@@ -6,6 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatData, nestData } from '@/pages/aip/aip';
 import {
     createColumnHelper,
     flexRender,
@@ -13,7 +14,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 
-type AIP = {
+type Aip = {
     aipRefCode: string;
     ppaDescription: string;
     implementingOfficeDepartmentLocation: string;
@@ -24,21 +25,54 @@ type AIP = {
     expectedOutputs: string;
     fundingSource: string;
     amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
+        ps: number;
+        mooe: number;
+        fe: number;
+        co: number;
+        total: number;
     };
     amountOfCcExpenditure: {
         ccAdaptation: string;
         ccMitigation: string;
     };
     ccTypologyCode: string;
-    children?: AIP[];
+    children?: Aip[];
 };
 
-const initialData: AIP[] = [
+type AipRaw = {
+    aipRefCode: string;
+    ppaDescription: string;
+    implementingOfficeDepartmentLocation: string;
+    startingDate: string;
+    completionDate: string;
+    expectedOutputs: string;
+    fundingSource: string;
+    ps: number;
+    mooe: number;
+    fe: number;
+    co: number;
+    total: number;
+    ccAdaptation: string;
+    ccMitigation: string;
+    ccTypologyCode: string;
+    children?: Aip[];
+};
+
+type AipProp = {
+    auth: {
+        user: null;
+    };
+    data: AipRaw[];
+    error: {};
+    name: string;
+    quote: {
+        author: string;
+        message: string;
+    };
+    sidebarOpen: boolean;
+};
+
+const initialData: Aip[] = [
     {
         aipRefCode: '',
         ppaDescription: '',
@@ -50,11 +84,11 @@ const initialData: AIP[] = [
         expectedOutputs: '',
         fundingSource: '',
         amount: {
-            ps: '',
-            mooe: '',
-            fe: '',
-            co: '',
-            total: '',
+            ps: 0,
+            mooe: 0,
+            fe: 0,
+            co: 0,
+            total: 0,
         },
         amountOfCcExpenditure: {
             ccAdaptation: '',
@@ -65,7 +99,7 @@ const initialData: AIP[] = [
     },
 ];
 
-const columnHelper = createColumnHelper<AIP>();
+const columnHelper = createColumnHelper<Aip>();
 
 const defaultColumns = [
     columnHelper.accessor('aipRefCode', {
@@ -156,14 +190,19 @@ const defaultColumns = [
     }),
 ];
 
-export default function Aip() {
+export default function Aip(prop: AipProp) {
+    console.log(prop);
+    console.log(formatData(prop.data));
+    console.log(nestData(prop.data));
+
     const table = useReactTable({
         columns: defaultColumns,
-        data: initialData,
+        // data: initialData,
+        data: formatData(prop.data),
         getCoreRowModel: getCoreRowModel(),
     });
 
-    console.log(table);
+    // console.log(table);
     // console.log(table.getState().rowSelection); //read the row selection state
     // console.log(table.setRowSelection((old) => ({ ...old }))); //set the row selection state
     // console.log(table.resetRowSelection()); //reset the row selection state

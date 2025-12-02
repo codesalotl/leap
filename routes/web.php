@@ -17,6 +17,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 });
 
-Route::get("/aip", [AipController::class, "index"]);
+Route::get('/aip', [AipController::class, 'index']);
 
-require __DIR__.'/settings.php';
+Route::get('/show', [AipController::class, 'show']);
+
+require __DIR__ . '/settings.php';
