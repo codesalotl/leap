@@ -7,14 +7,16 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { formatData, nestData } from '@/pages/aip/aip';
+import { formatData, nestData } from '@/pages/aip/aip-utility';
 import {
+    Column,
     createColumnHelper,
     flexRender,
     getCoreRowModel,
     getExpandedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+import { CSSProperties } from 'react';
 
 type Aip = {
     id: number;
@@ -80,35 +82,35 @@ type AipProp = {
     sidebarOpen: boolean;
 };
 
-const initialData: Aip[] = [
-    {
-        id: 0,
-        aipRefCode: '',
-        ppaDescription: '',
-        implementingOfficeDepartmentLocation: '',
-        scheduleOfImplementation: {
-            startingDate: '',
-            completionDate: '',
-        },
-        expectedOutputs: '',
-        fundingSource: '',
-        amount: {
-            ps: 0,
-            mooe: 0,
-            fe: 0,
-            co: 0,
-            total: 0,
-        },
-        amountOfCcExpenditure: {
-            ccAdaptation: '',
-            ccMitigation: '',
-        },
-        ccTypologyCode: '',
-        children: [],
-        created_at: '',
-        updated_at: '',
-    },
-];
+// const initialData: Aip[] = [
+//     {
+//         id: 0,
+//         aipRefCode: '',
+//         ppaDescription: '',
+//         implementingOfficeDepartmentLocation: '',
+//         scheduleOfImplementation: {
+//             startingDate: '',
+//             completionDate: '',
+//         },
+//         expectedOutputs: '',
+//         fundingSource: '',
+//         amount: {
+//             ps: 0,
+//             mooe: 0,
+//             fe: 0,
+//             co: 0,
+//             total: 0,
+//         },
+//         amountOfCcExpenditure: {
+//             ccAdaptation: '',
+//             ccMitigation: '',
+//         },
+//         ccTypologyCode: '',
+//         children: [],
+//         created_at: '',
+//         updated_at: '',
+//     },
+// ];
 
 const columnHelper = createColumnHelper<Aip>();
 
@@ -202,23 +204,26 @@ const defaultColumns = [
     columnHelper.display({
         id: 'action',
         header: 'Action',
-        cell: (row) => {
+        cell: ({ row }) => {
+            const idLength = row.id.split('.').length;
+
             return (
                 <div className="flex gap-2">
-                    <Button size="sm">Add</Button>
-                    <Button size="sm" variant="secondary">
-                        Edit
-                    </Button>
                     <Button size="sm" variant="destructive">
                         Delete
                     </Button>
+                    <Button size="sm" variant="secondary">
+                        Edit
+                    </Button>
+                    {idLength !== 3 && <Button size="sm">Add</Button>}
                 </div>
             );
         },
     }),
 ];
 
-const getCommonPinningStyles = (column: Column<Person>): CSSProperties => {
+// const getCommonPinningStyles = (column: Column<Person>): CSSProperties => {
+const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
         isPinned === 'left' && column.getIsLastColumn('left');
