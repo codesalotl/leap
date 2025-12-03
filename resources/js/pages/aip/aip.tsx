@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -11,10 +12,12 @@ import {
     createColumnHelper,
     flexRender,
     getCoreRowModel,
+    getExpandedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 
 type Aip = {
+    id: number;
     aipRefCode: string;
     ppaDescription: string;
     implementingOfficeDepartmentLocation: string;
@@ -37,9 +40,12 @@ type Aip = {
     };
     ccTypologyCode: string;
     children?: Aip[];
+    created_at: string;
+    updated_at: string;
 };
 
 type AipRaw = {
+    id: number;
     aipRefCode: string;
     ppaDescription: string;
     implementingOfficeDepartmentLocation: string;
@@ -56,6 +62,8 @@ type AipRaw = {
     ccMitigation: string;
     ccTypologyCode: string;
     children?: Aip[];
+    created_at: string;
+    updated_at: string;
 };
 
 type AipProp = {
@@ -74,6 +82,7 @@ type AipProp = {
 
 const initialData: Aip[] = [
     {
+        id: 0,
         aipRefCode: '',
         ppaDescription: '',
         implementingOfficeDepartmentLocation: '',
@@ -96,6 +105,8 @@ const initialData: Aip[] = [
         },
         ccTypologyCode: '',
         children: [],
+        created_at: '',
+        updated_at: '',
     },
 ];
 
@@ -188,19 +199,77 @@ const defaultColumns = [
     columnHelper.accessor('ccTypologyCode', {
         header: 'CC Typology Code',
     }),
+    columnHelper.display({
+        id: 'action',
+        header: 'Action',
+        cell: (row) => {
+            return (
+                <div className="flex gap-2">
+                    <Button size="sm">Add</Button>
+                    <Button size="sm" variant="secondary">
+                        Edit
+                    </Button>
+                    <Button size="sm" variant="destructive">
+                        Delete
+                    </Button>
+                </div>
+            );
+        },
+    }),
 ];
 
+const getCommonPinningStyles = (column: Column<Person>): CSSProperties => {
+    const isPinned = column.getIsPinned();
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left');
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right');
+
+    // console.log(column.columnDef.id);
+    // console.log(isPinned);
+    // console.log(isLastLeftPinnedColumn);
+    // console.log(isFirstRightPinnedColumn);
+
+    return {
+        boxShadow: isLastLeftPinnedColumn
+            ? '-4px 0 4px -4px gray inset'
+            : isFirstRightPinnedColumn
+              ? '4px 0 4px -4px gray inset'
+              : undefined,
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right:
+            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        opacity: isPinned ? 0.95 : 1,
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        zIndex: isPinned ? 1 : 0,
+    };
+};
+
 export default function Aip(prop: AipProp) {
-    console.log(prop);
-    console.log(formatData(prop.data));
-    console.log(nestData(prop.data));
+    // console.log(prop);
+    // console.log(formatData(prop.data));
+    // console.log(nestData(formatData(prop.data)));
 
     const table = useReactTable({
         columns: defaultColumns,
         // data: initialData,
-        data: formatData(prop.data),
+        data: nestData(formatData(prop.data)),
         getCoreRowModel: getCoreRowModel(),
+        getExpandedRowModel: getExpandedRowModel(),
+        getSubRows: (row) => row.children,
+        // getRowCanExpand: (row) => true,
+        state: {
+            expanded: true, // must pass expanded state back to the table
+        },
+        initialState: {
+            columnPinning: {
+                right: ['action'],
+            },
+        },
     });
+
+    // console.log(table);
 
     // console.log(table);
     // console.log(table.getState().rowSelection); //read the row selection state
@@ -224,12 +293,18 @@ export default function Aip(prop: AipProp) {
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     // console.log(header);
+                                    const { column } = header;
                                     return (
                                         <TableHead
                                             key={header.id}
                                             colSpan={header.colSpan}
-                                            style={{ width: header.getSize() }}
-                                            className="border"
+                                            style={{
+                                                ...getCommonPinningStyles(
+                                                    column,
+                                                ),
+                                                width: header.getSize(),
+                                            }}
+                                            className="border bg-background"
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -248,15 +323,21 @@ export default function Aip(prop: AipProp) {
 
                 <TableBody>
                     <TableRow>
-                        {table.getAllLeafColumns().map((col, index) => (
-                            <TableCell
-                                key={col.id}
-                                style={{ width: col.getSize() }}
-                                className="border"
-                            >
-                                {index + 1}
-                            </TableCell>
-                        ))}
+                        {table.getAllLeafColumns().map((col, index) => {
+                            console.log(col);
+                            return (
+                                <TableCell
+                                    key={col.id}
+                                    style={{
+                                        ...getCommonPinningStyles(col),
+                                        width: col.getSize(),
+                                    }}
+                                    className="border bg-background"
+                                >
+                                    {index + 1}
+                                </TableCell>
+                            );
+                        })}
                     </TableRow>
                 </TableBody>
 
@@ -267,17 +348,21 @@ export default function Aip(prop: AipProp) {
                             <TableRow key={row.id}>
                                 {row.getVisibleCells().map((cell, index) => {
                                     // console.log(cell);
+                                    const { column } = cell;
                                     return (
                                         <TableCell
                                             key={cell.id}
                                             style={{
+                                                ...getCommonPinningStyles(
+                                                    column,
+                                                ),
                                                 // width: cell.column.getSize(),
                                                 paddingLeft:
                                                     index === 1
                                                         ? `${row.depth * 2}rem`
                                                         : undefined,
                                             }}
-                                            className="border"
+                                            className="border bg-background"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
