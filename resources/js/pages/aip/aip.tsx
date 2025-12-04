@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
@@ -7,6 +6,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
+import AipDialog from '@/pages/aip/aip-dialog';
 import { formatData, nestData } from '@/pages/aip/aip-utility';
 import {
     Column,
@@ -205,17 +206,16 @@ const defaultColumns = [
         id: 'action',
         header: 'Action',
         cell: ({ row }) => {
+            // console.log(row.original);
+
             const idLength = row.id.split('.').length;
+            const isHidden = idLength === 3;
 
             return (
                 <div className="flex gap-2">
-                    <Button size="sm" variant="destructive">
-                        Delete
-                    </Button>
-                    <Button size="sm" variant="secondary">
-                        Edit
-                    </Button>
-                    {idLength !== 3 && <Button size="sm">Add</Button>}
+                    <AipDialog mode="add" hidden={isHidden} />
+                    <AipDialog data={row.original} mode="edit" />
+                    <AipAlertDialog data={row.original} />
                 </div>
             );
         },
@@ -291,6 +291,7 @@ export default function Aip(prop: AipProp) {
             {/* <TempComponent title={"Temp Comp"} /> */}
             {/*<ExportToPDFButton />*/}
             {/*<ExportToExcelButton />*/}
+            <AipDialog mode="create" />
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => {
@@ -329,7 +330,7 @@ export default function Aip(prop: AipProp) {
                 <TableBody>
                     <TableRow>
                         {table.getAllLeafColumns().map((col, index) => {
-                            console.log(col);
+                            // console.log(col);
                             return (
                                 <TableCell
                                     key={col.id}

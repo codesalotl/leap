@@ -87,7 +87,7 @@ export function formatData(data: AipRaw[]): Aip[] {
 }
 
 export function nestData(data: Aip[]): Aip[] {
-    console.log(data);
+    // console.log(data);
 
     const finalData: Aip[] = [];
 
@@ -119,7 +119,7 @@ export function nestData(data: Aip[]): Aip[] {
     });
 
     // console.log(map);
-    console.log(finalData);
+    // console.log(finalData);
 
     return finalData;
 }
