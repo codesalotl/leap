@@ -72,7 +72,7 @@ export default function AipDialog({ data, mode, hidden }: AipDialogProp) {
 
         {/*<ScrollArea className="h-72 w-48 rounded-md border">*/}
         <ScrollArea className="h-100">
-          <AipForm data={data} />
+          <AipForm data={data} mode={mode} />
         </ScrollArea>
 
         <DialogFooter>
