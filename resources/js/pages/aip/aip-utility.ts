@@ -1,125 +1,125 @@
 type Aip = {
-    id: number;
-    aipRefCode: string;
-    ppaDescription: string;
-    implementingOfficeDepartmentLocation: string;
-    scheduleOfImplementation: {
-        startingDate: string;
-        completionDate: string;
-    };
-    expectedOutputs: string;
-    fundingSource: string;
-    amount: {
-        ps: number;
-        mooe: number;
-        fe: number;
-        co: number;
-        total: number;
-    };
-    amountOfCcExpenditure: {
-        ccAdaptation: string;
-        ccMitigation: string;
-    };
-    ccTypologyCode: string;
-    children?: Aip[];
-    created_at: string;
-    updated_at: string;
+  id: number;
+  aipRefCode: string;
+  ppaDescription: string;
+  implementingOfficeDepartmentLocation: string;
+  scheduleOfImplementation: {
+    startingDate: string;
+    completionDate: string;
+  };
+  expectedOutputs: string;
+  fundingSource: string;
+  amount: {
+    ps: string;
+    mooe: string;
+    fe: string;
+    co: string;
+    total: string;
+  };
+  amountOfCcExpenditure: {
+    ccAdaptation: string;
+    ccMitigation: string;
+  };
+  ccTypologyCode: string;
+  children?: Aip[];
+  created_at: string;
+  updated_at: string;
 };
 
 type AipRaw = {
-    id: number;
-    aipRefCode: string;
-    ppaDescription: string;
-    implementingOfficeDepartmentLocation: string;
-    startingDate: string;
-    completionDate: string;
-    expectedOutputs: string;
-    fundingSource: string;
-    ps: number;
-    mooe: number;
-    fe: number;
-    co: number;
-    total: number;
-    ccAdaptation: string;
-    ccMitigation: string;
-    ccTypologyCode: string;
-    children?: Aip[];
-    created_at: string;
-    updated_at: string;
+  id: number;
+  aipRefCode: string;
+  ppaDescription: string;
+  implementingOfficeDepartmentLocation: string;
+  startingDate: string;
+  completionDate: string;
+  expectedOutputs: string;
+  fundingSource: string;
+  ps: string;
+  mooe: string;
+  fe: string;
+  co: string;
+  total: string;
+  ccAdaptation: string;
+  ccMitigation: string;
+  ccTypologyCode: string;
+  children?: Aip[];
+  created_at: string;
+  updated_at: string;
 };
 
 export function formatData(data: AipRaw[]): Aip[] {
-    return data.map((obj) => {
-        // console.log(obj);
+  return data.map((obj) => {
+    // console.log(obj);
 
-        const {
-            startingDate,
-            completionDate,
-            ps,
-            mooe,
-            fe,
-            co,
-            total,
-            ccAdaptation,
-            ccMitigation,
-            ...rest
-        } = obj;
+    const {
+      startingDate,
+      completionDate,
+      ps,
+      mooe,
+      fe,
+      co,
+      total,
+      ccAdaptation,
+      ccMitigation,
+      ...rest
+    } = obj;
 
-        return {
-            ...rest,
-            scheduleOfImplementation: {
-                startingDate: startingDate,
-                completionDate: completionDate,
-            },
-            amount: {
-                ps: ps,
-                mooe: mooe,
-                fe: fe,
-                co: co,
-                total: total,
-            },
-            amountOfCcExpenditure: {
-                ccAdaptation: ccAdaptation,
-                ccMitigation: ccMitigation,
-            },
-        };
-    });
+    return {
+      ...rest,
+      scheduleOfImplementation: {
+        startingDate: startingDate,
+        completionDate: completionDate,
+      },
+      amount: {
+        ps: ps,
+        mooe: mooe,
+        fe: fe,
+        co: co,
+        total: total,
+      },
+      amountOfCcExpenditure: {
+        ccAdaptation: ccAdaptation,
+        ccMitigation: ccMitigation,
+      },
+    };
+  });
 }
 
 export function nestData(data: Aip[]): Aip[] {
-    // console.log(data);
+  // console.log(data);
 
-    const finalData: Aip[] = [];
+  const finalData: Aip[] = [];
 
-    const map = new Map();
+  const map = new Map();
 
-    // store all items in map
-    // data.forEach((item) => map.set(item.id, { ...item, children: [] }));
-    data.forEach((item) => map.set(item.id, { ...item }));
+  // store all items in map
+  // data.forEach((item) => map.set(item.id, { ...item, children: [] }));
+  data.forEach((item) => map.set(item.id, { ...item }));
 
-    // attach to parent
-    map.forEach((item) => {
-        // console.log(item);
+  // attach to parent
+  map.forEach((item) => {
+    // console.log(item);
 
-        if (item.parentId === null) {
-            finalData.push(item);
-        } else {
-            const parent = map.get(item.parentId);
+    if (item.parentId === null) {
+      finalData.push(item);
+    } else {
+      const parent = map.get(item.parentId);
 
-            if (!parent.children) {
-                parent.children = [];
-            }
+      if (!parent.children) {
+        parent.children = [];
+      }
 
-            // console.log(parent);
+      // console.log(parent);
 
-            if (parent) {
-                parent.children.push(item);
-            }
-        }
-    });
+      if (parent) {
+        parent.children.push(item);
+      }
+    }
+  });
 
-    // console.log(map);
-    // console.log(finalData);
+  // console.log(map);
+  // console.log(finalData);
 
-    return finalData;
+  return finalData;
 }

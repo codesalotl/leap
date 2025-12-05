@@ -31,11 +31,11 @@ type Aip = {
     expectedOutputs: string;
     fundingSource: string;
     amount: {
-        ps: number;
-        mooe: number;
-        fe: number;
-        co: number;
-        total: number;
+        ps: string;
+        mooe: string;
+        fe: string;
+        co: string;
+        total: string;
     };
     amountOfCcExpenditure: {
         ccAdaptation: string;
@@ -47,7 +47,7 @@ type Aip = {
     updated_at: string;
 };
 
-type AipRaw = {
+type AipFlat = {
     id: number;
     aipRefCode: string;
     ppaDescription: string;
@@ -56,11 +56,11 @@ type AipRaw = {
     completionDate: string;
     expectedOutputs: string;
     fundingSource: string;
-    ps: number;
-    mooe: number;
-    fe: number;
-    co: number;
-    total: number;
+    ps: string;
+    mooe: string;
+    fe: string;
+    co: string;
+    total: string;
     ccAdaptation: string;
     ccMitigation: string;
     ccTypologyCode: string;
@@ -70,48 +70,36 @@ type AipRaw = {
 };
 
 type AipProp = {
-    auth: {
-        user: null;
-    };
-    data: AipRaw[];
-    error: {};
-    name: string;
-    quote: {
-        author: string;
-        message: string;
-    };
-    sidebarOpen: boolean;
+    data: AipFlat[];
 };
 
-// const initialData: Aip[] = [
-//     {
-//         id: 0,
-//         aipRefCode: '',
-//         ppaDescription: '',
-//         implementingOfficeDepartmentLocation: '',
-//         scheduleOfImplementation: {
-//             startingDate: '',
-//             completionDate: '',
-//         },
-//         expectedOutputs: '',
-//         fundingSource: '',
-//         amount: {
-//             ps: 0,
-//             mooe: 0,
-//             fe: 0,
-//             co: 0,
-//             total: 0,
-//         },
-//         amountOfCcExpenditure: {
-//             ccAdaptation: '',
-//             ccMitigation: '',
-//         },
-//         ccTypologyCode: '',
-//         children: [],
-//         created_at: '',
-//         updated_at: '',
-//     },
-// ];
+const initialFormData: Aip = {
+    id: 0,
+    aipRefCode: '',
+    ppaDescription: '',
+    implementingOfficeDepartmentLocation: '',
+    scheduleOfImplementation: {
+        startingDate: '',
+        completionDate: '',
+    },
+    expectedOutputs: '',
+    fundingSource: '',
+    amount: {
+        ps: '',
+        mooe: '',
+        fe: '',
+        co: '',
+        total: '',
+    },
+    amountOfCcExpenditure: {
+        ccAdaptation: '',
+        ccMitigation: '',
+    },
+    ccTypologyCode: '',
+    children: [],
+    created_at: '',
+    updated_at: '',
+};
 
 const columnHelper = createColumnHelper<Aip>();
 
@@ -213,7 +201,11 @@ const defaultColumns = [
 
             return (
                 <div className="flex gap-2">
-                    <AipDialog mode="add" hidden={isHidden} />
+                    <AipDialog
+                        data={initialFormData}
+                        mode="add"
+                        hidden={isHidden}
+                    />
                     <AipDialog data={row.original} mode="edit" />
                     <AipAlertDialog data={row.original} />
                 </div>
@@ -229,11 +221,6 @@ const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
         isPinned === 'left' && column.getIsLastColumn('left');
     const isFirstRightPinnedColumn =
         isPinned === 'right' && column.getIsFirstColumn('right');
-
-    // console.log(column.columnDef.id);
-    // console.log(isPinned);
-    // console.log(isLastLeftPinnedColumn);
-    // console.log(isFirstRightPinnedColumn);
 
     return {
         boxShadow: isLastLeftPinnedColumn
@@ -251,21 +238,17 @@ const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
     };
 };
 
-export default function Aip(prop: AipProp) {
-    // console.log(prop);
-    // console.log(formatData(prop.data));
-    // console.log(nestData(formatData(prop.data)));
+export default function Aip({ data }: AipProp) {
+    console.log(data);
 
     const table = useReactTable({
         columns: defaultColumns,
-        // data: initialData,
-        data: nestData(formatData(prop.data)),
+        data: nestData(formatData(data)),
         getCoreRowModel: getCoreRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
         getSubRows: (row) => row.children,
-        // getRowCanExpand: (row) => true,
         state: {
-            expanded: true, // must pass expanded state back to the table
+            expanded: true,
         },
         initialState: {
             columnPinning: {
@@ -274,31 +257,17 @@ export default function Aip(prop: AipProp) {
         },
     });
 
-    // console.log(table);
-
-    // console.log(table);
-    // console.log(table.getState().rowSelection); //read the row selection state
-    // console.log(table.setRowSelection((old) => ({ ...old }))); //set the row selection state
-    // console.log(table.resetRowSelection()); //reset the row selection state
-
     return (
         <div>
-            {/*<CreateRowDialog
-                buttonTitle={'Add Program'}
-                initailRowData={emptyRowData}
-                createRow={handleCreateRow}
-            />*/}
-            {/* <TempComponent title={"Temp Comp"} /> */}
             {/*<ExportToPDFButton />*/}
             {/*<ExportToExcelButton />*/}
-            <AipDialog mode="create" />
+            <AipDialog data={initialFormData} mode="create" />
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => {
                         return (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
-                                    // console.log(header);
                                     const { column } = header;
                                     return (
                                         <TableHead
@@ -330,7 +299,6 @@ export default function Aip(prop: AipProp) {
                 <TableBody>
                     <TableRow>
                         {table.getAllLeafColumns().map((col, index) => {
-                            // console.log(col);
                             return (
                                 <TableCell
                                     key={col.id}
@@ -349,11 +317,9 @@ export default function Aip(prop: AipProp) {
 
                 <TableBody>
                     {table.getRowModel().rows.map((row) => {
-                        // console.log(row.id === "0.0.0" ? row : "");
                         return (
                             <TableRow key={row.id}>
                                 {row.getVisibleCells().map((cell, index) => {
-                                    // console.log(cell);
                                     const { column } = cell;
                                     return (
                                         <TableCell
