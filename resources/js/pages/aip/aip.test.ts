@@ -1,4 +1,4 @@
-import { formatData, nestData } from '@/pages/aip/aip';
+import { formatData, nestData } from '@/pages/aip/aip-table';
 import { describe, expect, test } from 'vitest';
 
 describe('formatData', () => {

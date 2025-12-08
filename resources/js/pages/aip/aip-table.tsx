@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/table';
 import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
 import AipDialog from '@/pages/aip/aip-dialog';
-import { formatData, nestData } from '@/pages/aip/aip-utility';
+import { formatData, nestData } from '@/pages/aip/aip-utils';
 import type { Aip, AipProp } from '@/pages/aip/types';
 import {
     Column,
@@ -141,8 +141,6 @@ const defaultColumns = [
         id: 'action',
         header: 'Action',
         cell: ({ row }) => {
-            // console.log(row.original);
-
             const idLength = row.id.split('.').length;
             const isHidden = idLength === 3;
 
@@ -161,7 +159,6 @@ const defaultColumns = [
     }),
 ];
 
-// const getCommonPinningStyles = (column: Column<Person>): CSSProperties => {
 const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
