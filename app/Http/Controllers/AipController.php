@@ -12,7 +12,7 @@ class AipController extends Controller
     {
         $data = Aip::all();
 
-        return Inertia::render('aip/aip', ['data' => $data]);
+        return Inertia::render('aip/aip-table', ['data' => $data]);
     }
 
     public function store(Request $request)

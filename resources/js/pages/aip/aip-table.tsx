@@ -184,6 +184,7 @@ const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
 
 export default function Aip({ data }: AipProp) {
     console.log(data);
+    console.log(nestData(formatData(data)))
 
     const table = useReactTable({
         columns: defaultColumns,
