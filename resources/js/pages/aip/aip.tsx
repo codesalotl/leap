@@ -9,6 +9,7 @@ import {
 import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
 import AipDialog from '@/pages/aip/aip-dialog';
 import { formatData, nestData } from '@/pages/aip/aip-utility';
+import type { Aip, AipProp } from '@/pages/aip/types';
 import {
     Column,
     createColumnHelper,
@@ -18,60 +19,6 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import { CSSProperties } from 'react';
-
-type Aip = {
-    id: number;
-    aipRefCode: string;
-    ppaDescription: string;
-    implementingOfficeDepartmentLocation: string;
-    scheduleOfImplementation: {
-        startingDate: string;
-        completionDate: string;
-    };
-    expectedOutputs: string;
-    fundingSource: string;
-    amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
-    };
-    amountOfCcExpenditure: {
-        ccAdaptation: string;
-        ccMitigation: string;
-    };
-    ccTypologyCode: string;
-    children?: Aip[];
-    created_at: string;
-    updated_at: string;
-};
-
-type AipFlat = {
-    id: number;
-    aipRefCode: string;
-    ppaDescription: string;
-    implementingOfficeDepartmentLocation: string;
-    startingDate: string;
-    completionDate: string;
-    expectedOutputs: string;
-    fundingSource: string;
-    ps: string;
-    mooe: string;
-    fe: string;
-    co: string;
-    total: string;
-    ccAdaptation: string;
-    ccMitigation: string;
-    ccTypologyCode: string;
-    children?: Aip[];
-    created_at: string;
-    updated_at: string;
-};
-
-type AipProp = {
-    data: AipFlat[];
-};
 
 const initialFormData: Aip = {
     id: 0,

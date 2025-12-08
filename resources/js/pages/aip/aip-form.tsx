@@ -7,43 +7,11 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import type { AipFormProp } from '@/pages/aip/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
-type Aip = {
-    id: number;
-    aipRefCode: string;
-    ppaDescription: string;
-    implementingOfficeDepartmentLocation: string;
-    scheduleOfImplementation: {
-        startingDate: string;
-        completionDate: string;
-    };
-    expectedOutputs: string;
-    fundingSource: string;
-    amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
-    };
-    amountOfCcExpenditure: {
-        ccAdaptation: string;
-        ccMitigation: string;
-    };
-    ccTypologyCode: string;
-    children?: Aip[];
-    created_at: string;
-    updated_at: string;
-};
-
-type AipFormProp = {
-    data: Aip;
-    mode: 'create' | 'add' | 'edit';
-};
 
 const formSchema = z.object({
     // id: z.number(),
