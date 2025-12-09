@@ -12,8 +12,23 @@ import {
 import { Button } from '@/components/ui/button';
 import type { AipAlertDialogProp } from '@/pages/aip/types';
 import { Trash } from 'lucide-react';
+// import axios from "axios";
+import { router } from '@inertiajs/react';
 
 export default function AipAlertDialog({ data }: AipAlertDialogProp) {
+    console.log('aip-alert-dialog');
+
+    async function deleteRow(): Promise<void> {
+        router.delete(`http://localhost:8000/aip-delete/${data.id}`, {
+            onSuccess: () => {
+                // router.reload();
+            },
+            onError: (errors) => {
+                console.error('Delete failed:', errors);
+            },
+        });
+    }
+
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -34,7 +49,9 @@ export default function AipAlertDialog({ data }: AipAlertDialogProp) {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Continue</AlertDialogAction>
+                    <AlertDialogAction onClick={deleteRow}>
+                        Continue
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

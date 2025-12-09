@@ -18,7 +18,7 @@ import {
     getExpandedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { CSSProperties } from 'react';
+import { CSSProperties, useMemo } from 'react';
 
 const initialFormData: Aip = {
     id: 0,
@@ -147,6 +147,7 @@ const defaultColumns = [
             return (
                 <div className="flex gap-2">
                     <AipDialog
+                        id={row.original.id}
                         data={initialFormData}
                         mode="add"
                         hidden={isHidden}
@@ -183,12 +184,19 @@ const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
 };
 
 export default function Aip({ data }: AipProp) {
-    console.log(data);
-    console.log(nestData(formatData(data)))
+    console.log('aip-table');
+    // console.log(data);
+    // console.log(nestData(formatData(data)));
+
+    const tableData = useMemo(() => {
+        return nestData(formatData(data));
+    }, [data]);
+
+    const columns = useMemo(() => defaultColumns, []);
 
     const table = useReactTable({
-        columns: defaultColumns,
-        data: nestData(formatData(data)),
+        columns,
+        data: tableData, // <--- Use the memoized variable
         getCoreRowModel: getCoreRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
         getSubRows: (row) => row.children,

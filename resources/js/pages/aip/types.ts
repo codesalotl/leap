@@ -57,12 +57,14 @@ export type AipAlertDialogProp = {
 };
 
 export type AipDialogProp = {
+    id: number;
     data: Aip;
     mode: 'create' | 'add' | 'edit';
     hidden?: boolean;
 };
 
 export type AipFormProp = {
+    id: number;
     data: Aip;
     mode: 'create' | 'add' | 'edit';
 };

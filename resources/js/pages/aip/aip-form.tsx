@@ -9,7 +9,9 @@ import {
 import { Input } from '@/components/ui/input';
 import type { AipFormProp } from '@/pages/aip/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import axios from 'axios';
+import { router } from '@inertiajs/react';
+import Decimal from 'decimal.js';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -57,44 +59,108 @@ const formSchema = z.object({
     // updated_at: z.string(),
 });
 
-export default function AipForm({ data, mode }: AipFormProp) {
-    console.log(data);
-    console.log(mode);
+function calculateTotal(
+    ps: string,
+    mooe: string,
+    fe: string,
+    co: string,
+): string {
+    const psDecimal = new Decimal(ps);
+    const mooeDecimal = new Decimal(mooe);
+    const feDecimal = new Decimal(fe);
+    const coDecimal = new Decimal(co);
 
-    // 1. Define your form.
+    const totalAmount = psDecimal
+        .plus(mooeDecimal)
+        .plus(feDecimal)
+        .plus(coDecimal);
+
+    return totalAmount.toString();
+}
+
+export default function AipForm({ id, data, mode }: AipFormProp) {
+    console.log('aip-form');
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: data,
     });
 
+    const { watch, setValue } = form;
+
+    // console.log(form);
+    // console.log(watch(['amount.ps', 'amount.mooe', 'amount.fe', 'amount.co']));
+    // console.log(watch((value, { name, type }) => {
+    //     return [value, name, type];
+    // }));
+    // console.log(setValue);
+
+    const subscription = watch((value, { name, type }) => {
+        // This is the correct place to run side effects or log
+        console.log('--- Change Detected ---');
+        console.log('Value:', value); // All form values
+        console.log('Name:', name); // The field that triggered the change
+        console.log('Type:', type); // 'change', 'blur', etc.
+    });
+    console.log(subscription);
+
+    useEffect(() => {
+        const subscription = watch((value, { name, type }) => {
+            // console.log(value);
+            // console.log(name);
+            // console.log(type);
+
+            if (
+                name === 'amount.ps' ||
+                name === 'amount.mooe' ||
+                name === 'amount.fe' ||
+                name === 'amount.co'
+            ) {
+                // console.log(value.amount);
+
+                const { ps, mooe, fe, co } = value.amount;
+
+                const newTotal = calculateTotal(ps, mooe, fe, co);
+
+                console.log(ps, mooe, fe, co);
+                console.log(newTotal);
+
+                setValue('amount.total', newTotal, { shouldValidate: true });
+            }
+        });
+
+        console.log(subscription);
+    }, [watch, setValue, form]);
+
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        let axiosCall;
-        let endpoint;
+        let inertiaMethod: 'post' | 'patch' = 'post';
+        let endpoint: string = '';
 
         switch (mode) {
             case 'create':
-                axiosCall = axios.post;
+                inertiaMethod = 'post';
                 endpoint = 'aip-store';
                 break;
             case 'add':
-                axiosCall = axios.post;
-                endpoint = 'aip-store';
+                inertiaMethod = 'post';
+                endpoint = `aip-store-child/${id}`;
                 break;
             case 'edit':
-                axiosCall = axios.patch;
-                endpoint = `aip-update/${data.id}`;
+                inertiaMethod = 'patch';
+                endpoint = `aip-update/${data?.id}`;
                 break;
+            default:
+                return;
         }
 
-        try {
-            const res = await axiosCall(
-                `http://localhost:8000/${endpoint}`,
-                values,
-            );
-            console.log('Successfully Created User:', res.data);
-        } catch (error) {
-            console.error('Error:', error.response?.data || error.message);
-        }
+        router[inertiaMethod](`/${endpoint}`, values, {
+            onSuccess: () => {
+                form.reset(values);
+            },
+            onError: (errors) => {
+                console.error('Submission failed with errors:', errors);
+            },
+        });
     }
 
     return (
@@ -439,6 +505,7 @@ export default function AipForm({ data, mode }: AipFormProp) {
                                                 <Input
                                                     placeholder="0.00"
                                                     {...field}
+                                                    readOnly
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -449,7 +516,7 @@ export default function AipForm({ data, mode }: AipFormProp) {
                         />
                     </div>
                 </div>
-                {/*<Button type="submit">Submit</Button>*/}
+                {/* <Button type="submit">Submit</Button> */}
             </form>
         </Form>
     );
