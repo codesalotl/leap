@@ -11,7 +11,6 @@ class AipController extends Controller
     public function index()
     {
         $data = Aip::all();
-
         return Inertia::render('aip/aip-table', ['data' => $data]);
     }
 
@@ -39,7 +38,6 @@ class AipController extends Controller
             'ccTypologyCode' => 'required|string',
         ]);
 
-        // Flatten the nested data
         $flattenedData = [
             'aipRefCode' => $validatedData['aipRefCode'],
             'ppaDescription' => $validatedData['ppaDescription'],
@@ -92,7 +90,6 @@ class AipController extends Controller
             'ccTypologyCode' => 'required|string',
         ]);
 
-        // Flatten the nested data
         $flattenedData = [
             'aipRefCode' => $validatedData['aipRefCode'],
             'ppaDescription' => $validatedData['ppaDescription'],
@@ -173,10 +170,10 @@ class AipController extends Controller
 
         $aip->update($flattenedData);
 
-        return redirect()->back();
+        // return redirect()->back();
     }
 
-    public function delete($id)
+    public function destroy($id)
     {
         $aip = Aip::findOrFail($id);
         $aip->delete();

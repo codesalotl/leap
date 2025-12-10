@@ -19,7 +19,7 @@ export default function AipAlertDialog({ data }: AipAlertDialogProp) {
     console.log('aip-alert-dialog');
 
     async function deleteRow(): Promise<void> {
-        router.delete(`http://localhost:8000/aip-delete/${data.id}`, {
+        router.delete(`http://localhost:8000/aip/${data.id}`, {
             onSuccess: () => {
                 // router.reload();
             },

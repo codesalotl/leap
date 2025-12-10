@@ -79,8 +79,6 @@ function calculateTotal(
 }
 
 export default function AipForm({ id, data, mode }: AipFormProp) {
-    console.log('aip-form');
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: data,
@@ -88,49 +86,23 @@ export default function AipForm({ id, data, mode }: AipFormProp) {
 
     const { watch, setValue } = form;
 
-    // console.log(form);
-    // console.log(watch(['amount.ps', 'amount.mooe', 'amount.fe', 'amount.co']));
-    // console.log(watch((value, { name, type }) => {
-    //     return [value, name, type];
-    // }));
-    // console.log(setValue);
-
-    const subscription = watch((value, { name, type }) => {
-        // This is the correct place to run side effects or log
-        console.log('--- Change Detected ---');
-        console.log('Value:', value); // All form values
-        console.log('Name:', name); // The field that triggered the change
-        console.log('Type:', type); // 'change', 'blur', etc.
-    });
-    console.log(subscription);
-
     useEffect(() => {
         const subscription = watch((value, { name, type }) => {
-            // console.log(value);
-            // console.log(name);
-            // console.log(type);
-
             if (
                 name === 'amount.ps' ||
                 name === 'amount.mooe' ||
                 name === 'amount.fe' ||
                 name === 'amount.co'
             ) {
-                // console.log(value.amount);
-
                 const { ps, mooe, fe, co } = value.amount;
-
                 const newTotal = calculateTotal(ps, mooe, fe, co);
-
-                console.log(ps, mooe, fe, co);
-                console.log(newTotal);
 
                 setValue('amount.total', newTotal, { shouldValidate: true });
             }
         });
 
-        console.log(subscription);
-    }, [watch, setValue, form]);
+        return () => subscription.unsubscribe();
+    }, [watch, setValue]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
         let inertiaMethod: 'post' | 'patch' = 'post';
@@ -139,15 +111,15 @@ export default function AipForm({ id, data, mode }: AipFormProp) {
         switch (mode) {
             case 'create':
                 inertiaMethod = 'post';
-                endpoint = 'aip-store';
+                endpoint = 'aip';
                 break;
             case 'add':
                 inertiaMethod = 'post';
-                endpoint = `aip-store-child/${id}`;
+                endpoint = `aip/${id}`;
                 break;
             case 'edit':
                 inertiaMethod = 'patch';
-                endpoint = `aip-update/${data?.id}`;
+                endpoint = `aip/${data?.id}`;
                 break;
             default:
                 return;
