@@ -8,7 +8,39 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
-export default function AipRefCodeInput() {
+type LguLevel = {
+    id: number;
+    lgu_level: string;
+};
+
+type OfficeType = {
+    id: number;
+    office_type: string;
+};
+
+type Office = {
+    id: number;
+    code: string;
+    office: string;
+    lgu_level_id: number;
+    office_type_id: number;
+};
+
+type AipRefCodeInputProps = {
+    lgu_levels: LguLevel[];
+    office_types: OfficeType[];
+    offices: Office[];
+};
+
+export default function AipRefCodeInput({
+    lgu_levels,
+    office_types,
+    offices,
+}: AipRefCodeInputProps) {
+    console.log(lgu_levels);
+    console.log(office_types);
+    console.log(offices);
+
     return (
         <div>
             <Label htmlFor="sector">Sector</Label>
@@ -42,9 +74,11 @@ export default function AipRefCodeInput() {
                     <SelectValue placeholder="LGU Level" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="1">1 - Province</SelectItem>
-                    <SelectItem value="2">2 - City</SelectItem>
-                    <SelectItem value="3">3 - Municipality</SelectItem>
+                    {lgu_levels?.map((level) => (
+                        <SelectItem key={level.id} value={level.id.toString()}>
+                            {level.lgu_level}
+                        </SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
 
@@ -54,8 +88,11 @@ export default function AipRefCodeInput() {
                     <SelectValue placeholder="Office Type" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="1">1 - Mandatory</SelectItem>
-                    <SelectItem value="2">2 - Optional</SelectItem>
+                    {office_types?.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                            {type.office_type}
+                        </SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
 
@@ -65,9 +102,17 @@ export default function AipRefCodeInput() {
                     <SelectValue placeholder="Office" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
+                    {offices?.map((office) => {
+                        console.log(office);
+                        return (
+                            <SelectItem
+                                key={office.id}
+                                value={office.id.toString()}
+                            >
+                                {office.office}
+                            </SelectItem>
+                        );
+                    })}
                 </SelectContent>
             </Select>
 

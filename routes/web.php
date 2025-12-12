@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\AipController;
+use App\Http\Controllers\AipRefCodeController;
 
 Route::get('/', function () {
     return Inertia::render('welcome', [
@@ -23,9 +24,8 @@ Route::post('aip', [AipController::class, 'store']);
 Route::patch('aip/{id}', [AipController::class, 'update']);
 Route::delete('aip/{id}', [AipController::class, 'destroy']);
 
-Route::get('/aip-ref-code', function () {
-    return Inertia::render('aip/aip-ref-code-input');
-});
+// Route::get('/aip-ref-code', fn() => Inertia::render('aip/aip-ref-code-input'));
+Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
 
 // Route::resource('aip', AipController::class);
 
