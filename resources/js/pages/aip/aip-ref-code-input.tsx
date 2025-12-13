@@ -7,6 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useState } from 'react';
 
 type LguLevel = {
     id: number;
@@ -37,9 +38,46 @@ export default function AipRefCodeInput({
     office_types,
     offices,
 }: AipRefCodeInputProps) {
-    console.log(lgu_levels);
-    console.log(office_types);
-    console.log(offices);
+    // console.log(lgu_levels);
+    // console.log(office_types);
+    // console.log(offices);
+
+    const [selectedLguLevel, setSelectedLguLevel] = useState<number | null>(
+        null,
+    );
+    const [selectedOfficeType, setSelectedOfficeType] = useState<number | null>(
+        null,
+    );
+    const [selectedOffice, setSelectedOffice] = useState<number | null>(null);
+
+    console.log(selectedLguLevel);
+    console.log(selectedOfficeType);
+
+    function handleOfficeChange(officeId: string) {
+        const office = offices.find((item) => {
+            return item.id === Number(officeId);
+        });
+
+        console.log(office);
+
+        if (office) {
+            setSelectedLguLevel(office.lgu_level_id);
+            setSelectedOfficeType(office.office_type_id);
+            setSelectedOffice(office.id);
+        }
+    }
+
+    const handleLguLevelChange = (value: string) => {
+        // Clear the auto-populated fields if the user manually changes an FK
+        setSelectedLguLevel(Number(value));
+        setSelectedOffice(null);
+    };
+
+    const handleOfficeTypeChange = (value: string) => {
+        // Clear the auto-populated fields if the user manually changes an FK
+        setSelectedOfficeType(Number(value));
+        setSelectedOffice(null);
+    };
 
     return (
         <div>
@@ -69,7 +107,12 @@ export default function AipRefCodeInput({
             </Select>
 
             <Label htmlFor="lgu-level">LGU Level</Label>
-            <Select>
+            <Select
+                value={
+                    selectedLguLevel === null ? '' : selectedLguLevel.toString()
+                }
+                onValueChange={handleLguLevelChange}
+            >
                 <SelectTrigger className="w-[180px]" id="lgu-level">
                     <SelectValue placeholder="LGU Level" />
                 </SelectTrigger>
@@ -83,7 +126,14 @@ export default function AipRefCodeInput({
             </Select>
 
             <Label htmlFor="office-type">Office Type</Label>
-            <Select>
+            <Select
+                value={
+                    selectedOfficeType === null
+                        ? ''
+                        : selectedOfficeType.toString()
+                }
+                onValueChange={handleOfficeTypeChange}
+            >
                 <SelectTrigger className="w-[180px]" id="office-type">
                     <SelectValue placeholder="Office Type" />
                 </SelectTrigger>
@@ -97,13 +147,16 @@ export default function AipRefCodeInput({
             </Select>
 
             <Label htmlFor="office">Office</Label>
-            <Select>
+            <Select
+                value={selectedOffice === null ? '' : selectedOffice.toString()}
+                onValueChange={handleOfficeChange}
+            >
                 <SelectTrigger className="w-[180px]" id="office">
                     <SelectValue placeholder="Office" />
                 </SelectTrigger>
                 <SelectContent>
                     {offices?.map((office) => {
-                        console.log(office);
+                        // console.log(office);
                         return (
                             <SelectItem
                                 key={office.id}
