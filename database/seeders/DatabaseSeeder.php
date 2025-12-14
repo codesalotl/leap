@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             LguLevelsSeeder::class,
             OfficeTypesSeeder::class,
             OfficesSeeder::class,
+            SectorSeeder::class,
         ]);
     }
 }

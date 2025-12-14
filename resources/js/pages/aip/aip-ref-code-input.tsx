@@ -9,6 +9,12 @@ import {
 } from '@/components/ui/select';
 import { useState } from 'react';
 
+type Sector = {
+    id: number;
+    code: string;
+    sector: string;
+};
+
 type LguLevel = {
     id: number;
     lgu_level: string;
@@ -28,20 +34,19 @@ type Office = {
 };
 
 type AipRefCodeInputProps = {
+    sectors: Sector[];
     lgu_levels: LguLevel[];
     office_types: OfficeType[];
     offices: Office[];
 };
 
 export default function AipRefCodeInput({
+    sectors,
     lgu_levels,
     office_types,
     offices,
 }: AipRefCodeInputProps) {
-    // console.log(lgu_levels);
-    // console.log(office_types);
-    // console.log(offices);
-
+    const [selectedSector, setSelectedSector] = useState<number | null>(null);
     const [selectedLguLevel, setSelectedLguLevel] = useState<number | null>(
         null,
     );
@@ -50,15 +55,10 @@ export default function AipRefCodeInput({
     );
     const [selectedOffice, setSelectedOffice] = useState<number | null>(null);
 
-    console.log(selectedLguLevel);
-    console.log(selectedOfficeType);
-
     function handleOfficeChange(officeId: string) {
         const office = offices.find((item) => {
             return item.id === Number(officeId);
         });
-
-        console.log(office);
 
         if (office) {
             setSelectedLguLevel(office.lgu_level_id);
@@ -68,33 +68,49 @@ export default function AipRefCodeInput({
     }
 
     const handleLguLevelChange = (value: string) => {
-        // Clear the auto-populated fields if the user manually changes an FK
         setSelectedLguLevel(Number(value));
         setSelectedOffice(null);
     };
 
     const handleOfficeTypeChange = (value: string) => {
-        // Clear the auto-populated fields if the user manually changes an FK
         setSelectedOfficeType(Number(value));
         setSelectedOffice(null);
     };
 
+    function handleSectorChange(e: string) {
+        setSelectedSector(Number(e));
+    }
+
+    const selectedSectorObject = sectors?.find(
+        (sector) => sector.id === selectedSector,
+    );
+
+    const aipRefCode =
+        `${selectedSectorObject ? selectedSectorObject.code : '0000'}` +
+        '-000-' +
+        `${selectedLguLevel !== null ? selectedLguLevel : '0'}` +
+        `-${selectedOfficeType !== null ? selectedOfficeType : '0'}` +
+        `-${selectedOffice !== null ? offices[selectedOffice].code : '000'}` +
+        '-000-000-000';
+
     return (
         <div>
+            <p>{aipRefCode}</p>
+
             <Label htmlFor="sector">Sector</Label>
-            <Select>
+            <Select onValueChange={handleSectorChange}>
                 <SelectTrigger className="w-[180px]" id="sector">
                     <SelectValue placeholder="Sector" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="1000">
-                        1000 - General Public Services
-                    </SelectItem>
-                    <SelectItem value="3000">3000 - Social Services</SelectItem>
-                    <SelectItem value="8000">
-                        8000 - Economic Services
-                    </SelectItem>
-                    <SelectItem value="9000">9000 - Other Services</SelectItem>
+                    {sectors?.map((sector) => (
+                        <SelectItem
+                            key={sector.id}
+                            value={sector.id.toString()}
+                        >
+                            {sector.sector}
+                        </SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
 
@@ -155,17 +171,14 @@ export default function AipRefCodeInput({
                     <SelectValue placeholder="Office" />
                 </SelectTrigger>
                 <SelectContent>
-                    {offices?.map((office) => {
-                        // console.log(office);
-                        return (
-                            <SelectItem
-                                key={office.id}
-                                value={office.id.toString()}
-                            >
-                                {office.office}
-                            </SelectItem>
-                        );
-                    })}
+                    {offices?.map((office) => (
+                        <SelectItem
+                            key={office.id}
+                            value={office.id.toString()}
+                        >
+                            {office.office}
+                        </SelectItem>
+                    ))}
                 </SelectContent>
             </Select>
 
