@@ -90,7 +90,7 @@ export default function AipRefCodeInput({
         '-000-' +
         `${selectedLguLevel !== null ? selectedLguLevel : '0'}` +
         `-${selectedOfficeType !== null ? selectedOfficeType : '0'}` +
-        `-${selectedOffice !== null ? offices[selectedOffice].code : '000'}` +
+        `-${selectedOffice !== null ? offices[selectedOffice].code : '00'}` +
         '-000-000-000';
 
     return (
