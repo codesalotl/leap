@@ -13,6 +13,8 @@ class LguLevelsSeeder extends Seeder
      */
     public function run(): void
     {
+        LguLevels::truncate();
+
         LguLevels::insert([
             ['lgu_level' => 'Province'],
             ['lgu_level' => 'City'],
