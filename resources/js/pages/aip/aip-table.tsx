@@ -9,6 +9,7 @@ import {
 import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
 import AipDialog from '@/pages/aip/aip-dialog';
 import { formatData, nestData } from '@/pages/aip/aip-utils';
+import ProgramForm from '@/pages/aip/program-form';
 import type { Aip, AipProp } from '@/pages/aip/types';
 import {
     Column,
@@ -183,10 +184,11 @@ const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
     };
 };
 
-export default function Aip({ data }: AipProp) {
+export default function Aip({ data, programs }: AipProp) {
     console.log('aip-table');
     // console.log(data);
     // console.log(nestData(formatData(data)));
+    console.log(programs);
 
     const tableData = useMemo(() => {
         return nestData(formatData(data));
@@ -214,7 +216,27 @@ export default function Aip({ data }: AipProp) {
         <div>
             {/*<ExportToPDFButton />*/}
             {/*<ExportToExcelButton />*/}
-            <AipDialog data={initialFormData} mode="create" />
+            {/*<AipDialog data={initialFormData} mode="create" />*/}
+            {/*<div className="flex">
+                <Select>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select a fruit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            {programs.map((program) => (
+                                <SelectItem key={program.id} value={program.id}>
+                                    {program.name}
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <Button>Add</Button>
+            </div>*/}
+
+            <ProgramForm programs={programs} />
+
             <Table>
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => {

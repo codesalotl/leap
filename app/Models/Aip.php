@@ -8,6 +8,8 @@ class Aip extends Model
 {
     protected $table = 'aip';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'aipRefCode',
         'ppaDescription',

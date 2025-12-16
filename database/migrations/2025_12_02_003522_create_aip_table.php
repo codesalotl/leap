@@ -12,22 +12,21 @@ return new class extends Migration {
     {
         Schema::create('aip', function (Blueprint $table) {
             $table->id();
-            $table->string('aipRefCode');
-            $table->string('ppaDescription');
-            $table->string('implementingOfficeDepartmentLocation');
-            $table->timestamp('startingDate');
-            $table->timestamp('completionDate');
-            $table->string('expectedOutputs');
-            $table->string('fundingSource');
-            $table->decimal('ps');
-            $table->decimal('mooe');
-            $table->decimal('fe');
-            $table->decimal('co');
-            $table->decimal('total');
-            $table->string('ccAdaptation');
-            $table->string('ccMitigation');
-            $table->string('ccTypologyCode');
-            $table->timestamps();
+            $table->string('aipRefCode')->nullable();
+            $table->string('ppaDescription')->nullable();
+            $table->string('implementingOfficeDepartmentLocation')->nullable();
+            $table->timestamp('startingDate')->nullable();
+            $table->timestamp('completionDate')->nullable();
+            $table->string('expectedOutputs')->nullable();
+            $table->string('fundingSource')->nullable();
+            $table->decimal('ps')->nullable();
+            $table->decimal('mooe')->nullable();
+            $table->decimal('fe')->nullable();
+            $table->decimal('co')->nullable();
+            $table->decimal('total')->nullable();
+            $table->string('ccAdaptation')->nullable();
+            $table->string('ccMitigation')->nullable();
+            $table->string('ccTypologyCode')->nullable();
         });
     }
 
