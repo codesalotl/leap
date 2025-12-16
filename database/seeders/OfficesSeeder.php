@@ -13,6 +13,8 @@ class OfficesSeeder extends Seeder
      */
     public function run(): void
     {
+        Offices::truncate();
+
         Offices::insert([
             // LGU Level 1: Province (Mandatory Offices - Type 1)
             [

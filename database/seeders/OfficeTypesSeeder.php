@@ -13,6 +13,8 @@ class OfficeTypesSeeder extends Seeder
      */
     public function run(): void
     {
+        OfficeTypes::truncate();
+
         OfficeTypes::insert([
             ['office_type' => 'Mandatory'],
             ['office_type' => 'Optional'],
