@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             ProgramSeeder::class,
             ProjectSeeder::class,
             ActivitySeeder::class,
+            AipCollectionsSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

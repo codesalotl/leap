@@ -6,6 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import AppLayout from '@/layouts/app-layout';
 import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
 import AipDialog from '@/pages/aip/aip-dialog';
 import { formatData, nestData } from '@/pages/aip/aip-utils';
@@ -213,11 +214,12 @@ export default function Aip({ data, programs }: AipProp) {
     });
 
     return (
-        <div>
-            {/*<ExportToPDFButton />*/}
-            {/*<ExportToExcelButton />*/}
-            {/*<AipDialog data={initialFormData} mode="create" />*/}
-            {/*<div className="flex">
+        <AppLayout>
+            <div>
+                {/*<ExportToPDFButton />*/}
+                {/*<ExportToExcelButton />*/}
+                {/*<AipDialog data={initialFormData} mode="create" />*/}
+                {/*<div className="flex">
                 <Select>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Select a fruit" />
@@ -235,94 +237,98 @@ export default function Aip({ data, programs }: AipProp) {
                 <Button>Add</Button>
             </div>*/}
 
-            <ProgramForm programs={programs} />
+                <ProgramForm programs={programs} />
 
-            <Table>
-                <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => {
-                        return (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    const { column } = header;
-                                    return (
-                                        <TableHead
-                                            key={header.id}
-                                            colSpan={header.colSpan}
-                                            style={{
-                                                ...getCommonPinningStyles(
-                                                    column,
-                                                ),
-                                                width: header.getSize(),
-                                            }}
-                                            className="border bg-background"
-                                        >
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext(),
-                                                  )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        );
-                    })}
-                </TableHeader>
-
-                <TableBody>
-                    <TableRow>
-                        {table.getAllLeafColumns().map((col, index) => {
+                <Table>
+                    <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => {
                             return (
-                                <TableCell
-                                    key={col.id}
-                                    style={{
-                                        ...getCommonPinningStyles(col),
-                                        width: col.getSize(),
-                                    }}
-                                    className="border bg-background"
-                                >
-                                    {index + 1}
-                                </TableCell>
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => {
+                                        const { column } = header;
+                                        return (
+                                            <TableHead
+                                                key={header.id}
+                                                colSpan={header.colSpan}
+                                                style={{
+                                                    ...getCommonPinningStyles(
+                                                        column,
+                                                    ),
+                                                    width: header.getSize(),
+                                                }}
+                                                className="border bg-background"
+                                            >
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext(),
+                                                      )}
+                                            </TableHead>
+                                        );
+                                    })}
+                                </TableRow>
                             );
                         })}
-                    </TableRow>
-                </TableBody>
+                    </TableHeader>
 
-                <TableBody>
-                    {table.getRowModel().rows.map((row) => {
-                        return (
-                            <TableRow key={row.id}>
-                                {row.getVisibleCells().map((cell, index) => {
-                                    const { column } = cell;
-                                    return (
-                                        <TableCell
-                                            key={cell.id}
-                                            style={{
-                                                ...getCommonPinningStyles(
-                                                    column,
-                                                ),
-                                                // width: cell.column.getSize(),
-                                                paddingLeft:
-                                                    index === 1
-                                                        ? `${row.depth * 2}rem`
-                                                        : undefined,
-                                            }}
-                                            className="border bg-background"
-                                        >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    );
-                                })}
-                            </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
-        </div>
+                    <TableBody>
+                        <TableRow>
+                            {table.getAllLeafColumns().map((col, index) => {
+                                return (
+                                    <TableCell
+                                        key={col.id}
+                                        style={{
+                                            ...getCommonPinningStyles(col),
+                                            width: col.getSize(),
+                                        }}
+                                        className="border bg-background"
+                                    >
+                                        {index + 1}
+                                    </TableCell>
+                                );
+                            })}
+                        </TableRow>
+                    </TableBody>
+
+                    <TableBody>
+                        {table.getRowModel().rows.map((row) => {
+                            return (
+                                <TableRow key={row.id}>
+                                    {row
+                                        .getVisibleCells()
+                                        .map((cell, index) => {
+                                            const { column } = cell;
+                                            return (
+                                                <TableCell
+                                                    key={cell.id}
+                                                    style={{
+                                                        ...getCommonPinningStyles(
+                                                            column,
+                                                        ),
+                                                        // width: cell.column.getSize(),
+                                                        paddingLeft:
+                                                            index === 1
+                                                                ? `${row.depth * 2}rem`
+                                                                : undefined,
+                                                    }}
+                                                    className="border bg-background"
+                                                >
+                                                    {flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext(),
+                                                    )}
+                                                </TableCell>
+                                            );
+                                        })}
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </div>
+        </AppLayout>
     );
 }

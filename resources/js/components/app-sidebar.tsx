@@ -1,10 +1,7 @@
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -13,7 +10,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -22,20 +19,30 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    {
+        title: 'AIP Collections',
+        href: '/aip-collections',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Manage PPA',
+        href: '/ppa-list',
+        icon: LayoutGrid,
+    },
 ];
 
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
-];
+// const footerNavItems: NavItem[] = [
+//     {
+//         title: 'Repository',
+//         href: 'https://github.com/laravel/react-starter-kit',
+//         icon: Folder,
+//     },
+//     {
+//         title: 'Documentation',
+//         href: 'https://laravel.com/docs/starter-kits#react',
+//         icon: BookOpen,
+//     },
+// ];
 
 export function AppSidebar() {
     return (
@@ -56,10 +63,10 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
+            {/*<SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
-            </SidebarFooter>
+            </SidebarFooter>*/}
         </Sidebar>
     );
 }

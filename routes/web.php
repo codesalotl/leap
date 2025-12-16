@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AipCollectionController;
+use App\Http\Controllers\PpaListController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -24,9 +26,16 @@ Route::post('aip', [AipController::class, 'store']);
 Route::patch('aip/{id}', [AipController::class, 'update']);
 Route::delete('aip/{id}', [AipController::class, 'destroy']);
 
-// Route::get('/aip-ref-code', fn() => Inertia::render('aip/aip-ref-code-input'));
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
 
-// Route::resource('aip', AipController::class);
+Route::get('home', function () {
+    return Inertia::render('home');
+});
+
+Route::get('aip-collections', [AipCollectionController::class, 'index']);
+Route::post('aip-collections', [AipCollectionController::class, 'store']);
+
+Route::get('ppa-list', [PpaListController::class, 'index']);
+Route::patch('ppa-list/{program}', [PpaListController::class, 'update']);
 
 require __DIR__ . '/settings.php';
