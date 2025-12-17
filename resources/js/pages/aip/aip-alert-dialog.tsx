@@ -15,7 +15,7 @@ import { Trash } from 'lucide-react';
 // import axios from "axios";
 import { router } from '@inertiajs/react';
 
-export default function AipAlertDialog({ data }: AipAlertDialogProp) {
+export default function AipAlertDialog({ data, hidden }: AipAlertDialogProp) {
     console.log('aip-alert-dialog');
 
     async function deleteRow(): Promise<void> {
@@ -32,7 +32,11 @@ export default function AipAlertDialog({ data }: AipAlertDialogProp) {
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button size="icon" variant="destructive">
+                <Button
+                    size="icon"
+                    variant="destructive"
+                    className={hidden ? 'invisible' : ''}
+                >
                     <Trash />
                 </Button>
             </AlertDialogTrigger>

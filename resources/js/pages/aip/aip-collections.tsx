@@ -42,7 +42,7 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     createColumnHelper,
     flexRender,
@@ -96,7 +96,13 @@ const columns = [
     columnHelper.display({
         header: 'Action',
         cell: ({ row }) => {
-            return <Button size="sm">Open</Button>;
+            return (
+                <Button size="sm">
+                    <Link href={`/aip-collections/${row.original.id}`}>
+                        Open
+                    </Link>
+                </Button>
+            );
         },
     }),
 ];

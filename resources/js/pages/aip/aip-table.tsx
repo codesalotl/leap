@@ -10,8 +10,8 @@ import AppLayout from '@/layouts/app-layout';
 import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
 import AipDialog from '@/pages/aip/aip-dialog';
 import { formatData, nestData } from '@/pages/aip/aip-utils';
-import ProgramForm from '@/pages/aip/program-form';
 import type { Aip, AipProp } from '@/pages/aip/types';
+import { type BreadcrumbItem } from '@/types';
 import {
     Column,
     createColumnHelper,
@@ -52,116 +52,6 @@ const initialFormData: Aip = {
 
 const columnHelper = createColumnHelper<Aip>();
 
-const defaultColumns = [
-    columnHelper.accessor('aipRefCode', {
-        header: 'AIP Ref. Code',
-    }),
-    columnHelper.accessor('ppaDescription', {
-        header: 'Program/Project/Activity Description',
-    }),
-    columnHelper.accessor('implementingOfficeDepartmentLocation', {
-        header: 'Implementing Office Department Location',
-    }),
-    columnHelper.group({
-        header: 'Schedule of Implementation',
-        columns: [
-            columnHelper.accessor(
-                (row) => row.scheduleOfImplementation.startingDate,
-                {
-                    id: 'startingDate',
-                    header: 'Starting Date',
-                },
-            ),
-            columnHelper.accessor(
-                (row) => row.scheduleOfImplementation.completionDate,
-                {
-                    id: 'completionDate',
-                    header: 'Completion Date',
-                },
-            ),
-        ],
-    }),
-    columnHelper.accessor('expectedOutputs', {
-        header: 'Expected Outputs',
-    }),
-    columnHelper.accessor('fundingSource', {
-        header: 'Funding Source',
-    }),
-    columnHelper.group({
-        header: 'Amount',
-        columns: [
-            columnHelper.accessor((row) => row.amount.ps, {
-                id: 'ps',
-                header: 'Personal Services (PS)',
-                size: 100,
-            }),
-            columnHelper.accessor((row) => row.amount.mooe, {
-                id: 'mooe',
-                header: 'Maintenance and Other Operating Expenses (MOOE)',
-                size: 100,
-            }),
-            columnHelper.accessor((row) => row.amount.fe, {
-                id: 'fe',
-                header: 'Financial Expenses (FE)',
-                size: 100,
-            }),
-            columnHelper.accessor((row) => row.amount.co, {
-                id: 'co',
-                header: 'Capital Outlay (CO)',
-                size: 100,
-            }),
-            columnHelper.accessor((row) => row.amount.total, {
-                id: 'total',
-                header: 'Total',
-                size: 100,
-            }),
-        ],
-    }),
-    columnHelper.group({
-        header: 'Amount of Climate Change Expenditure',
-        columns: [
-            columnHelper.accessor(
-                (row) => row.amountOfCcExpenditure.ccAdaptation,
-                {
-                    id: 'ccAdaptation',
-                    header: 'Climate Change Adaption',
-                },
-            ),
-            columnHelper.accessor(
-                (row) => row.amountOfCcExpenditure.ccMitigation,
-                {
-                    id: 'ccMitigation',
-                    header: 'Climate Change Mitigation',
-                },
-            ),
-        ],
-    }),
-    columnHelper.accessor('ccTypologyCode', {
-        header: 'CC Typology Code',
-    }),
-    columnHelper.display({
-        id: 'action',
-        header: 'Action',
-        cell: ({ row }) => {
-            const idLength = row.id.split('.').length;
-            const isHidden = idLength === 3;
-
-            return (
-                <div className="flex gap-2">
-                    <AipDialog
-                        id={row.original.id}
-                        data={initialFormData}
-                        mode="add"
-                        hidden={isHidden}
-                    />
-                    <AipDialog data={row.original} mode="edit" />
-                    <AipAlertDialog data={row.original} />
-                </div>
-            );
-        },
-    }),
-];
-
 const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
@@ -185,17 +75,145 @@ const getCommonPinningStyles = (column: Column<Aip>): CSSProperties => {
     };
 };
 
-export default function Aip({ data, programs }: AipProp) {
-    console.log('aip-table');
-    // console.log(data);
-    // console.log(nestData(formatData(data)));
-    console.log(programs);
+export default function Aip({ collection, data, programs }: AipProp) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        {
+            title: 'AIP Collections',
+            href: '/aip-collections',
+        },
+        {
+            title: `AIP Summary Form ${collection.year}`,
+            href: '/aip-collections',
+        },
+    ];
 
     const tableData = useMemo(() => {
         return nestData(formatData(data));
     }, [data]);
 
-    const columns = useMemo(() => defaultColumns, []);
+    // const defaultColumns = ;
+
+    const columns = useMemo(
+        () => [
+            columnHelper.accessor('aipRefCode', {
+                header: 'AIP Ref. Code',
+            }),
+            columnHelper.accessor('ppaDescription', {
+                header: 'Program/Project/Activity Description',
+            }),
+            columnHelper.accessor('implementingOfficeDepartmentLocation', {
+                header: 'Implementing Office Department Location',
+            }),
+            columnHelper.group({
+                header: 'Schedule of Implementation',
+                columns: [
+                    columnHelper.accessor(
+                        (row) => row.scheduleOfImplementation.startingDate,
+                        {
+                            id: 'startingDate',
+                            header: 'Starting Date',
+                        },
+                    ),
+                    columnHelper.accessor(
+                        (row) => row.scheduleOfImplementation.completionDate,
+                        {
+                            id: 'completionDate',
+                            header: 'Completion Date',
+                        },
+                    ),
+                ],
+            }),
+            columnHelper.accessor('expectedOutputs', {
+                header: 'Expected Outputs',
+            }),
+            columnHelper.accessor('fundingSource', {
+                header: 'Funding Source',
+            }),
+            columnHelper.group({
+                header: 'Amount',
+                columns: [
+                    columnHelper.accessor((row) => row.amount.ps, {
+                        id: 'ps',
+                        header: 'Personal Services (PS)',
+                        size: 100,
+                    }),
+                    columnHelper.accessor((row) => row.amount.mooe, {
+                        id: 'mooe',
+                        header: 'Maintenance and Other Operating Expenses (MOOE)',
+                        size: 100,
+                    }),
+                    columnHelper.accessor((row) => row.amount.fe, {
+                        id: 'fe',
+                        header: 'Financial Expenses (FE)',
+                        size: 100,
+                    }),
+                    columnHelper.accessor((row) => row.amount.co, {
+                        id: 'co',
+                        header: 'Capital Outlay (CO)',
+                        size: 100,
+                    }),
+                    columnHelper.accessor((row) => row.amount.total, {
+                        id: 'total',
+                        header: 'Total',
+                        size: 100,
+                    }),
+                ],
+            }),
+            columnHelper.group({
+                header: 'Amount of Climate Change Expenditure',
+                columns: [
+                    columnHelper.accessor(
+                        (row) => row.amountOfCcExpenditure.ccAdaptation,
+                        {
+                            id: 'ccAdaptation',
+                            header: 'Climate Change Adaption',
+                        },
+                    ),
+                    columnHelper.accessor(
+                        (row) => row.amountOfCcExpenditure.ccMitigation,
+                        {
+                            id: 'ccMitigation',
+                            header: 'Climate Change Mitigation',
+                        },
+                    ),
+                ],
+            }),
+            columnHelper.accessor('ccTypologyCode', {
+                header: 'CC Typology Code',
+            }),
+            columnHelper.display({
+                id: 'action',
+                header: 'Action',
+                cell: ({ row }) => {
+                    const idLength = row.id.split('.').length;
+                    const isHidden = idLength === 3;
+
+                    const hasParent = row.original.parentId === null;
+
+                    console.log(row.original);
+
+                    return (
+                        <div className="flex gap-2">
+                            <AipDialog
+                                id={row.original.id}
+                                aipRefCode={row.original.aipRefCode}
+                                collectionId={collection.id}
+                                data={initialFormData}
+                                mode="add"
+                                hidden={isHidden}
+                            />
+                            <AipDialog data={row.original} mode="edit" />
+                            <AipAlertDialog
+                                data={row.original}
+                                hidden={hasParent}
+                            />
+                        </div>
+                    );
+                },
+            }),
+        ],
+        [],
+    );
 
     const table = useReactTable({
         columns,
@@ -214,30 +232,30 @@ export default function Aip({ data, programs }: AipProp) {
     });
 
     return (
-        <AppLayout>
-            <div>
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <div className="p-4">
                 {/*<ExportToPDFButton />*/}
                 {/*<ExportToExcelButton />*/}
                 {/*<AipDialog data={initialFormData} mode="create" />*/}
                 {/*<div className="flex">
-                <Select>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select a fruit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            {programs.map((program) => (
-                                <SelectItem key={program.id} value={program.id}>
-                                    {program.name}
-                                </SelectItem>
-                            ))}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-                <Button>Add</Button>
-            </div>*/}
+                    <Select>
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select a fruit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                {programs.map((program) => (
+                                    <SelectItem key={program.id} value={program.id}>
+                                        {program.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <Button>Add</Button>
+                </div>*/}
 
-                <ProgramForm programs={programs} />
+                {/*<ProgramForm programs={programs} />*/}
 
                 <Table>
                     <TableHeader>

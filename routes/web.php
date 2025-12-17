@@ -33,6 +33,7 @@ Route::get('home', function () {
 });
 
 Route::get('aip-collections', [AipCollectionController::class, 'index']);
+Route::get('aip-collections/{id}', [AipCollectionController::class, 'show']);
 Route::post('aip-collections', [AipCollectionController::class, 'store']);
 
 Route::get('ppa-list', [PpaListController::class, 'index']);

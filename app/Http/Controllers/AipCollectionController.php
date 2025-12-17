@@ -56,6 +56,7 @@ class AipCollectionController extends Controller
 
                 // Linking the Aip to the newly created AipCollection
                 'parentId' => null,
+                'aip_collection_id' => $newAipCollectionId,
 
                 // Setting default/placeholder values for the remaining required fields:
                 'implementingOfficeDepartmentLocation' => null,
@@ -78,11 +79,11 @@ class AipCollectionController extends Controller
             ];
         }
 
-        $count = 0;
+        // $count = 0;
         // 4. Perform the single mass insertion (Correct: Outside the loop)
         if (!empty($aipRecords)) {
             Aip::insert($aipRecords);
-            $count = count($aipRecords);
+            // $count = count($aipRecords);
         }
     }
 
@@ -91,7 +92,15 @@ class AipCollectionController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $aipCollection = AipCollection::findOrFail($id);
+        $data = Aip::where('aip_collection_id', $id)->get();
+        $programs = Program::all();
+
+        return Inertia::render('aip/aip-table', [
+            'collection' => $aipCollection,
+            'data' => $data,
+            'programs' => $programs,
+        ]);
     }
 
     /**

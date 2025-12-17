@@ -98,14 +98,40 @@ class AipController extends Controller
 
     public function storeChild(Request $request, $id)
     {
+        $collectionId = $request->input('collectionId');
+
+        // 1. Fetch the Parent to get its base aipRefCode
+        $parent = Aip::findOrFail($id);
+        $parentRefCode = $parent->aipRefCode;
+
+        // 2. Fetch all children to determine the next sequence
+        $children = Aip::where('parentId', $id)->get();
+
+        if ($children->isEmpty()) {
+            // If no children, start with -001
+            $newRefCode = $parentRefCode . '-001';
+        } else {
+            // If children exist, find the highest suffix
+            $maxSuffix = $children
+                ->map(function ($child) {
+                    // Get the last segment after the last hyphen
+                    $parts = explode('-', $child->aipRefCode);
+                    return (int) end($parts);
+                })
+                ->max();
+
+            // Increment the max suffix and pad with zeros (e.g., 2 becomes 003)
+            $newSuffix = str_pad($maxSuffix + 1, 3, '0', STR_PAD_LEFT);
+            $newRefCode = $parentRefCode . '-' . $newSuffix;
+        }
+
         $validatedData = $request->validate([
-            'aipRefCode' => 'required|string',
+            // Note: aipRefCode is no longer required from request as we generate it
             'ppaDescription' => 'required|string',
             'implementingOfficeDepartmentLocation' => 'required|string',
             'scheduleOfImplementation' => 'required|array',
-            'scheduleOfImplementation.startingDate' => 'required|date',
-            'scheduleOfImplementation.completionDate' =>
-                'required|date|after:scheduleOfImplementation.startingDate',
+            'scheduleOfImplementation.startingDate' => 'required|string',
+            'scheduleOfImplementation.completionDate' => 'required|string',
             'expectedOutputs' => 'required|string',
             'fundingSource' => 'required|string',
             'amount' => 'required|array',
@@ -121,7 +147,7 @@ class AipController extends Controller
         ]);
 
         $flattenedData = [
-            'aipRefCode' => $validatedData['aipRefCode'],
+            'aipRefCode' => $newRefCode, // Using the generated code
             'ppaDescription' => $validatedData['ppaDescription'],
             'implementingOfficeDepartmentLocation' =>
                 $validatedData['implementingOfficeDepartmentLocation'],
@@ -142,11 +168,10 @@ class AipController extends Controller
                 $validatedData['amountOfCcExpenditure']['ccMitigation'],
             'ccTypologyCode' => $validatedData['ccTypologyCode'],
             'parentId' => $id,
+            'aip_collection_id' => $collectionId,
         ];
 
-        $aip = Aip::create($flattenedData);
-
-        // return to_route('aip.index');
+        $newChild = Aip::create($flattenedData);
     }
 
     public function update(Request $request, $id)
@@ -158,9 +183,8 @@ class AipController extends Controller
             'ppaDescription' => 'required|string',
             'implementingOfficeDepartmentLocation' => 'required|string',
             'scheduleOfImplementation' => 'required|array',
-            'scheduleOfImplementation.startingDate' => 'required|date',
-            'scheduleOfImplementation.completionDate' =>
-                'required|date|after:scheduleOfImplementation.startingDate',
+            'scheduleOfImplementation.startingDate' => 'required|string',
+            'scheduleOfImplementation.completionDate' => 'required|string',
             'expectedOutputs' => 'required|string',
             'fundingSource' => 'required|string',
             'amount' => 'required|array',

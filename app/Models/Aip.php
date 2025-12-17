@@ -27,5 +27,6 @@ class Aip extends Model
         'ccMitigation',
         'ccTypologyCode',
         'parentId',
+        'aip_collection_id',
     ];
 }

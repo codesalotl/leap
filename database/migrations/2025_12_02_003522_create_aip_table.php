@@ -15,8 +15,8 @@ return new class extends Migration {
             $table->string('aipRefCode')->nullable();
             $table->string('ppaDescription')->nullable();
             $table->string('implementingOfficeDepartmentLocation')->nullable();
-            $table->timestamp('startingDate')->nullable();
-            $table->timestamp('completionDate')->nullable();
+            $table->string('startingDate')->nullable();
+            $table->string('completionDate')->nullable();
             $table->string('expectedOutputs')->nullable();
             $table->string('fundingSource')->nullable();
             $table->decimal('ps')->nullable();
@@ -27,6 +27,12 @@ return new class extends Migration {
             $table->string('ccAdaptation')->nullable();
             $table->string('ccMitigation')->nullable();
             $table->string('ccTypologyCode')->nullable();
+            $table
+                ->foreignId('aip_collection_id')
+                // ->after('id') // Optional: places it after the ID column
+                ->nullable() // Keep it nullable if existing rows don't have a collection yet
+                ->constrained('aip_collections');
+            // ->onDelete('cascade');
         });
     }
 
