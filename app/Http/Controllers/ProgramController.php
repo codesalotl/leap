@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Flight;
-use App\Http\Requests\StoreFlightRequest;
-use App\Http\Requests\UpdateFlightRequest;
+use Illuminate\Http\Request;
 
-class FlightController extends Controller
+class ProgramController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +25,7 @@ class FlightController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreFlightRequest $request)
+    public function store(Request $request)
     {
         //
     }
@@ -35,7 +33,7 @@ class FlightController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Flight $flight)
+    public function show(string $id)
     {
         //
     }
@@ -43,7 +41,7 @@ class FlightController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Flight $flight)
+    public function edit(string $id)
     {
         //
     }
@@ -51,7 +49,7 @@ class FlightController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateFlightRequest $request, Flight $flight)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -59,7 +57,7 @@ class FlightController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Flight $flight)
+    public function destroy(string $id)
     {
         //
     }

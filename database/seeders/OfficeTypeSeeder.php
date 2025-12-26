@@ -1,0 +1,28 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use App\Models\OfficeType;
+
+class OfficeTypeSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        OfficeType::truncate();
+
+        $officeTypes = [
+            ['office_type' => 'Mandatory'],
+            ['office_type' => 'Optional'],
+            ['office_type' => 'Others'],
+        ];
+
+        foreach ($officeTypes as $officeType) {
+            OfficeType::create($officeType);
+        }
+    }
+}

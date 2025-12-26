@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('aip_ref_code')->unique();
             $table->string('name');
             $table->boolean('is_active');
+            $table->timestamps();
         });
     }
 

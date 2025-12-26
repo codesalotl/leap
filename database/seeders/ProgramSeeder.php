@@ -20,7 +20,7 @@ class ProgramSeeder extends Seeder
         Project::truncate();
         Program::truncate();
 
-        Program::insert([
+        $programs = [
             [
                 'aip_ref_code' => '1000-1-10-001-006',
                 'name' => 'Manpower Services',
@@ -71,6 +71,10 @@ class ProgramSeeder extends Seeder
                 'name' => 'Operational Activities',
                 'is_active' => false,
             ],
-        ]);
+        ];
+
+        foreach ($programs as $program) {
+            Program::create($program);
+        }
     }
 }

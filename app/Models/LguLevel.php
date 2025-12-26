@@ -5,10 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Program extends Model
+class LguLevel extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProgramFactory> */
+    /** @use HasFactory<\Database\Factories\LguLevelFactory> */
     use HasFactory;
-
-    protected $fillable = ['is_active'];
 }

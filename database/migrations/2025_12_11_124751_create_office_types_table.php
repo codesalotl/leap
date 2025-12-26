@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('office_types', function (Blueprint $table) {
             $table->id();
             $table->string('office_type');
+            $table->timestamps();
         });
     }
 
