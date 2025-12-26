@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AipCollectionController;
 use App\Http\Controllers\PpaListController;
+use App\Http\Controllers\LguProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -38,5 +39,7 @@ Route::post('aip-collections', [AipCollectionController::class, 'store']);
 
 Route::get('ppa-list', [PpaListController::class, 'index']);
 Route::patch('ppa-list/{program}', [PpaListController::class, 'update']);
+
+Route::get('lgu-profile', [LguProfileController::class, 'index']);
 
 require __DIR__ . '/settings.php';

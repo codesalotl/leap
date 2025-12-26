@@ -1,7 +1,9 @@
 import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -10,7 +12,11 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid } from 'lucide-react';
+import {
+    // BookOpen,
+    // Folder,
+    LayoutGrid,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +33,11 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Manage PPA',
         href: '/ppa-list',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'LGU Profile',
+        href: '/lgu-profile',
         icon: LayoutGrid,
     },
 ];
@@ -63,10 +74,10 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            {/*<SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+            <SidebarFooter>
+                {/*<NavFooter items={footerNavItems} className="mt-auto" />*/}
                 <NavUser />
-            </SidebarFooter>*/}
+            </SidebarFooter>
         </Sidebar>
     );
 }
