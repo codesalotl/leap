@@ -13,9 +13,7 @@ return new class extends Migration {
         Schema::create('sectors', function (Blueprint $table) {
             $table->id();
             $table->string('code');
-            $table->string('office');
-            $table->foreignId('lgu_level_id')->constrained();
-            $table->foreignId('office_type_id')->constrained();
+            $table->string('sector');
             $table->timestamps();
         });
     }
