@@ -14,10 +14,18 @@ import AipForm from '@/pages/aip/aip-form';
 import type { AipDialogProp } from '@/pages/aip/types';
 import { BetweenHorizontalEnd, SquarePen } from 'lucide-react';
 
-export default function AipDialog({ id, data, mode, hidden }: AipDialogProp) {
+export default function AipDialog({
+    id,
+    aipRefCode,
+    collectionId,
+    data,
+    mode,
+    hidden,
+}: AipDialogProp) {
     // const [open, setOpen] = useState(false);
 
-    console.log('aip-dialog');
+    // console.log('aip-dialog');
+    // console.log('aip-dialog');
 
     return (
         <Dialog
@@ -49,7 +57,13 @@ export default function AipDialog({ id, data, mode, hidden }: AipDialogProp) {
 
                 {/*<ScrollArea className="h-72 w-48 rounded-md border">*/}
                 <ScrollArea className="h-100">
-                    <AipForm id={id} data={data} mode={mode} />
+                    <AipForm
+                        id={id}
+                        aipRefCode={aipRefCode}
+                        collectionId={collectionId}
+                        data={data}
+                        mode={mode}
+                    />
                 </ScrollArea>
 
                 <DialogFooter>

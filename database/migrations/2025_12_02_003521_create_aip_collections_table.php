@@ -10,12 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('sectors', function (Blueprint $table) {
+        Schema::create('aip_collections', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
-            $table->string('office');
-            $table->foreignId('lgu_level_id')->constrained();
-            $table->foreignId('office_type_id')->constrained();
+            $table->year('year');
             $table->timestamps();
         });
     }
@@ -25,6 +22,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('sectors');
+        Schema::dropIfExists('aip_collections');
     }
 };

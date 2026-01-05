@@ -29,14 +29,16 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             AipSummaryFormSeeder::class,
-            LguLevelsSeeder::class,
-            OfficeTypesSeeder::class,
+            LguLevelSeeder::class,
+            OfficeTypeSeeder::class,
             OfficeSeeder::class,
             SectorSeeder::class,
             ProgramSeeder::class,
             ProjectSeeder::class,
             ActivitySeeder::class,
             ChartOfAccountSeeder::class,
+            AipCollectionsSeeder::class,
+            AttributionSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

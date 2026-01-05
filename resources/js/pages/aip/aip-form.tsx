@@ -78,7 +78,19 @@ function calculateTotal(
     return totalAmount.toString();
 }
 
-export default function AipForm({ id, data, mode }: AipFormProp) {
+export default function AipForm({
+    id,
+    aipRefCode,
+    collectionId,
+    data,
+    mode,
+}: AipFormProp) {
+    // console.log(collectionId);
+    // console.log(mode);
+    console.log(id);
+    console.log(data);
+    console.log(aipRefCode);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: data,
@@ -108,6 +120,14 @@ export default function AipForm({ id, data, mode }: AipFormProp) {
         let inertiaMethod: 'post' | 'patch' = 'post';
         let endpoint: string = '';
 
+        const payload = {
+            ...values,
+            collectionId,
+            id,
+        };
+
+        console.log(payload);
+
         switch (mode) {
             case 'create':
                 inertiaMethod = 'post';
@@ -125,9 +145,9 @@ export default function AipForm({ id, data, mode }: AipFormProp) {
                 return;
         }
 
-        router[inertiaMethod](`/${endpoint}`, values, {
+        router[inertiaMethod](`/${endpoint}`, payload, {
             onSuccess: () => {
-                form.reset(values);
+                form.reset();
             },
             onError: (errors) => {
                 console.error('Submission failed with errors:', errors);

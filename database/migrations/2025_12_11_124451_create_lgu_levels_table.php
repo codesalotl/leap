@@ -12,7 +12,9 @@ return new class extends Migration {
     {
         Schema::create('lgu_levels', function (Blueprint $table) {
             $table->id();
+            $table->string('code', 1)->unique();
             $table->string('lgu_level');
+            $table->timestamps();
         });
     }
 

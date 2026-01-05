@@ -12,8 +12,10 @@ return new class extends Migration {
     {
         Schema::create('programs', function (Blueprint $table) {
             $table->id();
-            $table->string('aip-ref-code');
+            $table->string('aip_ref_code')->unique();
             $table->string('name');
+            $table->boolean('is_active');
+            $table->timestamps();
         });
     }
 

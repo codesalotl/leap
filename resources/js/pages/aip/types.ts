@@ -22,6 +22,7 @@ export type Aip = {
     };
     ccTypologyCode: string;
     children?: Aip[];
+    parentId: number | null;
     created_at: string;
     updated_at: string;
 };
@@ -54,10 +55,12 @@ export type AipProp = {
 
 export type AipAlertDialogProp = {
     data: Aip;
+    hidden: boolean;
 };
 
 export type AipDialogProp = {
-    id: number;
+    id?: number;
+    collectionId?: number;
     data: Aip;
     mode: 'create' | 'add' | 'edit';
     hidden?: boolean;
