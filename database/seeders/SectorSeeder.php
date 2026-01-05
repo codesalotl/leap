@@ -13,11 +13,17 @@ class SectorSeeder extends Seeder
      */
     public function run(): void
     {
-        Sector::insert([
+        Sector::truncate();
+
+        $sectors = [
             ['code' => '1000', 'sector' => 'General Public Services'],
             ['code' => '3000', 'sector' => 'Social Services'],
             ['code' => '8000', 'sector' => 'Economic Services'],
             ['code' => '9000', 'sector' => 'Other Services'],
-        ]);
+        ];
+
+        foreach ($sectors as $sector) {
+            Sector::create($sector);
+        }
     }
 }

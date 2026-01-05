@@ -6,17 +6,18 @@ use Laravel\Fortify\Features;
 use App\Http\Controllers\AipController;
 use App\Http\Controllers\AipRefCodeController;
 
-Route::get('/', function () {
-    return Inertia::render('welcome', [
+Route::get(
+    '/',
+    fn() => Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
-    ]);
-})->name('home');
+    ]),
+)->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-});
+Route::middleware(['auth', 'verified'])->group(
+    fn() => Route::get('dashboard', fn() => Inertia::render('dashboard'))->name(
+        'dashboard',
+    ),
+);
 
 Route::get('aip', [AipController::class, 'index']);
 Route::post('aip/{id}', [AipController::class, 'storeChild']);

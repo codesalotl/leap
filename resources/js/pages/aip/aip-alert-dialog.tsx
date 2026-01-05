@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { AipAlertDialogProp } from '@/pages/aip/types';
 import { Trash } from 'lucide-react';
-// import axios from "axios";
+// import axios from 'axios';
 import { router } from '@inertiajs/react';
 
 export default function AipAlertDialog({ data }: AipAlertDialogProp) {

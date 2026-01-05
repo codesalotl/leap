@@ -31,11 +31,12 @@ class DatabaseSeeder extends Seeder
             AipSummaryFormSeeder::class,
             LguLevelsSeeder::class,
             OfficeTypesSeeder::class,
-            OfficesSeeder::class,
+            OfficeSeeder::class,
             SectorSeeder::class,
             ProgramSeeder::class,
             ProjectSeeder::class,
             ActivitySeeder::class,
+            ChartOfAccountSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
