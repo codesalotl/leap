@@ -37,6 +37,9 @@ class DatabaseSeeder extends Seeder
 
             SignatorySeeder::class,
 
+            ExpenseClassSeeder::class,
+            AccountSeeder::class,
+
             // ---
 
             AipSummaryFormSeeder::class,
