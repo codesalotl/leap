@@ -37,8 +37,9 @@ class DatabaseSeeder extends Seeder
 
             SignatorySeeder::class,
 
-            ExpenseClassSeeder::class,
-            AccountSeeder::class,
+            AllotmentClassSeeder::class,
+            AccountGroupSeeder::class,
+            ChartOfAccountSeeder::class,
 
             // ---
 
@@ -48,7 +49,6 @@ class DatabaseSeeder extends Seeder
             ProjectSeeder::class,
             ActivitySeeder::class,
 
-            ChartOfAccountSeeder::class,
             AipCollectionsSeeder::class,
             AttributionSeeder::class,
             AipPpaSeeder::class,

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ExpenseClass;
-use App\Http\Requests\StoreExpenseClassRequest;
-use App\Http\Requests\UpdateExpenseClassRequest;
+use App\Models\AllotmentClass;
+use App\Http\Requests\StoreAllotmentClassRequest;
+use App\Http\Requests\UpdateAllotmentClassRequest;
 
-class ExpenseClassController extends Controller
+class AllotmentClassController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class ExpenseClassController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreExpenseClassRequest $request)
+    public function store(StoreAllotmentClassRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class ExpenseClassController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(ExpenseClass $expenseClass)
+    public function show(AllotmentClass $allotmentClass)
     {
         //
     }
@@ -43,7 +43,7 @@ class ExpenseClassController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ExpenseClass $expenseClass)
+    public function edit(AllotmentClass $allotmentClass)
     {
         //
     }
@@ -51,7 +51,7 @@ class ExpenseClassController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateExpenseClassRequest $request, ExpenseClass $expenseClass)
+    public function update(UpdateAllotmentClassRequest $request, AllotmentClass $allotmentClass)
     {
         //
     }
@@ -59,7 +59,7 @@ class ExpenseClassController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(ExpenseClass $expenseClass)
+    public function destroy(AllotmentClass $allotmentClass)
     {
         //
     }

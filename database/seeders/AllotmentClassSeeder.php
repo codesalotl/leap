@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\ExpenseClass;
+use App\Models\AllotmentClass;
 
-class ExpenseClassSeeder extends Seeder
+class AllotmentClassSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -21,10 +21,15 @@ class ExpenseClassSeeder extends Seeder
             ],
             ['code' => 'FE', 'name' => 'Financial Expenses'],
             ['code' => 'CO', 'name' => 'Capital Outlay'],
+            ['code' => 'INC', 'name' => 'Income Sources'],
         ];
 
         foreach ($classes as $class) {
-            ExpenseClass::create($class);
+            // Using updateOrCreate prevents duplicate errors if you run the seeder twice
+            AllotmentClass::updateOrCreate(
+                ['code' => $class['code']], // Unique identifier
+                ['name' => $class['name']], // Attributes to update/create
+            );
         }
     }
 }

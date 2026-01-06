@@ -10,10 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('expense_classes', function (Blueprint $table) {
+        Schema::create('account_groups', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 10)->unique(); // PS, MOOE, CO, FE
+            $table->string('uacs_digit', 1)->unique();
             $table->string('name');
+            $table->enum('normal_balance', ['debit', 'credit']);
             $table->timestamps();
         });
     }
@@ -23,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('expense_classes');
+        Schema::dropIfExists('account_groups');
     }
 };
