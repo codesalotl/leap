@@ -13,6 +13,8 @@ class ChartOfAccountSeeder extends Seeder
      */
     public function run(): void
     {
+        ChartOfAccount::truncate();
+
         $accounts = [
             // --- INCOME (Group 4) ---
             [

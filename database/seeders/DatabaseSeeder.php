@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             ChartOfAccountSeeder::class,
             AipCollectionsSeeder::class,
             AttributionSeeder::class,
+            AipPpaSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

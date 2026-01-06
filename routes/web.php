@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\AipController;
 use App\Http\Controllers\AipRefCodeController;
+use App\Http\Controllers\AipPpaController;
 
 Route::get(
     '/',
@@ -42,5 +43,17 @@ Route::get('ppa-list', [PpaListController::class, 'index']);
 Route::patch('ppa-list/{program}', [PpaListController::class, 'update']);
 
 Route::get('lgu-profile', [LguProfileController::class, 'index']);
+
+// aip ppa - master list for ppa
+Route::get('aip-ppa', [AipPpaController::class, 'index']);
+Route::post('aip-ppa', [AipPpaController::class, 'store'])->name(
+    'aip-ppa.store',
+);
+Route::patch('/aip-ppa/{aip_ppa}', [AipPpaController::class, 'update'])->name(
+    'aip-ppa.update',
+);
+Route::delete('/aip-ppa/{aipPpa}', [AipPpaController::class, 'destroy'])->name(
+    'aip-ppa.destroy',
+);
 
 require __DIR__ . '/settings.php';
