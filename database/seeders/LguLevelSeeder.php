@@ -16,9 +16,9 @@ class LguLevelSeeder extends Seeder
         LguLevel::truncate();
 
         $levels = [
-            ['code' => '1', 'lgu_level' => 'Province'],
-            ['code' => '2', 'lgu_level' => 'City'],
-            ['code' => '3', 'lgu_level' => 'Municipality'],
+            ['code' => '1', 'level' => 'Province'],
+            ['code' => '2', 'level' => 'City'],
+            ['code' => '3', 'level' => 'Municipality'],
         ];
 
         foreach ($levels as $level) {

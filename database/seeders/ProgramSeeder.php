@@ -8,6 +8,7 @@ use App\Models\Program;
 use App\Models\Project;
 use App\Models\Activity;
 use Pest\Mutate\Mutators\Logical\FalseToTrue;
+use Illuminate\Support\Facades\Schema;
 
 class ProgramSeeder extends Seeder
 {
@@ -16,9 +17,14 @@ class ProgramSeeder extends Seeder
      */
     public function run(): void
     {
-        Activity::truncate();
-        Project::truncate();
-        Program::truncate();
+        Schema::disableForeignKeyConstraints();
+
+        // CHANGE THESE THREE LINES:
+        Activity::query()->delete();
+        Project::query()->delete();
+        Program::query()->delete();
+
+        Schema::enableForeignKeyConstraints();
 
         $programs = [
             [

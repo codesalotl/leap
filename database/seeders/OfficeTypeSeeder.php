@@ -16,9 +16,9 @@ class OfficeTypeSeeder extends Seeder
         OfficeType::truncate();
 
         $officeTypes = [
-            ['office_type' => 'Mandatory'],
-            ['office_type' => 'Optional'],
-            ['office_type' => 'Others'],
+            ['code' => '01', 'type' => 'Mandatory'],
+            ['code' => '02', 'type' => 'Optional'],
+            ['code' => '03', 'type' => 'Others'],
         ];
 
         foreach ($officeTypes as $officeType) {

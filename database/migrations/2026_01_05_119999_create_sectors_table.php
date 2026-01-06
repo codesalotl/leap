@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('lgu_levels', function (Blueprint $table) {
+        Schema::create('sectors', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 1)->unique();
-            $table->string('lgu_level');
+            $table->string('code', 4)->unique();
+            $table->string('sector');
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('lgu_levels');
+        Schema::dropIfExists('sectors');
     }
 };

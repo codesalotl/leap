@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\AipCollection;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class AipCollectionsSeeder extends Seeder
 {
@@ -14,7 +15,14 @@ class AipCollectionsSeeder extends Seeder
      */
     public function run(): void
     {
-        AipCollection::truncate();
+        Schema::disableForeignKeyConstraints();
+
+        // Use delete() instead of truncate()
+        // If you have an Aip model, clear it first since it's the child
+        // \App\Models\Aip::query()->delete();
+        \App\Models\AipCollection::query()->delete();
+
+        Schema::enableForeignKeyConstraints();
 
         $timestamp = Carbon::now();
 

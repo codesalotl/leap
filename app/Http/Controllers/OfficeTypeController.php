@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\OfficeType;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreOfficeTypeRequest;
+use App\Http\Requests\UpdateOfficeTypeRequest;
 
 class OfficeTypeController extends Controller
 {
@@ -26,7 +27,7 @@ class OfficeTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreOfficeTypeRequest $request)
     {
         //
     }
@@ -50,7 +51,7 @@ class OfficeTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, OfficeType $officeType)
+    public function update(UpdateOfficeTypeRequest $request, OfficeType $officeType)
     {
         //
     }

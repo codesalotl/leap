@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Program;
 use App\Models\Project;
+use Illuminate\Support\Facades\Schema;
 
 class ProjectSeeder extends Seeder
 {
@@ -14,7 +15,22 @@ class ProjectSeeder extends Seeder
      */
     public function run(): void
     {
+        // 1. Disable constraints so we can wipe the table
+        Schema::disableForeignKeyConstraints();
+
+        // 2. USE DELETE, NOT TRUNCATE.
+        // MariaDB will not allow Truncate if Activities exist.
+        Project::query()->delete();
+
+        Schema::enableForeignKeyConstraints();
+
         $pIds = Program::pluck('id')->toArray();
+
+        // Check to prevent "Undefined offset" if ProgramSeeder is empty
+        if (count($pIds) < 5) {
+            $this->command->warn('Not enough programs found to seed projects.');
+            return;
+        }
 
         Project::insert([
             ['program_id' => $pIds[0], 'name' => 'Network Upgrade Phase I'],

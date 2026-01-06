@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::create('office_types', function (Blueprint $table) {
             $table->id();
-            $table->string('office_type');
+            $table->string('code', 2)->unique();
+            $table->string('type');
             $table->timestamps();
         });
     }
