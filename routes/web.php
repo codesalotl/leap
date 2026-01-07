@@ -9,6 +9,7 @@ use Laravel\Fortify\Features;
 use App\Http\Controllers\AipController;
 use App\Http\Controllers\AipRefCodeController;
 use App\Http\Controllers\AipPpaController;
+use App\Http\Controllers\ChartOfAccountController;
 
 Route::get(
     '/',
@@ -55,5 +56,7 @@ Route::patch('/aip-ppa/{aip_ppa}', [AipPpaController::class, 'update'])->name(
 Route::delete('/aip-ppa/{aipPpa}', [AipPpaController::class, 'destroy'])->name(
     'aip-ppa.destroy',
 );
+
+Route::get('chart-of-account', [ChartOfAccountController::class, 'index']);
 
 require __DIR__ . '/settings.php';

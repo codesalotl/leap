@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ChartOfAccount;
 use App\Http\Requests\StoreChartOfAccountRequest;
 use App\Http\Requests\UpdateChartOfAccountRequest;
+use Inertia\Inertia;
 
 class ChartOfAccountController extends Controller
 {
@@ -13,7 +14,7 @@ class ChartOfAccountController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('chart-of-account/index');
     }
 
     /**
@@ -51,8 +52,10 @@ class ChartOfAccountController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateChartOfAccountRequest $request, ChartOfAccount $chartOfAccount)
-    {
+    public function update(
+        UpdateChartOfAccountRequest $request,
+        ChartOfAccount $chartOfAccount,
+    ) {
         //
     }
 
