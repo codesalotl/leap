@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Office;
 use App\Http\Requests\StoreOfficeRequest;
 use App\Http\Requests\UpdateOfficeRequest;
+use Inertia\Inertia;
 
 class OfficeController extends Controller
 {
@@ -13,7 +14,11 @@ class OfficeController extends Controller
      */
     public function index()
     {
-        //
+        $offices = Office::all();
+
+        return Inertia::render('offices/index', [
+            'offices' => $offices,
+        ]);
     }
 
     /**

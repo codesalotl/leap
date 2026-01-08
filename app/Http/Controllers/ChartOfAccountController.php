@@ -14,7 +14,11 @@ class ChartOfAccountController extends Controller
      */
     public function index()
     {
-        return Inertia::render('chart-of-account/index');
+        $chartOfAccounts = ChartOfAccount::all();
+
+        return Inertia::render('chart-of-accounts/index', [
+            'chartOfAccounts' => $chartOfAccounts,
+        ]);
     }
 
     /**

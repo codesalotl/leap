@@ -40,6 +40,21 @@ const mainNavItems: NavItem[] = [
         href: '/ppa-list',
         icon: LayoutGrid,
     },
+    {
+        title: 'Chart of Accounts',
+        href: '/chart-of-accounts',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Sectors',
+        href: '/sectors',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Offices',
+        href: '/offices',
+        icon: LayoutGrid,
+    },
     // {
     //     title: 'LGU Profile',
     //     href: '/lgu-profile',

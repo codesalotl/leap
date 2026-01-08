@@ -10,6 +10,8 @@ use App\Http\Controllers\AipController;
 use App\Http\Controllers\AipRefCodeController;
 use App\Http\Controllers\AipPpaController;
 use App\Http\Controllers\ChartOfAccountController;
+use App\Http\Controllers\SectorController;
+use App\Http\Controllers\OfficeController;
 
 Route::get(
     '/',
@@ -57,6 +59,10 @@ Route::delete('/aip-ppa/{aipPpa}', [AipPpaController::class, 'destroy'])->name(
     'aip-ppa.destroy',
 );
 
-Route::get('chart-of-account', [ChartOfAccountController::class, 'index']);
+Route::get('chart-of-accounts', [ChartOfAccountController::class, 'index']);
+
+Route::get('sectors', [SectorController::class, 'index']);
+
+Route::get('offices', [OfficeController::class, 'index']);
 
 require __DIR__ . '/settings.php';

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sector;
 use App\Http\Requests\StoreSectorRequest;
 use App\Http\Requests\UpdateSectorRequest;
+use Inertia\Inertia;
 
 class SectorController extends Controller
 {
@@ -13,7 +14,11 @@ class SectorController extends Controller
      */
     public function index()
     {
-        //
+        $sectors = Sector::all();
+
+        return Inertia::render('sectors/index', [
+            'sectors' => $sectors,
+        ]);
     }
 
     /**
