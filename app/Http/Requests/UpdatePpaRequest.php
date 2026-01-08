@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreAipPpaRequest extends FormRequest
+class UpdatePpaRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,14 +22,10 @@ class StoreAipPpaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // REMOVE reference_code from here because the backend generates it now!
-
+            // REMOVE reference_code because the system manages it.
+            // We only allow updating the description and the office_id (though office is usually locked)
             'description' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:aip_ppas,id',
-
-            // ADD office_id validation
-            // It is required if there is no parent_id (Top-level Program)
-            'office_id' => 'required_without:parent_id|exists:offices,id',
+            'office_id' => 'required|exists:offices,id',
         ];
     }
 }

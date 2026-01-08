@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AipPpa;
+use App\Models\Ppa;
 use App\Models\Office;
-use App\Http\Requests\StoreAipPpaRequest;
-use App\Http\Requests\UpdateAipPpaRequest;
+use App\Http\Requests\StorePpaRequest;
+use App\Http\Requests\UpdatePpaRequest;
 use Inertia\Inertia;
 
-class AipPpaController extends Controller
+class PpaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,7 +17,7 @@ class AipPpaController extends Controller
     {
         // 1. Get only Programs (root nodes)
         // 2. Eager load descendants (Projects and Activities)
-        $aipPpa = AipPpa::whereNull('parent_id')->with('descendants')->get();
+        $ppa = Ppa::whereNull('parent_id')->with('descendants')->get();
 
         // 2. Get all Offices (The metadata for the Reference Code)
         // We fetch these so the user can select an office when creating a Program
@@ -25,7 +25,7 @@ class AipPpaController extends Controller
 
         // return response()->json($hierarchy);
         return Inertia::render('aip-ppa/aip-ppa', [
-            'aipPpa' => $aipPpa,
+            'aipPpa' => $ppa,
             'offices' => $offices,
         ]);
     }
@@ -41,7 +41,7 @@ class AipPpaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreAipPpaRequest $request)
+    public function store(StorePpaRequest $request)
     {
         // If you are using StoreAipPpaRequest, validation happens automatically.
         // Ensure the rules() in that file match these keys.
@@ -49,7 +49,7 @@ class AipPpaController extends Controller
 
         // 1. Get Office and Parent info
         $parent = $request->parent_id
-            ? AipPpa::with('office')->find($request->parent_id)
+            ? Ppa::with('office')->find($request->parent_id)
             : null;
 
         // Use the office_id from request if root, otherwise inherit from parent
@@ -68,7 +68,7 @@ class AipPpaController extends Controller
             : 'Program';
 
         $lastSequence =
-            AipPpa::where('parent_id', $request->parent_id)
+            Ppa::where('parent_id', $request->parent_id)
                 ->where('office_id', $office->id)
                 ->max('sequence_number') ?? 0;
         $newSequence = $lastSequence + 1;
@@ -105,7 +105,7 @@ class AipPpaController extends Controller
             $reference_code = sprintf('%s-%03d', $prefix, $newSequence);
         }
 
-        AipPpa::create([
+        Ppa::create([
             'type' => $type,
             'description' => $validated['description'],
             'reference_code' => $reference_code,
@@ -118,7 +118,7 @@ class AipPpaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(AipPpa $aipPpa)
+    public function show(Ppa $ppa)
     {
         //
     }
@@ -126,7 +126,7 @@ class AipPpaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(AipPpa $aipPpa)
+    public function edit(Ppa $ppa)
     {
         //
     }
@@ -134,22 +134,22 @@ class AipPpaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAipPpaRequest $request, AipPpa $aipPpa)
+    public function update(UpdatePpaRequest $request, Ppa $ppa)
     {
         // 1. Get the validated data (only description and office_id)
         $validated = $request->validated();
 
         // 2. Update the model instance
-        $aipPpa->update($validated);
+        $ppa->update($validated);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(AipPpa $aipPpa)
+    public function destroy(Ppa $ppa)
     {
-        $type = $aipPpa->type;
-        $aipPpa->delete();
+        $type = $ppa->type;
+        $ppa->delete();
 
         // return Redirect::back()->with('success', "$type deleted successfully.");
     }

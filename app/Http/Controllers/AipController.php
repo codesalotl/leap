@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Models\Aip;
 use App\Models\Program;
+use Inertia\Inertia;
+use App\Http\Requests\StoreAipRequest;
+use App\Http\Requests\UpdateAipRequest;
 
 class AipController extends Controller
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         $data = Aip::all();
@@ -19,57 +23,18 @@ class AipController extends Controller
         ]);
     }
 
-    // public function store(Request $request)
-    // {
-    //     $validatedData = $request->validate([
-    //         'aipRefCode' => 'required|string',
-    //         'ppaDescription' => 'required|string',
-    //         'implementingOfficeDepartmentLocation' => 'required|string',
-    //         'scheduleOfImplementation' => 'required|array',
-    //         'scheduleOfImplementation.startingDate' => 'required|date',
-    //         'scheduleOfImplementation.completionDate' =>
-    //             'required|date|after:scheduleOfImplementation.startingDate',
-    //         'expectedOutputs' => 'required|string',
-    //         'fundingSource' => 'required|string',
-    //         'amount' => 'required|array',
-    //         'amount.ps' => 'required|numeric|min:0',
-    //         'amount.mooe' => 'required|numeric|min:0',
-    //         'amount.fe' => 'required|numeric|min:0',
-    //         'amount.co' => 'required|numeric|min:0',
-    //         'amount.total' => 'required|numeric|min:0',
-    //         'amountOfCcExpenditure' => 'required|array',
-    //         'amountOfCcExpenditure.ccAdaptation' => 'required|numeric|min:0',
-    //         'amountOfCcExpenditure.ccMitigation' => 'required|numeric|min:0',
-    //         'ccTypologyCode' => 'required|string',
-    //     ]);
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        //
+    }
 
-    //     $flattenedData = [
-    //         'aipRefCode' => $validatedData['aipRefCode'],
-    //         'ppaDescription' => $validatedData['ppaDescription'],
-    //         'implementingOfficeDepartmentLocation' =>
-    //             $validatedData['implementingOfficeDepartmentLocation'],
-    //         'startingDate' =>
-    //             $validatedData['scheduleOfImplementation']['startingDate'],
-    //         'completionDate' =>
-    //             $validatedData['scheduleOfImplementation']['completionDate'],
-    //         'expectedOutputs' => $validatedData['expectedOutputs'],
-    //         'fundingSource' => $validatedData['fundingSource'],
-    //         'ps' => $validatedData['amount']['ps'],
-    //         'mooe' => $validatedData['amount']['mooe'],
-    //         'fe' => $validatedData['amount']['fe'],
-    //         'co' => $validatedData['amount']['co'],
-    //         'total' => $validatedData['amount']['total'],
-    //         'ccAdaptation' =>
-    //             $validatedData['amountOfCcExpenditure']['ccAdaptation'],
-    //         'ccMitigation' =>
-    //             $validatedData['amountOfCcExpenditure']['ccMitigation'],
-    //         'ccTypologyCode' => $validatedData['ccTypologyCode'],
-    //     ];
-
-    //     $aip = Aip::create($flattenedData);
-    // }
-
-    public function store(Request $request)
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreAipRequest $request)
     {
         $id = $request->input('programId');
 
@@ -174,9 +139,28 @@ class AipController extends Controller
         $newChild = Aip::create($flattenedData);
     }
 
-    public function update(Request $request, $id)
+    /**
+     * Display the specified resource.
+     */
+    public function show(Aip $aip)
     {
-        $aip = Aip::findOrFail($id);
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Aip $aip)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateAipRequest $request, Aip $aip)
+    {
+        $data = Aip::findOrFail($aip);
 
         $validatedData = $request->validate([
             'aipRefCode' => 'required|string',
@@ -222,14 +206,17 @@ class AipController extends Controller
             'ccTypologyCode' => $validatedData['ccTypologyCode'],
         ];
 
-        $aip->update($flattenedData);
+        $data->update($flattenedData);
 
-        // return redirect()->back();
+        // return redirect()->back()
     }
 
-    public function destroy($id)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Aip $aip)
     {
-        $aip = Aip::findOrFail($id);
-        $aip->delete();
+        $data = Aip::findOrFail($aip);
+        $data->delete();
     }
 }

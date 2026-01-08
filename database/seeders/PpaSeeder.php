@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\AipPpa;
+use App\Models\Ppa;
 
-class AipPpaSeeder extends Seeder
+class PpaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -14,7 +14,7 @@ class AipPpaSeeder extends Seeder
     public function run(): void
     {
         // Wipe the table clean
-        AipPpa::truncate();
+        Ppa::truncate();
 
         // Config variables
         $sector = '1000';
@@ -30,7 +30,7 @@ class AipPpaSeeder extends Seeder
         for ($i = 1; $i <= 5; $i++) {
             $progInc = str_pad($i, 3, '0', STR_PAD_LEFT);
 
-            $program = AipPpa::create([
+            $program = Ppa::create([
                 'type' => 'Program',
                 'reference_code' => "{$prefix}-{$progInc}-000-000",
                 'description' => "Main Program $i",
@@ -44,7 +44,7 @@ class AipPpaSeeder extends Seeder
             for ($j = 1; $j <= $projectLimit; $j++) {
                 $projInc = str_pad($j, 3, '0', STR_PAD_LEFT);
 
-                $project = AipPpa::create([
+                $project = Ppa::create([
                     'type' => 'Project',
                     'reference_code' => "{$prefix}-{$progInc}-{$projInc}-000",
                     'description' => "Project $j under Program $i",
@@ -60,7 +60,7 @@ class AipPpaSeeder extends Seeder
                         $activityCount++;
                         $actInc = str_pad($k, 3, '0', STR_PAD_LEFT);
 
-                        AipPpa::create([
+                        Ppa::create([
                             'type' => 'Activity',
                             'reference_code' => "{$prefix}-{$progInc}-{$projInc}-{$actInc}",
                             'description' => "Activity $activityCount for Project $j",

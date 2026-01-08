@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('aip_ppas', function (Blueprint $table) {
+        Schema::create('ppas', function (Blueprint $table) {
             $table->id();
             $table->string('type');
             $table->string('reference_code');
@@ -29,6 +29,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('aip_ppas');
+        Schema::dropIfExists('ppas');
     }
 };

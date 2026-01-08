@@ -8,7 +8,7 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers\AipController;
 use App\Http\Controllers\AipRefCodeController;
-use App\Http\Controllers\AipPpaController;
+use App\Http\Controllers\PpaController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\OfficeController;
@@ -48,14 +48,12 @@ Route::patch('ppa-list/{program}', [PpaListController::class, 'update']);
 Route::get('lgu-profile', [LguProfileController::class, 'index']);
 
 // aip ppa - master list for ppa
-Route::get('aip-ppa', [AipPpaController::class, 'index']);
-Route::post('aip-ppa', [AipPpaController::class, 'store'])->name(
-    'aip-ppa.store',
-);
-Route::patch('/aip-ppa/{aip_ppa}', [AipPpaController::class, 'update'])->name(
+Route::get('aip-ppa', [PpaController::class, 'index']);
+Route::post('aip-ppa', [PpaController::class, 'store'])->name('aip-ppa.store');
+Route::patch('/aip-ppa/{aip_ppa}', [PpaController::class, 'update'])->name(
     'aip-ppa.update',
 );
-Route::delete('/aip-ppa/{aipPpa}', [AipPpaController::class, 'destroy'])->name(
+Route::delete('/aip-ppa/{aipPpa}', [PpaController::class, 'destroy'])->name(
     'aip-ppa.destroy',
 );
 

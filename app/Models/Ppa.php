@@ -5,9 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AipPpa extends Model
+class Ppa extends Model
 {
-    /** @use HasFactory<\Database\Factories\AipPpaFactory> */
+    /** @use HasFactory<\Database\Factories\PpaFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -27,7 +27,7 @@ class AipPpa extends Model
 
     public function children()
     {
-        return $this->hasMany(AipPpa::class, 'parent_id');
+        return $this->hasMany(Ppa::class, 'parent_id');
     }
 
     public function descendants()

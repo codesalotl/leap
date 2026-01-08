@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('aip', function (Blueprint $table) {
+        Schema::create('aips', function (Blueprint $table) {
             $table->id();
             $table->string('aipRefCode')->nullable();
             $table->string('ppaDescription')->nullable();
@@ -33,6 +33,12 @@ return new class extends Migration {
                 ->nullable() // Keep it nullable if existing rows don't have a collection yet
                 ->constrained('aip_collections');
             // ->onDelete('cascade');
+            $table
+                ->foreignId('parentId')
+                ->nullable()
+                ->constrained('aips')
+                ->onDelete('cascade');
+            $table->timestamps();
         });
     }
 
@@ -41,6 +47,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('aip');
+        Schema::dropIfExists('aips');
     }
 };

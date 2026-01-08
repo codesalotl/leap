@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\AipPpa;
+use App\Models\Ppa;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class AipPpaPolicy
+class PpaPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -19,7 +19,7 @@ class AipPpaPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, AipPpa $aipPpa): bool
+    public function view(User $user, Ppa $ppa): bool
     {
         return false;
     }
@@ -35,7 +35,7 @@ class AipPpaPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, AipPpa $aipPpa): bool
+    public function update(User $user, Ppa $ppa): bool
     {
         return false;
     }
@@ -43,7 +43,7 @@ class AipPpaPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, AipPpa $aipPpa): bool
+    public function delete(User $user, Ppa $ppa): bool
     {
         return false;
     }
@@ -51,7 +51,7 @@ class AipPpaPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, AipPpa $aipPpa): bool
+    public function restore(User $user, Ppa $ppa): bool
     {
         return false;
     }
@@ -59,7 +59,7 @@ class AipPpaPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, AipPpa $aipPpa): bool
+    public function forceDelete(User $user, Ppa $ppa): bool
     {
         return false;
     }
