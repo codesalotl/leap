@@ -2,23 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Aip;
-use App\Http\Requests\StoreAipRequest;
-use App\Http\Requests\UpdateAipRequest;
+use App\Models\AipEntry;
+use App\Http\Requests\StoreAipEntryRequest;
+use App\Http\Requests\UpdateAipEntryRequest;
 use Inertia\Inertia;
 
-class AipController extends Controller
+class AipEntryController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $aip = Aip::all();
-
-        return Inertia::render('aip/index', [
-            'aip' => $aip,
-        ]);
+        return Inertia::render('aip-entries/index');
     }
 
     /**
@@ -32,7 +28,7 @@ class AipController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreAipRequest $request)
+    public function store(StoreAipEntryRequest $request)
     {
         //
     }
@@ -40,7 +36,7 @@ class AipController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Aip $aip)
+    public function show(AipEntry $aipEntry)
     {
         //
     }
@@ -48,7 +44,7 @@ class AipController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Aip $aip)
+    public function edit(AipEntry $aipEntry)
     {
         //
     }
@@ -56,7 +52,7 @@ class AipController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateAipRequest $request, Aip $aip)
+    public function update(UpdateAipEntryRequest $request, AipEntry $aipEntry)
     {
         //
     }
@@ -64,7 +60,7 @@ class AipController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Aip $aip)
+    public function destroy(AipEntry $aipEntry)
     {
         //
     }

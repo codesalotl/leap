@@ -24,8 +24,8 @@ class PpaController extends Controller
         $offices = Office::get();
 
         // return response()->json($hierarchy);
-        return Inertia::render('aip-ppa/aip-ppa', [
-            'aipPpa' => $ppa,
+        return Inertia::render('ppa/index', [
+            'ppa' => $ppa,
             'offices' => $offices,
         ]);
     }

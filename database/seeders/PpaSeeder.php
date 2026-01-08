@@ -14,7 +14,7 @@ class PpaSeeder extends Seeder
     public function run(): void
     {
         // Wipe the table clean
-        Ppa::truncate();
+        // Ppa::truncate();
 
         // Config variables
         $sector = '1000';

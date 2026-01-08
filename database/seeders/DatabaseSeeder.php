@@ -45,15 +45,17 @@ class DatabaseSeeder extends Seeder
 
             // ---
 
-            AipSummaryFormSeeder::class,
+            // AipSummaryFormSeeder::class,
 
-            ProgramSeeder::class,
-            ProjectSeeder::class,
-            ActivitySeeder::class,
+            // ProgramSeeder::class,
+            // ProjectSeeder::class,
+            // ActivitySeeder::class,
 
-            AipCollectionsSeeder::class,
+            // AipCollectionsSeeder::class,
             AttributionSeeder::class,
             PpaSeeder::class,
+
+            AipEntrySeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

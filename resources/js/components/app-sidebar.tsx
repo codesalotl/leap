@@ -25,21 +25,21 @@ const mainNavItems: NavItem[] = [
     //     href: dashboard(),
     //     icon: LayoutGrid,
     // },
-    {
-        title: 'AIP Collections',
-        href: '/aip-collections',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'AIP PPA',
-        href: '/aip-ppa',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Manage PPA',
-        href: '/ppa-list',
-        icon: LayoutGrid,
-    },
+    // {
+    //     title: 'AIP Collections',
+    //     href: '/aip-collections',
+    //     icon: LayoutGrid,
+    // },
+    // {
+    //     title: 'AIP PPA',
+    //     href: '/aip-ppa',
+    //     icon: LayoutGrid,
+    // },
+    // {
+    //     title: 'Manage PPA',
+    //     href: '/ppa-list',
+    //     icon: LayoutGrid,
+    // },
     {
         title: 'Chart of Accounts',
         href: '/chart-of-accounts',
@@ -53,6 +53,16 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Offices',
         href: '/offices',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'AIPs',
+        href: '/aip',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'PPAs',
+        href: '/ppa',
         icon: LayoutGrid,
     },
     // {

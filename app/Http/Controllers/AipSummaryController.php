@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\AipSummary;
+use App\Http\Requests\StoreAipSummaryRequest;
+use App\Http\Requests\UpdateAipSummaryRequest;
 
-class ProgramController extends Controller
+class AipSummaryController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -25,7 +27,7 @@ class ProgramController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreAipSummaryRequest $request)
     {
         //
     }
@@ -33,7 +35,7 @@ class ProgramController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(AipSummary $aipSummary)
     {
         //
     }
@@ -41,7 +43,7 @@ class ProgramController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(AipSummary $aipSummary)
     {
         //
     }
@@ -49,7 +51,7 @@ class ProgramController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateAipSummaryRequest $request, AipSummary $aipSummary)
     {
         //
     }
@@ -57,7 +59,7 @@ class ProgramController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(AipSummary $aipSummary)
     {
         //
     }

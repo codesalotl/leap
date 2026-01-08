@@ -4,19 +4,14 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Aip;
 
-class AipSeeder extends Seeder
+class AipSummarySeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $years = [['year' => 2023], ['year' => 2024], ['year' => 2025]];
-
-        foreach ($years as $year) {
-            Aip::create($year);
-        }
+        //
     }
 }

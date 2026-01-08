@@ -12,6 +12,8 @@ use App\Http\Controllers\PpaController;
 use App\Http\Controllers\ChartOfAccountController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\OfficeController;
+use App\Http\Controllers\AipEntryController;
+use App\Http\Controllers\AipSummaryController;
 
 Route::get(
     '/',
@@ -26,11 +28,11 @@ Route::middleware(['auth', 'verified'])->group(
     ),
 );
 
-Route::get('aip', [AipController::class, 'index']);
-Route::post('aip/{id}', [AipController::class, 'storeChild']);
-Route::post('aip', [AipController::class, 'store']);
-Route::patch('aip/{id}', [AipController::class, 'update']);
-Route::delete('aip/{id}', [AipController::class, 'destroy']);
+// Route::get('aip', [AipController::class, 'index']);
+// Route::post('aip/{id}', [AipController::class, 'storeChild']);
+// Route::post('aip', [AipController::class, 'store']);
+// Route::patch('aip/{id}', [AipController::class, 'update']);
+// Route::delete('aip/{id}', [AipController::class, 'destroy']);
 
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
 
@@ -38,9 +40,9 @@ Route::get('home', function () {
     return Inertia::render('home');
 });
 
-Route::get('aip-collections', [AipCollectionController::class, 'index']);
-Route::get('aip-collections/{id}', [AipCollectionController::class, 'show']);
-Route::post('aip-collections', [AipCollectionController::class, 'store']);
+// Route::get('aip-collections', [AipCollectionController::class, 'index']);
+// Route::get('aip-collections/{id}', [AipCollectionController::class, 'show']);
+// Route::post('aip-collections', [AipCollectionController::class, 'store']);
 
 Route::get('ppa-list', [PpaListController::class, 'index']);
 Route::patch('ppa-list/{program}', [PpaListController::class, 'update']);
@@ -62,5 +64,13 @@ Route::get('chart-of-accounts', [ChartOfAccountController::class, 'index']);
 Route::get('sectors', [SectorController::class, 'index']);
 
 Route::get('offices', [OfficeController::class, 'index']);
+
+Route::get('aip', [AipController::class, 'index']);
+
+Route::get('ppa', [PpaController::class, 'index']);
+
+Route::get('aip-entries', [AipEntryController::class, 'index']);
+
+Route::get('aip-summary', [AipSummaryController::class, 'index']);
 
 require __DIR__ . '/settings.php';
