@@ -9,4 +9,6 @@ class Aip extends Model
 {
     /** @use HasFactory<\Database\Factories\AipFactory> */
     use HasFactory;
+
+    protected $fillable = ['year'];
 }

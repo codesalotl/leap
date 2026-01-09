@@ -20,10 +20,10 @@ class Ppa extends Model
     ];
 
     // Define the relationship so the controller can find the parent's office
-    public function office()
-    {
-        return $this->belongsTo(Office::class);
-    }
+    // public function office()
+    // {
+    //     return $this->belongsTo(Office::class);
+    // }
 
     public function children()
     {
@@ -33,5 +33,15 @@ class Ppa extends Model
     public function descendants()
     {
         return $this->children()->with('descendants');
+    }
+
+    public function office()
+    {
+        return $this->belongsTo(Office::class, 'office_id');
+    }
+
+    public function sector()
+    {
+        return $this->belongsTo(Sector::class, 'sector_id');
     }
 }

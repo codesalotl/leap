@@ -20,80 +20,132 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { generateYearRange } from '@/pages/aip/utils';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form';
+import { router } from '@inertiajs/react';
+
+const formSchema = z.object({
+    year: z.number().int(),
+});
 
 export default function YearDialog() {
-    const currentYear = new Date().getFullYear();
-    const yearsData = null;
+    const years = generateYearRange(2026, 5, 5);
 
-    console.log(currentYear);
+    // 1. Define your form.
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            year: 2026,
+        },
+    });
 
-    // function handleYearCalculation(currentYear, length) {
-    //     currentYear - length + 1;
+    // 2. Define a submit handler.
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        // console.log(values);
 
-    //     for (let i = 0; i < length; i++) {}
-
-    //     // return;
-    // }
+        router.post('/aip', values, {
+            onSuccess: () => console.log('Saved!'),
+            onError: (errors) => console.log('Validation Errors:', errors),
+        });
+    }
 
     return (
         <Dialog>
-            <form>
-                <DialogTrigger asChild>
-                    <Button>Initialize AIP</Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Edit profile</DialogTitle>
-                        <DialogDescription>
-                            Make changes to your profile here. Click save when
-                            you&apos;re done.
-                        </DialogDescription>
-                    </DialogHeader>
+            <Form {...form}>
+                {/* <form id="year-dialog" onSubmit={onSubmit}> */}
+                <form
+                    id="year-dialog"
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-8"
+                >
+                    <DialogTrigger asChild>
+                        <Button>Initialize AIP</Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Edit profile</DialogTitle>
+                            <DialogDescription>
+                                Make changes to your profile here. Click save
+                                when you&apos;re done.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <div className="grid gap-4">
-                        <div className="grid gap-3">
-                            <Label htmlFor="name-1">Year</Label>
+                        <div className="grid gap-4">
+                            <div className="grid gap-3">
+                                {/* <Label htmlFor="name-1">Year</Label> */}
 
-                            {/*<Input
-                                id="name-1"
-                                name="name"
-                                defaultValue="Pedro Duarte"
-                            />*/}
+                                <FormField
+                                    control={form.control}
+                                    name="year"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Year</FormLabel>
+                                            <FormControl>
+                                                <Select
+                                                    onValueChange={(value) =>
+                                                        field.onChange(
+                                                            Number(value),
+                                                        )
+                                                    }
+                                                    defaultValue={
+                                                        field.value
+                                                            ? String(
+                                                                  field.value,
+                                                              )
+                                                            : undefined
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-[180px]">
+                                                        <SelectValue placeholder="Select year" />
+                                                    </SelectTrigger>
 
-                            <Select>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Select year" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {/*<SelectGroup>*/}
-                                    {/*<SelectLabel>Fruits</SelectLabel>*/}
-                                    <SelectItem value="apple">Apple</SelectItem>
-                                    <SelectItem value="banana">
-                                        Banana
-                                    </SelectItem>
-                                    <SelectItem value="blueberry">
-                                        Blueberry
-                                    </SelectItem>
-                                    <SelectItem value="grapes">
-                                        Grapes
-                                    </SelectItem>
-                                    <SelectItem value="pineapple">
-                                        Pineapple
-                                    </SelectItem>
-                                    {/*</SelectGroup>*/}
-                                </SelectContent>
-                            </Select>
+                                                    <SelectContent>
+                                                        {years.map((year) => (
+                                                            <SelectItem
+                                                                key={year}
+                                                                value={String(
+                                                                    year,
+                                                                )}
+                                                            >
+                                                                {year}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            </FormControl>
+                                            <FormDescription>
+                                                This is your public display
+                                                name.
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                        <Button type="submit">Save changes</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </form>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button form="year-dialog" type="submit">
+                                Save changes
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </form>
+            </Form>
         </Dialog>
     );
 }

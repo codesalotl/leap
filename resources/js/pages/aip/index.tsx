@@ -36,6 +36,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import YearDialog from '@/pages/aip/year-dialog';
+import { router } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -175,38 +176,48 @@ export const columns: ColumnDef<Aip>[] = [
     //         return <div className="text-right font-medium">{formatted}</div>;
     //     },
     // },
-    // {
-    //     id: 'actions',
-    //     enableHiding: false,
-    //     cell: ({ row }) => {
-    //         const payment = row.original;
-    //         return (
-    //             <DropdownMenu>
-    //                 <DropdownMenuTrigger asChild>
-    //                     <Button variant="ghost" className="h-8 w-8 p-0">
-    //                         <span className="sr-only">Open menu</span>
-    //                         <MoreHorizontal />
-    //                     </Button>
-    //                 </DropdownMenuTrigger>
-    //                 <DropdownMenuContent align="end">
-    //                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //                     <DropdownMenuItem
-    //                         onClick={() =>
-    //                             navigator.clipboard.writeText(payment.id)
-    //                         }
-    //                     >
-    //                         Copy payment ID
-    //                     </DropdownMenuItem>
-    //                     <DropdownMenuSeparator />
-    //                     <DropdownMenuItem>View customer</DropdownMenuItem>
-    //                     <DropdownMenuItem>
-    //                         View payment details
-    //                     </DropdownMenuItem>
-    //                 </DropdownMenuContent>
-    //             </DropdownMenu>
-    //         );
-    //     },
-    // },
+    {
+        id: 'actions',
+        enableHiding: false,
+        cell: ({ row }) => {
+            const aip = row.original;
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal />
+                        </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+                        {/* <DropdownMenuItem
+                            onClick={() =>
+                                navigator.clipboard.writeText(payment.id)
+                            }
+                        >
+                            Copy payment ID
+                        </DropdownMenuItem> */}
+
+                        <DropdownMenuSeparator />
+
+                        {/* <DropdownMenuItem>View customer</DropdownMenuItem>
+                        <DropdownMenuItem>
+                            View payment details
+                        </DropdownMenuItem> */}
+
+                        <DropdownMenuItem
+                            onClick={() => router.visit(`/aip/${aip.id}`)}
+                        >
+                            Open AIP
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
+        },
+    },
 ];
 
 export default function Sectors({ aip }: AipProp) {

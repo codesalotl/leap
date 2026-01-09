@@ -9,4 +9,9 @@ class AipEntry extends Model
 {
     /** @use HasFactory<\Database\Factories\AipEntryFactory> */
     use HasFactory;
+
+    public function ppa()
+    {
+        return $this->belongsTo(Ppa::class, 'ppa_id');
+    }
 }
