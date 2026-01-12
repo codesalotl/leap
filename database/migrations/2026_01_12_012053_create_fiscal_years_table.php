@@ -10,10 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('sectors', function (Blueprint $table) {
+        Schema::create('fiscal_years', function (Blueprint $table) {
             $table->id();
-            $table->string('code', 4)->unique();
-            $table->string('sector', 50);
+            $table->year('year')->unique();
+            $table->string('status', 20);
             $table->timestamps();
         });
     }
@@ -23,6 +23,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('sectors');
+        Schema::dropIfExists('fiscal_years');
     }
 };

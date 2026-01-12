@@ -12,18 +12,12 @@ return new class extends Migration {
     {
         Schema::create('offices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sector_id')->nullable()->constrained('sectors');
-            $table
-                ->foreignId('lgu_level_id')
-                ->constrained('lgu_levels')
-                ->cascadeOnDelete();
-            $table
-                ->foreignId('office_type_id')
-                ->constrained('office_types')
-                ->cascadeOnDelete();
+            $table->foreignId('sector_id')->nullable()->constrained();
+            $table->foreignId('lgu_level_id')->constrained();
+            $table->foreignId('office_type_id')->constrained();
             $table->string('code', 3);
-            $table->string('name');
-            $table->boolean('is_lee')->default(false);
+            $table->string('name', 100);
+            $table->boolean('is_lee')->default(false); // what is this?
             $table->timestamps();
 
             $table->unique(['lgu_level_id', 'office_type_id', 'code']);

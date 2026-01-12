@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\LguLevel;
-use App\Http\Requests\StoreLguLevelRequest;
-use App\Http\Requests\UpdateLguLevelRequest;
+use App\Models\FiscalYear;
+use App\Http\Requests\StoreFiscalYearRequest;
+use App\Http\Requests\UpdateFiscalYearRequest;
 
-class LguLevelController extends Controller
+class FiscalYearController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -27,7 +27,7 @@ class LguLevelController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreLguLevelRequest $request)
+    public function store(StoreFiscalYearRequest $request)
     {
         //
     }
@@ -35,7 +35,7 @@ class LguLevelController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(LguLevel $lguLevel)
+    public function show(FiscalYear $fiscalYear)
     {
         //
     }
@@ -43,7 +43,7 @@ class LguLevelController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(LguLevel $lguLevel)
+    public function edit(FiscalYear $fiscalYear)
     {
         //
     }
@@ -51,7 +51,7 @@ class LguLevelController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateLguLevelRequest $request, LguLevel $lguLevel)
+    public function update(UpdateFiscalYearRequest $request, FiscalYear $fiscalYear)
     {
         //
     }
@@ -59,7 +59,7 @@ class LguLevelController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(LguLevel $lguLevel)
+    public function destroy(FiscalYear $fiscalYear)
     {
         //
     }

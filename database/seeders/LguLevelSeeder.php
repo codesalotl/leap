@@ -13,16 +13,14 @@ class LguLevelSeeder extends Seeder
      */
     public function run(): void
     {
-        LguLevel::truncate();
-
-        $levels = [
+        $lguLevels = [
             ['code' => '1', 'level' => 'Province'],
             ['code' => '2', 'level' => 'City'],
-            ['code' => '3', 'level' => 'Municipality'],
+            ['code' => '3', 'level' => 'Minicipality'],
         ];
 
-        foreach ($levels as $level) {
-            LguLevel::create($level);
+        foreach ($lguLevels as $lguLevel) {
+            LguLevel::updateOrCreate($lguLevel);
         }
     }
 }

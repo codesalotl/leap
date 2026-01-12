@@ -22,7 +22,8 @@ class OfficeTypeSeeder extends Seeder
         ];
 
         foreach ($officeTypes as $officeType) {
-            OfficeType::create($officeType);
+            // OfficeType::create($officeType);
+            OfficeType::updateOrCreate($officeType);
         }
     }
 }

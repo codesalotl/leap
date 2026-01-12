@@ -13,8 +13,6 @@ class SectorSeeder extends Seeder
      */
     public function run(): void
     {
-        Sector::truncate();
-
         $sectors = [
             ['code' => '1000', 'sector' => 'General Public Services Sector'],
             ['code' => '3000', 'sector' => 'Social Services Sector'],
