@@ -12,36 +12,40 @@ class Ppa extends Model
 
     protected $fillable = [
         'type',
+        'title',
+        'code_suffix',
         'reference_code',
-        'description',
         'parent_id',
-        'office_id', // Add this
-        'sequence_number', // Add this
+        'office_id',
+        'is_active',
     ];
 
-    // Define the relationship so the controller can find the parent's office
-    // public function office()
-    // {
-    //     return $this->belongsTo(Office::class);
-    // }
+    // Casting ensures boolean values are handled correctly
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
 
+    /**
+     * Relationship: Recursive children
+     */
     public function children()
     {
-        return $this->hasMany(Ppa::class, 'parent_id');
+        return $this->hasMany(Ppa::class, 'parent_id')->with('children');
     }
 
-    public function descendants()
+    /**
+     * Relationship: Immediate parent
+     */
+    public function parent()
     {
-        return $this->children()->with('descendants');
+        return $this->belongsTo(Ppa::class, 'parent_id');
     }
 
+    /**
+     * Relationship: Office/Department
+     */
     public function office()
     {
-        return $this->belongsTo(Office::class, 'office_id');
-    }
-
-    public function sector()
-    {
-        return $this->belongsTo(Sector::class, 'sector_id');
+        return $this->belongsTo(Office::class);
     }
 }

@@ -79,7 +79,15 @@ Route::post('aip', [AipController::class, 'store']);
 Route::get('aip/{aip}', [AipController::class, 'show']);
 Route::patch('/aip/{aip}/status', [AipController::class, 'update']);
 
-Route::get('ppa', [PpaController::class, 'index']);
+// Route::get('ppa', [PpaController::class, 'index']);
+Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
+Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
+Route::patch('ppas/{ppa}', [PpaController::class, 'update'])->name(
+    'ppas.update',
+);
+Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
+    'ppas.destroy',
+);
 
 Route::get('aip-entries', [AipEntryController::class, 'index']);
 

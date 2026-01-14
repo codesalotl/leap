@@ -12,15 +12,32 @@ return new class extends Migration {
     {
         Schema::create('ppas', function (Blueprint $table) {
             $table->id();
-            $table->string('type');
-            $table->string('reference_code');
-            $table->string('description');
-            $table->unsignedBigInteger('parent_id')->nullable();
-            // Link to your existing offices table
-            $table->foreignId('office_id')->nullable()->constrained('offices');
-            // To track the numbering (001, 002, etc.) within its own level
-            $table->integer('sequence_number')->default(1);
+            $table->foreignId('office_id')->constrained('offices');
+
+            // Self-referencing parent
+            $table
+                ->foreignId('parent_id')
+                ->nullable()
+                ->constrained('ppas') // Matches table name
+                ->onDelete('cascade');
+
+            $table->string('title');
+
+            // Use an enum or string for strict types
+            $table->enum('type', ['Program', 'Project', 'Activity']);
+
+            // The suffix (e.g., 001).
+            // We should probably ensure code_suffix is unique per office + parent_id
+            $table->string('code_suffix', 4)->nullable();
+
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
+
+            // Prevent duplicate suffixes for the same office/parent
+            $table->unique(
+                ['office_id', 'parent_id', 'code_suffix', 'type'],
+                'ppa_unique_index',
+            );
         });
     }
 

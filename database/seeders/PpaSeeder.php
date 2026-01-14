@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Ppa;
+use App\Models\Office;
 
 class PpaSeeder extends Seeder
 {
@@ -13,64 +14,50 @@ class PpaSeeder extends Seeder
      */
     public function run(): void
     {
-        // Wipe the table clean
-        // Ppa::truncate();
+        // Get the first office to associate the PPAs with
+        // Ensure you have at least one office in your database
+        $office = Office::first();
 
-        // Config variables
-        $sector = '1000';
-        $subSector = '000';
-        $lguLevel = '1';
-        $officeType = '01';
-        $office = '006';
+        if (!$office) {
+            $this->command->error(
+                'No Office found. Please seed offices first.',
+            );
+            return;
+        }
 
-        // prefix: 1000-000-1-01-006
-        $prefix = "{$sector}-{$subSector}-{$lguLevel}-{$officeType}-{$office}";
-
-        // 1. Create 5 Programs
-        for ($i = 1; $i <= 5; $i++) {
-            $progInc = str_pad($i, 3, '0', STR_PAD_LEFT);
-
+        // 1. Create 6 Programs
+        for ($i = 1; $i <= 6; $i++) {
             $program = Ppa::create([
-                'type' => 'Program',
-                'reference_code' => "{$prefix}-{$progInc}-000-000",
-                'description' => "Main Program $i",
+                'office_id' => $office->id,
                 'parent_id' => null,
+                'title' =>
+                    'General Program ' . str_pad($i, 2, '0', STR_PAD_LEFT),
+                'type' => 'Program',
+                'code_suffix' => str_pad($i, 3, '0', STR_PAD_LEFT),
+                'is_active' => true,
             ]);
 
-            // 2. Create Projects for this Program (Let's give each program 1 or 2 projects)
-            // Total will reach ~7 projects as requested
-            $projectLimit = $i <= 2 ? 2 : 1;
-
-            for ($j = 1; $j <= $projectLimit; $j++) {
-                $projInc = str_pad($j, 3, '0', STR_PAD_LEFT);
-
+            // 2. Create Projects for each Program
+            for ($j = 1; $j <= 2; $j++) {
                 $project = Ppa::create([
-                    'type' => 'Project',
-                    'reference_code' => "{$prefix}-{$progInc}-{$projInc}-000",
-                    'description' => "Project $j under Program $i",
+                    'office_id' => $office->id,
                     'parent_id' => $program->id,
+                    'title' => "Infrastructure Project $j under Program $i",
+                    'type' => 'Project',
+                    'code_suffix' => str_pad($j, 3, '0', STR_PAD_LEFT),
+                    'is_active' => true,
                 ]);
 
-                // 3. Create Activities for this Project
-                // We'll add 1 or 2 activities until we hit 10 total
-                static $activityCount = 0;
-                if ($activityCount < 10) {
-                    $actLimit = $activityCount < 5 ? 2 : 1;
-                    for ($k = 1; $k <= $actLimit; $k++) {
-                        $activityCount++;
-                        $actInc = str_pad($k, 3, '0', STR_PAD_LEFT);
-
-                        Ppa::create([
-                            'type' => 'Activity',
-                            'reference_code' => "{$prefix}-{$progInc}-{$projInc}-{$actInc}",
-                            'description' => "Activity $activityCount for Project $j",
-                            'parent_id' => $project->id,
-                        ]);
-
-                        if ($activityCount >= 10) {
-                            break;
-                        }
-                    }
+                // 3. Create Activities for each Project
+                for ($k = 1; $k <= 2; $k++) {
+                    Ppa::create([
+                        'office_id' => $office->id,
+                        'parent_id' => $project->id,
+                        'title' => "Standard Activity $k for Project $j",
+                        'type' => 'Activity',
+                        'code_suffix' => str_pad($k, 3, '0', STR_PAD_LEFT),
+                        'is_active' => $k % 2 == 0, // Mix of active and inactive for testing
+                    ]);
                 }
             }
         }

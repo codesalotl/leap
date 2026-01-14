@@ -22,14 +22,12 @@ class StorePpaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // REMOVE reference_code from here because the backend generates it now!
-
-            'description' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:aip_ppas,id',
-
-            // ADD office_id validation
-            // It is required if there is no parent_id (Top-level Program)
-            'office_id' => 'required_without:parent_id|exists:offices,id',
-        ];
+                // REMOVE reference_code from here because the backend generates it now!
+                // 'description' => 'required|string|max:255',
+                // 'parent_id' => 'nullable|exists:aip_ppas,id',
+                // // ADD office_id validation
+                // // It is required if there is no parent_id (Top-level Program)
+                // 'office_id' => 'required_without:parent_id|exists:offices,id',
+            ];
     }
 }
