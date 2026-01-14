@@ -90,6 +90,14 @@ Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
 );
 
 Route::get('aip-entries', [AipEntryController::class, 'index']);
+// View the AIP Summary Table
+Route::get('/aip/{aip}/summary', [AipEntryController::class, 'show'])->name(
+    'aip.summary',
+);
+// Handle the Import Modal Logic
+Route::post('/aip/{aip}/import', [AipEntryController::class, 'store'])->name(
+    'aip.import',
+);
 
 Route::get('aip-summary', [AipSummaryController::class, 'index']);
 

@@ -44,11 +44,25 @@ class AipController extends Controller
      */
     public function show(Aip $aip)
     {
+        // 1. Fetch existing entries for the table
         $aip_entries = AipEntry::with(['ppa.office', 'ppa.sector'])
             ->where('aip_id', $aip->id)
             ->get();
 
-        // Map the flat list into the formatted structure first
+        // 2. Fetch Active PPAs for the Import Modal
+        // We only select the columns needed to keep the payload light
+        $master_ppas = Ppa::where('is_active', true)
+            ->select(
+                'id',
+                'title',
+                'type',
+                'code_suffix',
+                'parent_id',
+                'is_active',
+            )
+            ->get();
+
+        // Map the flat list into the formatted structure
         $formatted_entries = $aip_entries->map(function ($entry) {
             $ps = (float) $entry->ps_amount;
             $mooe = (float) $entry->mooe_amount;
@@ -57,10 +71,10 @@ class AipController extends Controller
 
             return [
                 'id' => $entry->id,
-                'ppa_id' => $entry->ppa_id, // Temp field for nesting
-                'parent_id' => $entry->ppa->parent_id, // Temp field for nesting
+                'ppa_id' => $entry->ppa_id,
+                'parent_id' => $entry->ppa->parent_id,
                 'aip_ref_code' => $entry->ppa->reference_code,
-                'ppa_desc' => $entry->ppa->description,
+                'ppa_desc' => $entry->ppa->title, // Changed from description to title based on your migration
                 'implementing_office_department' =>
                     $entry->ppa->office->name ?? 'N/A',
                 'sched_implementation' => [
@@ -105,11 +119,13 @@ class AipController extends Controller
             ];
         });
 
-        // Build the Tree
+        // Build the Tree structure for TanStack Table
         $tree = $this->buildTree($formatted_entries);
 
         return Inertia::render('aip/aip-summary-table', [
+            'aip' => $aip, // Pass the AIP record so you have the ID for the form post
             'aip_entries' => $tree,
+            'masterPpas' => $master_ppas, // The prop for your PpaImportModal
         ]);
     }
 
