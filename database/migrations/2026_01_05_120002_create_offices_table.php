@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->foreignId('office_type_id')->constrained();
             $table->string('code', 3);
             $table->string('name', 100);
-            $table->boolean('is_lee')->default(false); // what is this?
+            $table->boolean('is_lee')->default(false);
             $table->timestamps();
 
             $table->unique(['lgu_level_id', 'office_type_id', 'code']);

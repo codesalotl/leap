@@ -40,7 +40,7 @@ import { router } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Annual Invesment Program',
+        title: 'Annual Invesment Programs',
         href: '/aip',
     },
 ];
@@ -124,18 +124,47 @@ export const columns: ColumnDef<Aip>[] = [
     },
     {
         accessorKey: 'id',
+        header: 'ID',
     },
     {
         accessorKey: 'year',
+        header: 'Year',
     },
     {
         accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => {
+            const status = row.getValue('status') as string;
+            return (
+                <div
+                    className={`font-medium ${status === 'Open' ? 'text-green-600' : 'text-red-600'}`}
+                >
+                    {status}
+                </div>
+            );
+        },
     },
     {
         accessorKey: 'created_at',
+        header: 'Created At',
+        cell: ({ getValue }) => {
+            const date = new Date(getValue());
+            return date.toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            });
+        },
     },
     {
         accessorKey: 'updated_at',
+        header: 'Updated at',
+        cell: ({ getValue }) => {
+            const date = new Date(getValue());
+            return date.toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            });
+        },
     },
     // {
     //     accessorKey: 'status',
@@ -181,6 +210,21 @@ export const columns: ColumnDef<Aip>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const aip = row.original;
+
+            // Placeholder function for your backend integration later
+            const handleStatusChange = (newStatus: string) => {
+                router.patch(
+                    `/aip/${aip.id}/status`,
+                    { status: newStatus },
+                    {
+                        preserveScroll: true,
+                        onStart: () => {
+                            // Optional: You could trigger a global loading bar here
+                        },
+                    },
+                );
+            };
+
             return (
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -190,28 +234,32 @@ export const columns: ColumnDef<Aip>[] = [
                         </Button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-                        {/* <DropdownMenuItem
-                            onClick={() =>
-                                navigator.clipboard.writeText(payment.id)
-                            }
-                        >
-                            Copy payment ID
-                        </DropdownMenuItem> */}
-
-                        <DropdownMenuSeparator />
-
-                        {/* <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>
-                            View payment details
-                        </DropdownMenuItem> */}
 
                         <DropdownMenuItem
                             onClick={() => router.visit(`/aip/${aip.id}`)}
                         >
                             Open AIP
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        {/* Status Toggle Sub-menu */}
+                        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                            Update Status
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem
+                            disabled={aip.status === 'Open'}
+                            onClick={() => handleStatusChange('Open')}
+                        >
+                            Mark as Open
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                            disabled={aip.status === 'Closed'}
+                            onClick={() => handleStatusChange('Closed')}
+                        >
+                            Mark as Closed
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

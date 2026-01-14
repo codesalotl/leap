@@ -13,7 +13,11 @@ class AipSeeder extends Seeder
      */
     public function run(): void
     {
-        $years = [['year' => 2023], ['year' => 2024], ['year' => 2025]];
+        $years = [
+            ['year' => 2023, 'status' => 'Closed'],
+            ['year' => 2024, 'status' => 'Closed'],
+            ['year' => 2025, 'status' => 'Open'],
+        ];
 
         foreach ($years as $year) {
             Aip::create($year);

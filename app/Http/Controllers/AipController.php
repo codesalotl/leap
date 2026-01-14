@@ -143,7 +143,15 @@ class AipController extends Controller
      */
     public function update(UpdateAipRequest $request, Aip $aip)
     {
-        //
+        $request->validate([
+            'status' => 'required|string|in:Open,Closed',
+        ]);
+
+        $aip->update([
+            'status' => $request->status,
+        ]);
+
+        return back();
     }
 
     /**

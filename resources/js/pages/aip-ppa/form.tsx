@@ -22,7 +22,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-// We now validate for office_id instead of a manual string for the code
+// Validation schema
 const formSchema = z.object({
     office_id: z.string().min(1, 'Implementing office is required'),
     description: z.string().min(1, 'Description is required'),
@@ -30,14 +30,15 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+// UPDATED: Matches the 'offices' migration schema
 interface Office {
     id: number;
-    sector_id: number;
-    lgu_level_id: 1 | 2 | 3;
-    office_type_id: 1 | 2 | 3;
-    office_number: number;
-    title: string;
-    full_code?: string;
+    sector_id: number | null; // schema says nullable()
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string; // schema: string('code', 3)
+    name: string; // schema: string('name', 100)
+    is_lee: boolean; // schema: boolean
     created_at?: string | Date;
     updated_at?: string | Date;
 }
@@ -64,6 +65,7 @@ export default function AipForm({
     // Helper to get initial office ID string
     const getInitialOfficeId = () => {
         if (isEditing) return data?.office_id?.toString() || '';
+        // If adding a child, the office usually defaults to the parent's office
         if (isAddingChild) return data?.office_id?.toString() || '';
         return '';
     };
@@ -106,6 +108,21 @@ export default function AipForm({
         });
     }
 
+    // Helper to get display name for Read-Only mode
+    const getReadOnlyOfficeName = () => {
+        // Try to find the office name in the data object directly
+        if (data?.office?.name) return data.office.name;
+
+        // If data just has an ID, try to find it in the offices prop
+        if (data?.office_id) {
+            const found = offices.find((o) => o.id === data.office_id);
+            if (found) return found.name;
+        }
+
+        // Fallback (mostly for parent titles in Add Child mode)
+        return data?.name || 'Unknown Office';
+    };
+
     return (
         <Form {...form}>
             <form
@@ -143,8 +160,8 @@ export default function AipForm({
                                                 key={office.id}
                                                 value={office.id.toString()}
                                             >
-                                                {office.title} (
-                                                {office.full_code})
+                                                {/* Display Name and Code */}
+                                                {office.name} ({office.code})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -152,12 +169,7 @@ export default function AipForm({
                             ) : (
                                 <div className="space-y-2">
                                     <Input
-                                        value={
-                                            isEditing
-                                                ? data?.office?.title
-                                                : data?.office?.title ||
-                                                  data?.title
-                                        }
+                                        value={getReadOnlyOfficeName()}
                                         disabled
                                         className="bg-muted"
                                     />

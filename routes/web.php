@@ -68,6 +68,7 @@ Route::get('offices', [OfficeController::class, 'index']);
 Route::get('aip', [AipController::class, 'index']);
 Route::post('aip', [AipController::class, 'store']);
 Route::get('aip/{aip}', [AipController::class, 'show']);
+Route::patch('/aip/{aip}/status', [AipController::class, 'update']);
 
 Route::get('ppa', [PpaController::class, 'index']);
 

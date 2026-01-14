@@ -12,32 +12,33 @@ return new class extends Migration {
     {
         Schema::create('chart_of_accounts', function (Blueprint $table) {
             $table->id();
-
-            // The UACS Code (Indexed for search speed)
             $table->string('uacs_code', 20)->unique();
-
-            // The Account Name
             $table->string('account_title');
-
-            // Foreign Keys
+            // $table->string('parent_id', 20)->nullable()->index();
+            $table->unsignedBigInteger('parent_id')->nullable()->index();
+            $table->enum('account_group', [
+                'Asset',
+                'Liability',
+                'Equity',
+                'Income',
+                'Expense',
+            ]);
             $table
-                ->foreignId('account_group_id')
-                ->constrained('account_groups')
-                ->onDelete('restrict'); // Prevent deleting a group if accounts exist
-
-            $table
-                ->foreignId('allotment_class_id')
-                ->constrained('allotment_classes')
-                ->onDelete('restrict');
-
-            // Hierarchy Logic (Self-referencing for Headers vs Items)
-            $table->string('parent_code', 20)->nullable()->index();
-
-            // Logic Flags
-            $table->boolean('is_posting')->default(true); // FALSE = Folder/Header, TRUE = Selectable Item
+                ->enum('budget_class', ['PS', 'MOOE', 'FE', 'CO', 'Non-Budget'])
+                ->nullable()
+                ->index();
+            $table->enum('normal_balance', ['Debit', 'Credit']);
+            $table->integer('level')->default(1);
+            $table->boolean('is_posting')->default(false); // FALSE = Folder/Header, TRUE = Selectable Item
             $table->boolean('is_active')->default(true); // For soft deletes
-
             $table->timestamps();
+
+            // Foreign Key Constraint
+            $table
+                ->foreign('parent_id')
+                ->references('id')
+                ->on('chart_of_accounts')
+                ->onDelete('restrict'); // Prevents deleting a parent if it has children
         });
     }
 
