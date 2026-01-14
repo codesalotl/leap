@@ -36,6 +36,18 @@ import {
     TableRow,
 } from '@/components/ui/table';
 
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Offices',
@@ -51,6 +63,9 @@ interface Office {
     code: string;
     name: string;
     is_lee: boolean;
+    sector?: { code: string };
+    lgu_level?: { code: string };
+    office_type?: { code: string };
     created_at: string;
     updated_at: string;
 }
@@ -125,31 +140,68 @@ export const columns: ColumnDef<Office>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: 'id',
+        id: 'full_code',
+        header: 'Office Account Code',
+        cell: ({ row }) => {
+            const office = row.original;
+
+            // Extract codes or default to zeros if missing
+            const sector = office.sector?.code ?? '0000';
+            const subsector = '000'; // Hardcoded as requested
+            const lgu = office.lgu_level?.code ?? '0';
+            const type = office.office_type?.code ?? '00';
+            const officeCode = office.code ?? '000';
+
+            return (
+                <code className="font-mono text-xs">{`${sector}-${subsector}-${lgu}-${type}-${officeCode}`}</code>
+            );
+        },
     },
-    {
-        accessorKey: 'sector_id',
-    },
-    {
-        accessorKey: 'lgu_level_id',
-    },
-    {
-        accessorKey: 'office_type_id',
-    },
-    {
-        accessorKey: 'code',
-    },
+    // {
+    //     accessorKey: 'sector_id',
+    // },
+    // {
+    //     accessorKey: 'lgu_level_id',
+    // },
+    // {
+    //     accessorKey: 'office_type_id',
+    // },
+    // {
+    //     accessorKey: 'code',
+    // },
     {
         accessorKey: 'name',
     },
     {
         accessorKey: 'is_lee',
+        header: 'LEE',
+        cell: ({ row }) => (
+            <span
+                className={`rounded-full px-2 py-1 text-xs ${row.getValue('is_lee') ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}
+            >
+                {row.getValue('is_lee') ? 'Yes' : 'No'}
+            </span>
+        ),
     },
     {
         accessorKey: 'created_at',
+        cell: ({ getValue }) => {
+            const date = new Date(getValue());
+            return date.toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            });
+        },
     },
     {
         accessorKey: 'updated_at',
+        cell: ({ getValue }) => {
+            const date = new Date(getValue());
+            return date.toLocaleString('en-US', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            });
+        },
     },
     // {
     //     accessorKey: 'status',
@@ -222,6 +274,24 @@ export const columns: ColumnDef<Office>[] = [
     //         );
     //     },
     // },
+    {
+        id: 'actions',
+        cell: ({ row }) => (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem>Edit Office</DropdownMenuItem>
+                    <DropdownMenuItem className="text-destructive">
+                        Delete
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        ),
+    },
 ];
 
 export default function Offices({ offices }: OfficesProp) {
@@ -275,6 +345,7 @@ export default function Offices({ offices }: OfficesProp) {
                         }
                         className="max-w-sm"
                     />
+
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="ml-auto">
@@ -301,6 +372,51 @@ export default function Offices({ offices }: OfficesProp) {
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
+
+                    <Dialog>
+                        <form>
+                            <DialogTrigger asChild>
+                                <Button>Add Office</Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogHeader>
+                                    <DialogTitle>Edit profile</DialogTitle>
+                                    <DialogDescription>
+                                        Make changes to your profile here. Click
+                                        save when you&apos;re done.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4">
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="name-1">Name</Label>
+                                        <Input
+                                            id="name-1"
+                                            name="name"
+                                            defaultValue="Pedro Duarte"
+                                        />
+                                    </div>
+                                    <div className="grid gap-3">
+                                        <Label htmlFor="username-1">
+                                            Username
+                                        </Label>
+                                        <Input
+                                            id="username-1"
+                                            name="username"
+                                            defaultValue="@peduarte"
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button variant="outline">
+                                            Cancel
+                                        </Button>
+                                    </DialogClose>
+                                    <Button type="submit">Save changes</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </form>
+                    </Dialog>
                 </div>
                 <div className="overflow-hidden rounded-md border">
                     <Table>

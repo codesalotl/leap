@@ -14,7 +14,8 @@ class OfficeController extends Controller
      */
     public function index()
     {
-        $offices = Office::all();
+        // Eager load the relationships to get access to their 'code' fields
+        $offices = Office::with(['sector', 'lguLevel', 'officeType'])->get();
 
         return Inertia::render('offices/index', [
             'offices' => $offices,
