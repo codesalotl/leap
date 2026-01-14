@@ -150,8 +150,6 @@ class AipController extends Controller
         $aip->update([
             'status' => $request->status,
         ]);
-
-        return back();
     }
 
     /**
