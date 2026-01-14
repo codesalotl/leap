@@ -64,6 +64,15 @@ Route::get('chart-of-accounts', [ChartOfAccountController::class, 'index']);
 Route::get('sectors', [SectorController::class, 'index']);
 
 Route::get('offices', [OfficeController::class, 'index']);
+Route::post('offices', [OfficeController::class, 'store'])->name(
+    'offices.store',
+);
+Route::put('offices/{office}', [OfficeController::class, 'update'])->name(
+    'offices.update',
+);
+Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
+    'offices.destroy',
+);
 
 Route::get('aip', [AipController::class, 'index']);
 Route::post('aip', [AipController::class, 'store']);

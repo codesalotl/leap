@@ -1,6 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-
 import * as React from 'react';
 import {
     flexRender,
@@ -14,7 +13,7 @@ import {
     type SortingState,
     type VisibilityState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -35,25 +34,10 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { router } from '@inertiajs/react'; // Ensure router is imported
+import OfficeFormDialog from '@/pages/offices/office-form-dialog';
 
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Offices',
-        href: '/office',
-    },
-];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Offices', href: '/office' }];
 
 interface Office {
     id: number;
@@ -72,237 +56,132 @@ interface Office {
 
 interface OfficesProp {
     offices: Office[];
+    sectors: any[];
+    lguLevels: any[];
+    officeTypes: any[];
 }
 
-// const data: Payment[] = [
-//     {
-//         id: 'm5gr84i9',
-//         amount: 316,
-//         status: 'success',
-//         email: 'ken99@example.com',
-//     },
-//     {
-//         id: '3u1reuv4',
-//         amount: 242,
-//         status: 'success',
-//         email: 'Abe45@example.com',
-//     },
-//     {
-//         id: 'derv1ws0',
-//         amount: 837,
-//         status: 'processing',
-//         email: 'Monserrat44@example.com',
-//     },
-//     {
-//         id: '5kma53ae',
-//         amount: 874,
-//         status: 'success',
-//         email: 'Silas22@example.com',
-//     },
-//     {
-//         id: 'bhqecj4p',
-//         amount: 721,
-//         status: 'failed',
-//         email: 'carmella@example.com',
-//     },
-// ];
-
-// export type Payment = {
-//     id: string;
-//     amount: number;
-//     status: 'pending' | 'processing' | 'success' | 'failed';
-//     email: string;
-// };
-
-export const columns: ColumnDef<Office>[] = [
-    {
-        id: 'select',
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate')
-                }
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        id: 'full_code',
-        header: 'Office Account Code',
-        cell: ({ row }) => {
-            const office = row.original;
-
-            // Extract codes or default to zeros if missing
-            const sector = office.sector?.code ?? '0000';
-            const subsector = '000'; // Hardcoded as requested
-            const lgu = office.lgu_level?.code ?? '0';
-            const type = office.office_type?.code ?? '00';
-            const officeCode = office.code ?? '000';
-
-            return (
-                <code className="font-mono text-xs">{`${sector}-${subsector}-${lgu}-${type}-${officeCode}`}</code>
-            );
-        },
-    },
-    // {
-    //     accessorKey: 'sector_id',
-    // },
-    // {
-    //     accessorKey: 'lgu_level_id',
-    // },
-    // {
-    //     accessorKey: 'office_type_id',
-    // },
-    // {
-    //     accessorKey: 'code',
-    // },
-    {
-        accessorKey: 'name',
-    },
-    {
-        accessorKey: 'is_lee',
-        header: 'LEE',
-        cell: ({ row }) => (
-            <span
-                className={`rounded-full px-2 py-1 text-xs ${row.getValue('is_lee') ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}
-            >
-                {row.getValue('is_lee') ? 'Yes' : 'No'}
-            </span>
-        ),
-    },
-    {
-        accessorKey: 'created_at',
-        cell: ({ getValue }) => {
-            const date = new Date(getValue());
-            return date.toLocaleString('en-US', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-            });
-        },
-    },
-    {
-        accessorKey: 'updated_at',
-        cell: ({ getValue }) => {
-            const date = new Date(getValue());
-            return date.toLocaleString('en-US', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-            });
-        },
-    },
-    // {
-    //     accessorKey: 'status',
-    //     header: 'Status',
-    //     cell: ({ row }) => (
-    //         <div className="capitalize">{row.getValue('status')}</div>
-    //     ),
-    // },
-    // {
-    //     accessorKey: 'email',
-    //     header: ({ column }) => {
-    //         return (
-    //             <Button
-    //                 variant="ghost"
-    //                 onClick={() =>
-    //                     column.toggleSorting(column.getIsSorted() === 'asc')
-    //                 }
-    //             >
-    //                 Email
-    //                 <ArrowUpDown />
-    //             </Button>
-    //         );
-    //     },
-    //     cell: ({ row }) => (
-    //         <div className="lowercase">{row.getValue('email')}</div>
-    //     ),
-    // },
-    // {
-    //     accessorKey: 'amount',
-    //     header: () => <div className="text-right">Amount</div>,
-    //     cell: ({ row }) => {
-    //         const amount = parseFloat(row.getValue('amount'));
-    //         // Format the amount as a dollar amount
-    //         const formatted = new Intl.NumberFormat('en-US', {
-    //             style: 'currency',
-    //             currency: 'USD',
-    //         }).format(amount);
-    //         return <div className="text-right font-medium">{formatted}</div>;
-    //     },
-    // },
-    // {
-    //     id: 'actions',
-    //     enableHiding: false,
-    //     cell: ({ row }) => {
-    //         const payment = row.original;
-    //         return (
-    //             <DropdownMenu>
-    //                 <DropdownMenuTrigger asChild>
-    //                     <Button variant="ghost" className="h-8 w-8 p-0">
-    //                         <span className="sr-only">Open menu</span>
-    //                         <MoreHorizontal />
-    //                     </Button>
-    //                 </DropdownMenuTrigger>
-    //                 <DropdownMenuContent align="end">
-    //                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-    //                     <DropdownMenuItem
-    //                         onClick={() =>
-    //                             navigator.clipboard.writeText(payment.id)
-    //                         }
-    //                     >
-    //                         Copy payment ID
-    //                     </DropdownMenuItem>
-    //                     <DropdownMenuSeparator />
-    //                     <DropdownMenuItem>View customer</DropdownMenuItem>
-    //                     <DropdownMenuItem>
-    //                         View payment details
-    //                     </DropdownMenuItem>
-    //                 </DropdownMenuContent>
-    //             </DropdownMenu>
-    //         );
-    //     },
-    // },
-    {
-        id: 'actions',
-        cell: ({ row }) => (
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                        <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit Office</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
-                        Delete
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        ),
-    },
-];
-
-export default function Offices({ offices }: OfficesProp) {
-    console.log(offices);
-
+export default function Offices({
+    offices,
+    sectors,
+    lguLevels,
+    officeTypes,
+}: OfficesProp) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+    const [selectedOffice, setSelectedOffice] = React.useState<Office | null>(
+        null,
+    );
+
+    const handleCreate = () => {
+        setSelectedOffice(null);
+        setIsDialogOpen(true);
+    };
+
+    const handleEdit = (office: Office) => {
+        setSelectedOffice(office);
+        setIsDialogOpen(true);
+    };
+
+    // MOVED COLUMNS INSIDE so it can access handleEdit
+    const columns: ColumnDef<Office>[] = [
+        {
+            id: 'select',
+            header: ({ table }) => (
+                <Checkbox
+                    checked={
+                        table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && 'indeterminate')
+                    }
+                    onCheckedChange={(value) =>
+                        table.toggleAllPageRowsSelected(!!value)
+                    }
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
+            id: 'full_code',
+            header: 'Office Account Code',
+            cell: ({ row }) => {
+                const office = row.original;
+                const sector = office.sector?.code ?? '0000';
+                const subsector = '000';
+                const lgu = office.lgu_level?.code ?? '0';
+                const type = office.office_type?.code ?? '00';
+                const officeCode = office.code ?? '000';
+                return (
+                    <code className="font-mono text-xs">{`${sector}-${subsector}-${lgu}-${type}-${officeCode}`}</code>
+                );
+            },
+        },
+        {
+            accessorKey: 'name',
+            header: 'Office Name',
+        },
+        {
+            accessorKey: 'is_lee',
+            header: 'LEE',
+            cell: ({ row }) => (
+                <span
+                    className={`rounded-full px-2 py-1 text-xs ${row.getValue('is_lee') ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}
+                >
+                    {row.getValue('is_lee') ? 'Yes' : 'No'}
+                </span>
+            ),
+        },
+        {
+            id: 'actions',
+            enableHiding: false,
+            cell: ({ row }) => (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem
+                            onClick={() => handleEdit(row.original)}
+                        >
+                            Edit Office
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => {
+                                if (
+                                    confirm(
+                                        'Are you sure you want to delete this office?',
+                                    )
+                                ) {
+                                    router.delete(`/office/${row.original.id}`);
+                                }
+                            }}
+                        >
+                            Delete Office
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            ),
+        },
+    ];
+
     const table = useReactTable({
         data: offices,
         columns,
@@ -319,11 +198,6 @@ export default function Offices({ offices }: OfficesProp) {
             columnFilters,
             columnVisibility,
             rowSelection,
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
         },
     });
 
@@ -346,18 +220,19 @@ export default function Offices({ offices }: OfficesProp) {
                         className="max-w-sm"
                     />
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
-                                Columns <ChevronDown />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => {
-                                    return (
+                    <div className="ml-auto flex items-center space-x-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    Columns{' '}
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
                                         <DropdownMenuCheckboxItem
                                             key={column.id}
                                             className="capitalize"
@@ -366,76 +241,32 @@ export default function Offices({ offices }: OfficesProp) {
                                                 column.toggleVisibility(!!value)
                                             }
                                         >
-                                            {column.id}
+                                            {column.id.replace('_', ' ')}
                                         </DropdownMenuCheckboxItem>
-                                    );
-                                })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
 
-                    <Dialog>
-                        <form>
-                            <DialogTrigger asChild>
-                                <Button>Add Office</Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
-                                <DialogHeader>
-                                    <DialogTitle>Edit profile</DialogTitle>
-                                    <DialogDescription>
-                                        Make changes to your profile here. Click
-                                        save when you&apos;re done.
-                                    </DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4">
-                                    <div className="grid gap-3">
-                                        <Label htmlFor="name-1">Name</Label>
-                                        <Input
-                                            id="name-1"
-                                            name="name"
-                                            defaultValue="Pedro Duarte"
-                                        />
-                                    </div>
-                                    <div className="grid gap-3">
-                                        <Label htmlFor="username-1">
-                                            Username
-                                        </Label>
-                                        <Input
-                                            id="username-1"
-                                            name="username"
-                                            defaultValue="@peduarte"
-                                        />
-                                    </div>
-                                </div>
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button variant="outline">
-                                            Cancel
-                                        </Button>
-                                    </DialogClose>
-                                    <Button type="submit">Save changes</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </form>
-                    </Dialog>
+                        <Button onClick={handleCreate}>Add Office</Button>
+                    </div>
                 </div>
+
                 <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead key={header.id}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext(),
-                                                      )}
-                                            </TableHead>
-                                        );
-                                    })}
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext(),
+                                                  )}
+                                        </TableHead>
+                                    ))}
                                 </TableRow>
                             ))}
                         </TableHeader>
@@ -471,6 +302,7 @@ export default function Offices({ offices }: OfficesProp) {
                         </TableBody>
                     </Table>
                 </div>
+
                 <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="flex-1 text-sm text-muted-foreground">
                         {table.getFilteredSelectedRowModel().rows.length} of{' '}
@@ -496,6 +328,15 @@ export default function Offices({ offices }: OfficesProp) {
                         </Button>
                     </div>
                 </div>
+
+                <OfficeFormDialog
+                    open={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    office={selectedOffice}
+                    sectors={sectors}
+                    lguLevels={lguLevels}
+                    officeTypes={officeTypes}
+                />
             </div>
         </AppLayout>
     );
