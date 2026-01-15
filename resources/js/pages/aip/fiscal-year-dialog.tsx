@@ -39,7 +39,7 @@ const formSchema = z.object({
     year: z.number().int(),
 });
 
-export default function YearDialog() {
+export default function FiscalYearDialog() {
     const years = generateYearRange(2026, 5, 5);
 
     // 1. Define your form.
@@ -56,7 +56,16 @@ export default function YearDialog() {
 
         router.post('/aip', values, {
             onSuccess: () => console.log('Saved!'),
-            onError: (errors) => console.log('Validation Errors:', errors),
+            // onError: (errors) => console.log('Validation Errors:', errors),
+            onError: (errors) => {
+                // Handle backend errors
+                if (errors.year) {
+                    form.setError('year', {
+                        type: 'manual',
+                        message: errors.year,
+                    });
+                }
+            },
         });
     }
 
@@ -74,14 +83,15 @@ export default function YearDialog() {
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
-                            <DialogTitle>Edit profile</DialogTitle>
+                            <DialogTitle>
+                                Initialize Annual Investment Program
+                            </DialogTitle>
                             <DialogDescription>
-                                Make changes to your profile here. Click save
-                                when you&apos;re done.
+                                Select a fiscal year to initialize the AIP with.
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className="grid gap-4">
+                        <div className="grid gap-4 py-2">
                             <div className="grid gap-3">
                                 {/* <Label htmlFor="name-1">Year</Label> */}
 
@@ -90,7 +100,7 @@ export default function YearDialog() {
                                     name="year"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Year</FormLabel>
+                                            <FormLabel>Fiscal Year</FormLabel>
                                             <FormControl>
                                                 <Select
                                                     onValueChange={(value) =>
@@ -106,7 +116,7 @@ export default function YearDialog() {
                                                             : undefined
                                                     }
                                                 >
-                                                    <SelectTrigger className="w-[180px]">
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue placeholder="Select year" />
                                                     </SelectTrigger>
 
@@ -124,10 +134,10 @@ export default function YearDialog() {
                                                     </SelectContent>
                                                 </Select>
                                             </FormControl>
-                                            <FormDescription>
+                                            {/*<FormDescription>
                                                 This is your public display
                                                 name.
-                                            </FormDescription>
+                                            </FormDescription>*/}
                                             <FormMessage />
                                         </FormItem>
                                     )}

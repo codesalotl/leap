@@ -314,14 +314,18 @@ export default function ChartOfAccount({
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
+
                 <div className="overflow-hidden rounded-md border">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => {
                                         return (
-                                            <TableHead key={header.id}>
+                                            <TableHead
+                                                key={header.id}
+                                                className="text-sm text-muted-foreground"
+                                            >
                                                 {header.isPlaceholder
                                                     ? null
                                                     : flexRender(

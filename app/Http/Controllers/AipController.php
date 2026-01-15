@@ -36,7 +36,14 @@ class AipController extends Controller
      */
     public function store(StoreAipRequest $request)
     {
-        Aip::create($request->validated());
+        try {
+            Aip::create($request->validated());
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['year' => 'The year is already initialized.']);
+        }
     }
 
     /**

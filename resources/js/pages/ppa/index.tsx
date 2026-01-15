@@ -280,13 +280,15 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                 <div className="flex items-center justify-between py-6">
                     <div className="space-y-1">
                         <h1 className="text-2xl font-bold tracking-tight">
-                            PPA Master Library
+                            PPA Masterlist
                         </h1>
+
                         <p className="text-sm text-muted-foreground">
                             Manage your Office Programs, Projects, and
                             Activities hierarchy.
                         </p>
                     </div>
+
                     <div className="flex gap-2">
                         <Input
                             placeholder="Search PPAs..."
@@ -294,6 +296,7 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                             onChange={(e) => setGlobalFilter(e.target.value)}
                             className="w-64"
                         />
+
                         <Button
                             onClick={() => {
                                 setDialogMode('add');
@@ -360,6 +363,7 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                                     ? `Add ${targetType}`
                                     : `Edit ${targetType}`}
                             </DialogTitle>
+
                             <DialogDescription>
                                 {dialogMode === 'add' && activePpa
                                     ? `Creating under: ${activePpa.title}`
@@ -382,6 +386,7 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                             >
                                 Cancel
                             </Button>
+
                             <Button type="submit" form="ppa-form">
                                 {dialogMode === 'add'
                                     ? 'Create PPA'
@@ -401,6 +406,7 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                             <AlertDialogTitle>
                                 Delete {ppaToDelete?.type}?
                             </AlertDialogTitle>
+
                             <AlertDialogDescription>
                                 This will permanently remove{' '}
                                 <span className="font-semibold text-foreground">
@@ -415,8 +421,10 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                                 )}
                             </AlertDialogDescription>
                         </AlertDialogHeader>
+
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
+
                             <AlertDialogAction
                                 onClick={confirmDelete}
                                 className="bg-destructive text-white hover:bg-destructive/90"

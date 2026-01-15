@@ -20,26 +20,21 @@ import {
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
-    // {
-    //     title: 'Dashboard',
-    //     href: dashboard(),
-    //     icon: LayoutGrid,
-    // },
-    // {
-    //     title: 'AIP Collections',
-    //     href: '/aip-collections',
-    //     icon: LayoutGrid,
-    // },
-    // {
-    //     title: 'AIP PPA',
-    //     href: '/aip-ppa',
-    //     icon: LayoutGrid,
-    // },
-    // {
-    //     title: 'Manage PPA',
-    //     href: '/ppa-list',
-    //     icon: LayoutGrid,
-    // },
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Annual Investment Programs',
+        href: '/aip',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'PPA Masterlist',
+        href: '/ppa',
+        icon: LayoutGrid,
+    },
     {
         title: 'Chart of Accounts',
         href: '/chart-of-accounts',
@@ -55,16 +50,21 @@ const mainNavItems: NavItem[] = [
         href: '/offices',
         icon: LayoutGrid,
     },
-    {
-        title: 'AIPs',
-        href: '/aip',
-        icon: LayoutGrid,
-    },
-    {
-        title: 'PPAs',
-        href: '/ppa',
-        icon: LayoutGrid,
-    },
+    // {
+    //     title: 'AIP Collections',
+    //     href: '/aip-collections',
+    //     icon: LayoutGrid,
+    // },
+    // {
+    //     title: 'AIP PPA',
+    //     href: '/aip-ppa',
+    //     icon: LayoutGrid,
+    // },
+    // {
+    //     title: 'Manage PPA',
+    //     href: '/ppa-list',
+    //     icon: LayoutGrid,
+    // },
     // {
     //     title: 'LGU Profile',
     //     href: '/lgu-profile',
