@@ -12,7 +12,12 @@ import {
     type SortingState,
     type VisibilityState,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal } from 'lucide-react';
+import {
+    ChevronDown,
+    MoreHorizontal,
+    Library, // Added missing import
+    Search,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,18 +41,18 @@ import {
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import PpaImportModal from '@/pages/aip/PpaImportModal';
+import PpaImportModal from '@/pages/aip/ppa-import-modal';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Annual Investment Programs', href: '/aip' },
-    { title: 'AIP Summary', href: '/aip-summary' },
+    { title: 'AIP Summary', href: '#' },
 ];
 
 export interface AipEntry {
     id: number;
-    aip_ref_code: number;
-    ppa_desc: string; // Changed from number to string for description
-    implementing_office_department: string; // Changed from number to string
+    aip_ref_code: string;
+    ppa_desc: string;
+    implementing_office_department: string;
     sched_implementation: {
         start_date: string;
         completion_date: string;
@@ -69,9 +74,9 @@ export interface AipEntry {
 }
 
 interface AipSummaryTableProp {
-    aip: { id: number; year: number }; // Added this
-    aip_entries: AipEntry[];
-    masterPpas: any[]; // Added this
+    aip: { id: number; year: number };
+    aip_entries: AipEntry[]; // This will now be hierarchical
+    masterPpas: any[]; // This will now be hierarchical
 }
 
 const columnHelper = createColumnHelper<AipEntry>();
@@ -102,15 +107,27 @@ const columns = [
         enableHiding: false,
     }),
 
-    columnHelper.accessor('aip_ref_code', { header: 'Ref Code' }),
+    columnHelper.accessor('aip_ref_code', {
+        header: 'Ref Code',
+        cell: (info) => (
+            <span className="font-mono text-xs">{info.getValue()}</span>
+        ),
+    }),
+
     columnHelper.accessor('ppa_desc', {
         header: 'PPA Description',
         cell: (info) => (
-            <div className="max-w-[200px] truncate">{info.getValue()}</div>
+            <div className="max-w-[300px] leading-tight font-medium">
+                {info.getValue()}
+            </div>
         ),
     }),
+
     columnHelper.accessor('implementing_office_department', {
         header: 'Department',
+        cell: (info) => (
+            <span className="text-xs uppercase">{info.getValue()}</span>
+        ),
     }),
 
     columnHelper.group({
@@ -118,9 +135,15 @@ const columns = [
         columns: [
             columnHelper.accessor('sched_implementation.start_date', {
                 header: 'Start',
+                cell: (info) => (
+                    <span className="text-xs">{info.getValue()}</span>
+                ),
             }),
             columnHelper.accessor('sched_implementation.completion_date', {
-                header: 'Completion',
+                header: 'End',
+                cell: (info) => (
+                    <span className="text-xs">{info.getValue()}</span>
+                ),
             }),
         ],
     }),
@@ -135,14 +158,15 @@ const columns = [
             columnHelper.accessor('amount.total', {
                 header: 'Total',
                 cell: (info) => (
-                    <span className="font-semibold">{info.getValue()}</span>
+                    <span className="font-bold text-primary">
+                        {info.getValue()}
+                    </span>
                 ),
             }),
         ],
     }),
 
-    columnHelper.accessor('funding_source', { header: 'Funding' }),
-    columnHelper.accessor('cc_typology_code', { header: 'Typology' }),
+    columnHelper.accessor('funding_source', { header: 'Source' }),
 
     columnHelper.display({
         id: 'actions',
@@ -153,7 +177,6 @@ const columns = [
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                     </DropdownMenuTrigger>
@@ -162,7 +185,7 @@ const columns = [
                         <DropdownMenuItem
                             onClick={() =>
                                 navigator.clipboard.writeText(
-                                    entry.aip_ref_code.toString(),
+                                    entry.aip_ref_code,
                                 )
                             }
                         >
@@ -171,6 +194,9 @@ const columns = [
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem>Edit Entry</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">
+                            Remove from AIP
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
@@ -189,6 +215,7 @@ export default function AipSummaryTable({
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [isImportOpen, setIsImportOpen] = React.useState(false);
 
     const table = useReactTable({
         data: aip_entries,
@@ -214,50 +241,74 @@ export default function AipSummaryTable({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full px-4 pb-4">
-                <div className="flex items-center py-4">
-                    <Input
-                        placeholder="Search PPA Description..."
-                        value={
-                            (table
-                                .getColumn('ppa_desc')
-                                ?.getFilterValue() as string) ?? ''
-                        }
-                        onChange={(event) =>
-                            table
-                                .getColumn('ppa_desc')
-                                ?.setFilterValue(event.target.value)
-                        }
-                        className="max-w-sm"
-                    />
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
-                                Columns <ChevronDown className="ml-2 h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id.replace(/_/g, ' ')}
-                                    </DropdownMenuCheckboxItem>
-                                ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                <div className="flex items-center justify-between py-4">
+                    <div className="flex flex-1 items-center space-x-2">
+                        <div className="relative">
+                            <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Filter PPAs..."
+                                value={
+                                    (table
+                                        .getColumn('ppa_desc')
+                                        ?.getFilterValue() as string) ?? ''
+                                }
+                                onChange={(event) =>
+                                    table
+                                        .getColumn('ppa_desc')
+                                        ?.setFilterValue(event.target.value)
+                                }
+                                className="max-w-sm pl-8"
+                            />
+                        </div>
+                    </div>
 
-                    <PpaImportModal masterPpas={masterPpas} aipId={aip.id} />
+                    <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    Columns{' '}
+                                    <ChevronDown className="ml-2 h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                {table
+                                    .getAllColumns()
+                                    .filter((column) => column.getCanHide())
+                                    .map((column) => (
+                                        <DropdownMenuCheckboxItem
+                                            key={column.id}
+                                            className="capitalize"
+                                            checked={column.getIsVisible()}
+                                            onCheckedChange={(value) =>
+                                                column.toggleVisibility(!!value)
+                                            }
+                                        >
+                                            {column.id.replace(/_/g, ' ')}
+                                        </DropdownMenuCheckboxItem>
+                                    ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button
+                            variant="default"
+                            onClick={() => setIsImportOpen(true)}
+                            className="bg-primary"
+                        >
+                            <Library className="mr-2 h-4 w-4" />
+                            Import from Library
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="overflow-hidden rounded-md border">
+                {/* Import Modal */}
+                <PpaImportModal
+                    isOpen={isImportOpen}
+                    onClose={() => setIsImportOpen(false)}
+                    ppaTree={masterPpas} // The hierarchical data
+                    aipId={aip.id}
+                />
+
+                <div className="overflow-hidden rounded-md border bg-card">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -266,7 +317,7 @@ export default function AipSummaryTable({
                                         <TableHead
                                             key={header.id}
                                             colSpan={header.colSpan}
-                                            className="border bg-muted/50 text-center font-bold"
+                                            className="border-r border-b bg-muted/50 text-center text-[11px] font-bold tracking-wider text-muted-foreground uppercase last:border-r-0"
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -288,11 +339,12 @@ export default function AipSummaryTable({
                                         data-state={
                                             row.getIsSelected() && 'selected'
                                         }
+                                        className="hover:bg-muted/30"
                                     >
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell
                                                 key={cell.id}
-                                                className="border-x"
+                                                className="border-r border-b py-2 last:border-r-0"
                                             >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
@@ -305,10 +357,11 @@ export default function AipSummaryTable({
                             ) : (
                                 <TableRow>
                                     <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center"
+                                        colSpan={table.getAllColumns().length}
+                                        className="h-32 text-center text-muted-foreground"
                                     >
-                                        No results found.
+                                        No AIP entries found for fiscal year{' '}
+                                        {aip.year}.
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -316,13 +369,13 @@ export default function AipSummaryTable({
                     </Table>
                 </div>
 
-                <div className="flex items-center justify-end space-x-2 py-4">
-                    <div className="flex-1 text-sm text-muted-foreground">
+                <div className="flex items-center justify-between py-4">
+                    <div className="text-sm text-muted-foreground">
                         {table.getFilteredSelectedRowModel().rows.length} of{' '}
                         {table.getFilteredRowModel().rows.length} row(s)
                         selected.
                     </div>
-                    <div className="space-x-2">
+                    <div className="flex items-center space-x-2">
                         <Button
                             variant="outline"
                             size="sm"
