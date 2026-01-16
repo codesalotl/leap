@@ -95,8 +95,8 @@ Route::get('/aip/{aip}/summary', [AipEntryController::class, 'show'])->name(
     'aip.summary',
 );
 // Handle the Import Modal Logic
-Route::post('/aip/{aip}/import', [AipEntryController::class, 'store'])->name(
-    'aip.import',
+Route::post('/aip/{aip}/import', [AipController::class, 'importPpas'])->name(
+    'aip.import-ppas',
 );
 
 Route::get('aip-summary', [AipSummaryController::class, 'index']);

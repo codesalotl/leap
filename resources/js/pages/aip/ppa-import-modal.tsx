@@ -45,7 +45,7 @@ interface PpaImportModalProps {
     isOpen: boolean;
     onClose: () => void;
     ppaTree: Ppa[];
-    aipId: number; // ID of the current Annual Investment Program
+    aipId: number;
 }
 
 export default function PpaImportModal({
@@ -76,7 +76,19 @@ export default function PpaImportModal({
             cell: ({ row }) => (
                 <Checkbox
                     checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    onCheckedChange={(value) => {
+                        // 1. Toggle the row and all its children (downward)
+                        row.toggleSelected(!!value);
+
+                        // 2. Custom Logic: If checking a child, force all ancestors to be checked (upward)
+                        if (!!value) {
+                            let parent = row.getParentRow();
+                            while (parent) {
+                                parent.toggleSelected(true);
+                                parent = parent.getParentRow();
+                            }
+                        }
+                    }}
                     aria-label="Select row"
                 />
             ),
@@ -154,18 +166,25 @@ export default function PpaImportModal({
         getExpandedRowModel: getExpandedRowModel(),
         onRowSelectionChange: setRowSelection,
         onGlobalFilterChange: setGlobalFilter,
+
+        // Ensure that selecting a parent row selects all sub-rows
+        enableSubRowSelection: true,
+
         filterFromLeafRows: true,
         state: {
             rowSelection,
             globalFilter,
-            expanded: true, // Always expanded for easier selection
+            expanded: true,
         },
     });
 
     const handleImport = () => {
+        // USE flatRows TO GET EVERY SINGLE SELECTED CHILD/GRANDCHILD
         const selectedIds = table
-            .getFilteredSelectedRowModel()
-            .rows.map((row) => row.original.id);
+            .getSelectedRowModel()
+            .flatRows.map((row) => row.original.id);
+
+        if (selectedIds.length === 0) return;
 
         setLoading(true);
         router.post(
@@ -175,6 +194,7 @@ export default function PpaImportModal({
                 onSuccess: () => {
                     setLoading(false);
                     onClose();
+                    setRowSelection({}); // Clear checkboxes after import
                 },
                 onError: () => setLoading(false),
             },
@@ -187,8 +207,8 @@ export default function PpaImportModal({
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle>Import PPA from Library</DialogTitle>
                     <DialogDescription>
-                        Select the Program hierarchy you want to clone into this
-                        AIP.
+                        Select the Programs and their nested Projects/Activities
+                        to import.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -268,7 +288,7 @@ export default function PpaImportModal({
 
                 <DialogFooter className="flex items-center justify-between border-t bg-muted/30 p-6 pt-3">
                     <div className="text-sm text-muted-foreground">
-                        {table.getFilteredSelectedRowModel().rows.length} items
+                        {table.getSelectedRowModel().flatRows.length} items
                         selected
                     </div>
                     <div className="flex gap-3">
@@ -278,8 +298,8 @@ export default function PpaImportModal({
                         <Button
                             onClick={handleImport}
                             disabled={
-                                table.getFilteredSelectedRowModel().rows
-                                    .length === 0 || loading
+                                table.getSelectedRowModel().flatRows.length ===
+                                    0 || loading
                             }
                         >
                             <Download className="mr-2 h-4 w-4" />

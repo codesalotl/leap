@@ -12,12 +12,7 @@ import {
     type SortingState,
     type VisibilityState,
 } from '@tanstack/react-table';
-import {
-    ChevronDown,
-    MoreHorizontal,
-    Library, // Added missing import
-    Search,
-} from 'lucide-react';
+import { ChevronDown, MoreHorizontal, Library, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -75,8 +70,8 @@ export interface AipEntry {
 
 interface AipSummaryTableProp {
     aip: { id: number; year: number };
-    aip_entries: AipEntry[]; // This will now be hierarchical
-    masterPpas: any[]; // This will now be hierarchical
+    aip_entries: AipEntry[];
+    masterPpas: any[];
 }
 
 const columnHelper = createColumnHelper<AipEntry>();
@@ -110,15 +105,25 @@ const columns = [
     columnHelper.accessor('aip_ref_code', {
         header: 'Ref Code',
         cell: (info) => (
-            <span className="font-mono text-xs">{info.getValue()}</span>
+            <span className="font-mono text-[11px]">{info.getValue()}</span>
         ),
     }),
 
     columnHelper.accessor('ppa_desc', {
         header: 'PPA Description',
-        cell: (info) => (
-            <div className="max-w-[300px] leading-tight font-medium">
-                {info.getValue()}
+        cell: ({ row, getValue }) => (
+            <div
+                style={{ paddingLeft: `${row.depth * 20}px` }} // Indentation logic
+                className="flex items-center gap-2"
+            >
+                {row.depth > 0 && (
+                    <span className="font-mono text-muted-foreground opacity-50">
+                        ↳
+                    </span>
+                )}
+                <div className="max-w-[400px] py-1 leading-tight font-medium">
+                    {getValue()}
+                </div>
             </div>
         ),
     }),
@@ -126,7 +131,9 @@ const columns = [
     columnHelper.accessor('implementing_office_department', {
         header: 'Department',
         cell: (info) => (
-            <span className="text-xs uppercase">{info.getValue()}</span>
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+                {info.getValue()}
+            </span>
         ),
     }),
 
@@ -136,13 +143,13 @@ const columns = [
             columnHelper.accessor('sched_implementation.start_date', {
                 header: 'Start',
                 cell: (info) => (
-                    <span className="text-xs">{info.getValue()}</span>
+                    <span className="text-[11px]">{info.getValue()}</span>
                 ),
             }),
             columnHelper.accessor('sched_implementation.completion_date', {
                 header: 'End',
                 cell: (info) => (
-                    <span className="text-xs">{info.getValue()}</span>
+                    <span className="text-[11px]">{info.getValue()}</span>
                 ),
             }),
         ],
@@ -222,19 +229,20 @@ export default function AipSummaryTable({
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
-        getSubRows: (row) => row.children,
+        getSubRows: (row) => row.children, // Ensure children are processed
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
         onRowSelectionChange: setRowSelection,
-        getExpandedRowModel: getExpandedRowModel(),
+        getExpandedRowModel: getExpandedRowModel(), // Required for hierarchy
         state: {
             sorting,
             columnFilters,
             columnVisibility,
             rowSelection,
+            expanded: true, // Make sure it is expanded by default to see hierarchy
         },
     });
 
@@ -292,7 +300,6 @@ export default function AipSummaryTable({
                         <Button
                             variant="default"
                             onClick={() => setIsImportOpen(true)}
-                            className="bg-primary"
                         >
                             <Library className="mr-2 h-4 w-4" />
                             Import from Library
@@ -300,11 +307,10 @@ export default function AipSummaryTable({
                     </div>
                 </div>
 
-                {/* Import Modal */}
                 <PpaImportModal
                     isOpen={isImportOpen}
                     onClose={() => setIsImportOpen(false)}
-                    ppaTree={masterPpas} // The hierarchical data
+                    ppaTree={masterPpas}
                     aipId={aip.id}
                 />
 
@@ -344,7 +350,7 @@ export default function AipSummaryTable({
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell
                                                 key={cell.id}
-                                                className="border-r border-b py-2 last:border-r-0"
+                                                className="border-r border-b px-2 py-0 last:border-r-0"
                                             >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
@@ -369,6 +375,7 @@ export default function AipSummaryTable({
                     </Table>
                 </div>
 
+                {/* Pagination Controls */}
                 <div className="flex items-center justify-between py-4">
                     <div className="text-sm text-muted-foreground">
                         {table.getFilteredSelectedRowModel().rows.length} of{' '}

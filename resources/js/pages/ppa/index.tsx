@@ -195,9 +195,8 @@ export const columns: ColumnDef<Ppa>[] = [
             const active = getValue<boolean>();
             return active ? (
                 <Badge
-                    variant="secondary"
+                    variant="primary"
                     // className="gap-1 border-green-200 bg-green-50 text-green-600"
-                    className="text-foreground"
                 >
                     <CheckCircle2 className="h-3 w-3" /> Active
                 </Badge>
@@ -205,7 +204,6 @@ export const columns: ColumnDef<Ppa>[] = [
                 <Badge
                     variant="destructive"
                     // className="gap-1 text-muted-foreground"
-                    className="text-muted-foreground"
                 >
                     <XCircle className="h-3 w-3" /> Inactive
                 </Badge>

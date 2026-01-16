@@ -25,30 +25,13 @@ class AipEntry extends Model
         'ccet_mitigation',
     ];
 
-    /**
-     * Correct relationship return type
-     */
     public function ppa(): BelongsTo
     {
-        return $this->belongsTo(Ppa::class, 'ppa_id');
+        return $this->belongsTo(Ppa::class);
     }
 
     public function aip(): BelongsTo
     {
         return $this->belongsTo(Aip::class);
-    }
-
-    public function sector(): BelongsTo
-    {
-        // If your table uses sector_id, this is standard:
-        return $this->belongsTo(Sector::class);
-    }
-
-    /**
-     * Also ensure you have the office relationship for ppa.office
-     */
-    public function office(): BelongsTo
-    {
-        return $this->belongsTo(Office::class);
     }
 }

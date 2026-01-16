@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateAipRequest;
 use App\Models\AipEntry;
 use App\Models\Ppa;
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 class AipController extends Controller
 {
@@ -44,6 +45,51 @@ class AipController extends Controller
                 ->withInput()
                 ->withErrors(['year' => 'The year is already initialized.']);
         }
+    }
+
+    public function importPpas(Request $request, Aip $aip)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:ppas,id',
+        ]);
+
+        $importedCount = 0;
+
+        foreach ($request->ids as $ppaId) {
+            // 1. Avoid duplicates: Check if this PPA is already in this AIP
+            $exists = AipEntry::where('aip_id', $aip->id)
+                ->where('ppa_id', $ppaId)
+                ->exists();
+
+            if (!$exists) {
+                // 2. Create entry with default values
+                AipEntry::create([
+                    'aip_id' => $aip->id,
+                    'ppa_id' => $ppaId,
+
+                    // Dates default to the AIP Fiscal Year
+                    'start_date' => "{$aip->year}-01-01",
+                    'end_date' => "{$aip->year}-12-31",
+
+                    // Defaults as per your schema requirements
+                    'expected_output' => 'To be defined',
+                    'ps_amount' => 0,
+                    'mooe_amount' => 0,
+                    'fe_amount' => 0,
+                    'co_amount' => 0,
+                    'ccet_adaptation' => 0,
+                    'ccet_mitigation' => 0,
+                ]);
+
+                $importedCount++;
+            }
+        }
+
+        return back()->with(
+            'success',
+            "Successfully imported {$importedCount} items from the library.",
+        );
     }
 
     /**
