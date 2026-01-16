@@ -49,7 +49,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import AipForm from '@/pages/aip-ppa/form';
+import PpaFormDialog from '@/pages/ppa/form';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -64,12 +64,38 @@ import { router } from '@inertiajs/react';
 
 type DialogMode = 'add' | 'edit';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'PPA Master Library',
-        href: '/offices',
-    },
-];
+interface Sector {
+    id: number;
+    code: string;
+}
+
+interface LguLevel {
+    id: number;
+    code: string;
+}
+
+interface OfficeType {
+    id: number;
+    code: string;
+}
+
+interface Office {
+    id: number;
+    sector_id: number;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    is_lee: number; // Use 0 | 1 if you want to be stricter
+    created_at: string;
+    updated_at: string;
+    full_code: string;
+
+    // Relationships (Eager Loaded)
+    sector?: Sector;
+    lgu_level?: LguLevel;
+    office_type?: OfficeType;
+}
 
 interface Ppa {
     id: number;
@@ -79,15 +105,10 @@ interface Ppa {
     type: 'Program' | 'Project' | 'Activity';
     code_suffix: string; // 001, 002, etc.
     is_active: boolean;
+    full_code: string;
     created_at: string;
     updated_at: string;
     children?: Ppa[]; // Recursive children for the tree
-}
-
-interface Office {
-    id: number;
-    name: string;
-    full_code?: string;
 }
 
 interface PpaProps {
@@ -95,16 +116,40 @@ interface PpaProps {
     offices: Office[];
 }
 
-export type Payment = {
-    id: string;
-    amount: number;
-    status: 'pending' | 'processing' | 'success' | 'failed';
-    email: string;
-};
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'PPA Master Library',
+        href: '/offices',
+    },
+];
 
 export const columns: ColumnDef<Ppa>[] = [
     {
-        accessorKey: 'type',
+        id: 'select',
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected() ||
+                    (table.getIsSomePageRowsSelected() && 'indeterminate')
+                }
+                onCheckedChange={(value) =>
+                    table.toggleAllPageRowsSelected(!!value)
+                }
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) => row.toggleSelected(!!value)}
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+    },
+    {
+        accessorKey: 'title',
         header: 'Type & Title',
         cell: ({ row }) => {
             const ppa = row.original;
@@ -135,10 +180,10 @@ export const columns: ColumnDef<Ppa>[] = [
         },
     },
     {
-        accessorKey: 'code_suffix',
-        header: 'Suffix',
+        accessorKey: 'full_code',
+        header: 'Aip Reference Code',
         cell: ({ getValue }) => (
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-semibold">
+            <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
                 {getValue<string>()}
             </code>
         ),
@@ -150,15 +195,17 @@ export const columns: ColumnDef<Ppa>[] = [
             const active = getValue<boolean>();
             return active ? (
                 <Badge
-                    variant="outline"
-                    className="gap-1 border-green-200 bg-green-50 text-green-600"
+                    variant="secondary"
+                    // className="gap-1 border-green-200 bg-green-50 text-green-600"
+                    className="text-foreground"
                 >
                     <CheckCircle2 className="h-3 w-3" /> Active
                 </Badge>
             ) : (
                 <Badge
-                    variant="secondary"
-                    className="gap-1 text-muted-foreground"
+                    variant="destructive"
+                    // className="gap-1 text-muted-foreground"
+                    className="text-muted-foreground"
                 >
                     <XCircle className="h-3 w-3" /> Inactive
                 </Badge>
@@ -167,7 +214,7 @@ export const columns: ColumnDef<Ppa>[] = [
     },
     {
         accessorKey: 'created_at',
-        header: 'Date Created',
+        header: 'Created At',
         cell: ({ getValue }) => {
             const date = new Date(getValue());
             return date.toLocaleString('en-US', {
@@ -226,6 +273,10 @@ export const columns: ColumnDef<Ppa>[] = [
 ];
 
 export default function PpaPage({ ppaTree, offices }: PpaProps) {
+    console.log(ppaTree);
+    console.log(offices);
+    // console.log(sectors);
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [dialogMode, setDialogMode] = useState<DialogMode>('add');
@@ -233,7 +284,16 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
     const [targetType, setTargetType] = useState<Ppa['type']>('Program');
     const [ppaToDelete, setPpaToDelete] = useState<Ppa | null>(null);
 
+    const [value, setValue] = useState('');
     const [globalFilter, setGlobalFilter] = useState('');
+
+    React.useEffect(() => {
+        const timeout = setTimeout(() => {
+            setGlobalFilter(value);
+        }, 300); // 300ms delay
+
+        return () => clearTimeout(timeout);
+    }, [value]);
 
     const table = useReactTable({
         data: ppaTree || [],
@@ -242,6 +302,9 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
         getCoreRowModel: getCoreRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
+        // ADD THESE TWO LINES:
+        filterFromLeafRows: true, // Search children and include parents if a child matches
+        globalFilterFn: 'includesString', // Ensure it's using the standard string search
         state: {
             expanded: true,
             globalFilter,
@@ -276,47 +339,37 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="w-full px-6 pb-8">
-                <div className="flex items-center justify-between py-6">
-                    <div className="space-y-1">
-                        <h1 className="text-2xl font-bold tracking-tight">
-                            PPA Masterlist
-                        </h1>
+            <div className="w-full px-4 pb-4">
+                <div className="flex items-center justify-between py-4">
+                    <Input
+                        value={value}
+                        onChange={(e) => setValue(e.target.value)}
+                        placeholder="Search Programs/Projects/Activities..."
+                        className="max-w-sm"
+                    />
 
-                        <p className="text-sm text-muted-foreground">
-                            Manage your Office Programs, Projects, and
-                            Activities hierarchy.
-                        </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                        <Input
-                            placeholder="Search PPAs..."
-                            value={globalFilter ?? ''}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            className="w-64"
-                        />
-
-                        <Button
-                            onClick={() => {
-                                setDialogMode('add');
-                                setActivePpa(null);
-                                setTargetType('Program');
-                                setIsDialogOpen(true);
-                            }}
-                        >
-                            New Program
-                        </Button>
-                    </div>
+                    <Button
+                        onClick={() => {
+                            setDialogMode('add');
+                            setActivePpa(null);
+                            setTargetType('Program');
+                            setIsDialogOpen(true);
+                        }}
+                    >
+                        New Program
+                    </Button>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+                <div className="overflow-hidden rounded-md border">
                     <Table>
-                        <TableHeader className="bg-muted/50">
+                        <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            className="text-sm text-muted-foreground"
+                                        >
                                             {flexRender(
                                                 header.column.columnDef.header,
                                                 header.getContext(),
@@ -355,46 +408,18 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                 </div>
 
                 {/* Main Form Dialog */}
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogContent className="sm:max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle>
-                                {dialogMode === 'add'
-                                    ? `Add ${targetType}`
-                                    : `Edit ${targetType}`}
-                            </DialogTitle>
-
-                            <DialogDescription>
-                                {dialogMode === 'add' && activePpa
-                                    ? `Creating under: ${activePpa.title}`
-                                    : 'Modify the details of this PPA entry.'}
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <AipForm
-                            mode={dialogMode}
-                            data={activePpa}
-                            type={targetType}
-                            onSuccess={() => setIsDialogOpen(false)}
-                            offices={offices}
-                        />
-
-                        <DialogFooter className="gap-2 sm:gap-0">
-                            <Button
-                                variant="ghost"
-                                onClick={() => setIsDialogOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-
-                            <Button type="submit" form="ppa-form">
-                                {dialogMode === 'add'
-                                    ? 'Create PPA'
-                                    : 'Save Changes'}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
+                <PpaFormDialog
+                    mode={dialogMode}
+                    data={activePpa}
+                    type={targetType}
+                    onSuccess={() => setIsDialogOpen(false)}
+                    offices={offices}
+                    isDialogOpen={isDialogOpen}
+                    setIsDialogOpen={setIsDialogOpen}
+                    dialogMode={dialogMode}
+                    targetType={targetType}
+                    activePpa={activePpa}
+                />
 
                 {/* Delete Alert */}
                 <AlertDialog

@@ -15,17 +15,37 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
-// We now validate for office_id instead of a manual string for the code
+// 1. Validation Schema
 const formSchema = z.object({
     office_id: z.string().min(1, 'Implementing office is required'),
-    description: z.string().min(1, 'Description is required'),
+    title: z.string().min(1, 'Title is required'),
+    code_suffix: z
+        .string()
+        .min(1, 'Suffix is required')
+        .max(3, 'Suffix must be 3 digits (e.g., 001)')
+        .regex(/^\d+$/, 'Suffix must be numeric'),
+    type: z.enum(['Program', 'Project', 'Activity']),
+    is_active: z.boolean().default(true),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -33,188 +53,334 @@ type FormValues = z.infer<typeof formSchema>;
 interface Office {
     id: number;
     sector_id: number;
-    lgu_level_id: 1 | 2 | 3;
-    office_type_id: 1 | 2 | 3;
-    office_number: number;
-    title: string;
-    full_code?: string;
-    created_at?: string | Date;
-    updated_at?: string | Date;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    is_lee: number; // Use 0 | 1 if you want to be stricter
+    created_at: string;
+    updated_at: string;
+    full_code: string;
+
+    // Relationships (Eager Loaded)
+    sector?: Sector;
+    lgu_level?: LguLevel;
+    office_type?: OfficeType;
 }
 
-interface AipFormProps {
-    id?: number | null; // Record ID (for Edit) or Parent ID (for Add Child)
-    data?: any; // Existing record data
+interface PpaFormDialogProps {
+    data?: any; // The record (if editing) OR the Parent record (if adding child)
     mode: 'add' | 'edit';
+    type?: 'Program' | 'Project' | 'Activity'; // Target type from the table action
     onSuccess?: () => void;
     offices: Office[];
 }
 
-export default function AipForm({
-    id,
+export default function PpaFormDialog({
     data,
     mode,
+    type,
     onSuccess,
     offices,
-}: AipFormProps) {
-    // Determine if we are adding a child to a parent
-    const isAddingChild = mode === 'add' && !!id;
+    isDialogOpen,
+    setIsDialogOpen,
+    dialogMode,
+    targetType,
+    activePpa,
+}: PpaFormDialogProps) {
     const isEditing = mode === 'edit';
+    const isAddingChild = mode === 'add' && !!data;
 
-    // Helper to get initial office ID string
-    const getInitialOfficeId = () => {
-        if (isEditing) return data?.office_id?.toString() || '';
-        if (isAddingChild) return data?.office_id?.toString() || '';
-        return '';
-    };
+    // console.log(offices);
 
-    const defaultValues: FormValues = {
-        office_id: getInitialOfficeId(),
-        description: isEditing ? data?.description : '',
-    };
-
+    // 2. Initialize Form
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues,
+        defaultValues: {
+            office_id: '',
+            title: '',
+            code_suffix: '',
+            type: 'Program',
+            is_active: true,
+        },
     });
 
-    // Reset form when props change
+    const selectedOfficeId = Number(form.watch('office_id'));
+    const codeSuffix = form.watch('code_suffix');
+    const currentType = form.watch('type');
+
+    const officeFullCode = offices.find(
+        (office) => office.id === selectedOfficeId,
+    )?.full_code;
+
+    const getCodePreview = () => {
+        if (currentType === 'Program') {
+            return `${officeFullCode || '0000-000-0-00-000'}-${codeSuffix || '000'}`;
+        }
+        // For Projects/Activities, we use the parent's full_code
+        // 'activePpa' contains the parent info when adding a child
+        if (activePpa?.full_code) {
+            return `${activePpa.full_code}-${codeSuffix || '000'}`;
+        }
+        return `CODE-${codeSuffix || '000'}`;
+    };
+
+    // 3. Sync form with props when dialog opens
     useEffect(() => {
-        form.reset(defaultValues);
-    }, [data, mode, id]);
+        if (isEditing) {
+            form.reset({
+                office_id: data?.office_id?.toString() || '',
+                title: data?.title || '',
+                code_suffix: data?.code_suffix || '',
+                type: data?.type || 'Program',
+                is_active: !!data?.is_active,
+            });
+        } else {
+            // Adding Mode
+            form.reset({
+                office_id: data?.office_id?.toString() || '', // Inherit office from parent if exists
+                title: '',
+                code_suffix: '',
+                type: type || 'Program',
+                is_active: true,
+            });
+        }
+    }, [data, mode, type, form]);
 
+    // 4. Submit Handler
     function onSubmit(values: FormValues) {
-        let inertiaMethod: 'post' | 'patch' = 'post';
-        let url = '/aip-ppa';
-
         const payload: any = { ...values };
 
-        if (mode === 'add') {
-            // id here is the parent_id
-            payload.parent_id = id;
-        } else if (mode === 'edit') {
-            // id here is the record's primary key
-            inertiaMethod = 'patch';
-            url = `/aip-ppa/${id}`;
-        }
+        if (isEditing) {
+            router.patch(`/ppas/${data.id}`, payload, {
+                onSuccess: () => onSuccess?.(),
+            });
+        } else {
+            // If adding a child, include the parent_id
+            if (isAddingChild) {
+                payload.parent_id = data.id;
+            }
 
-        router[inertiaMethod](url, payload, {
-            onSuccess: () => {
-                form.reset();
-                onSuccess?.();
-            },
-        });
+            router.post('/ppas', payload, {
+                onSuccess: () => {
+                    form.reset();
+                    onSuccess?.();
+                },
+            });
+        }
     }
 
     return (
-        <Form {...form}>
-            <form
-                id="ppa-form"
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-            >
-                {/* OFFICE SELECTION LOGIC */}
-                <FormField
-                    control={form.control}
-                    name="office_id"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>
-                                Implementing Office / Department
-                            </FormLabel>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>
+                        {dialogMode === 'add'
+                            ? `Add ${targetType}`
+                            : `Edit ${targetType}`}
+                    </DialogTitle>
 
-                            {/*
-                               If we are adding a root Program (no parent id),
-                               show the dropdown. Otherwise, keep it read-only.
-                            */}
-                            {!isAddingChild && !isEditing ? (
-                                <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select an office" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {offices.map((office) => (
-                                            <SelectItem
-                                                key={office.id}
-                                                value={office.id.toString()}
+                    <DialogDescription>
+                        {dialogMode === 'add' && activePpa
+                            ? `Creating under: ${activePpa.title}`
+                            : 'Modify the details of this PPA entry.'}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="flex gap-4">
+                    <div className="flex-3 rounded-lg bg-card p-3">
+                        <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                            AIP Reference Code Preview
+                        </div>
+                        {/*<div className="font-mono text-xl font-bold text-primary">
+                        </div>*/}
+                        <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xl font-semibold">
+                            {getCodePreview()}
+                        </code>
+                    </div>
+
+                    <div className="flex-1 rounded-lg bg-card p-3">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                Entry Type
+                            </span>
+                            <span className="rounded border bg-background px-2 py-1 text-sm font-bold text-primary shadow-sm">
+                                {form.watch('type')}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <Form {...form}>
+                    <form
+                        id="ppa-form"
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                    >
+                        {/* OFFICE SELECTION */}
+                        {/* 1. Wrap in a div that spans all columns if inside a grid */}
+                        <div className="col-span-1 md:col-span-2">
+                            <FormField
+                                control={form.control}
+                                name="office_id"
+                                render={({ field }) => (
+                                    <FormItem className="w-full">
+                                        <FormLabel className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                                            Implementing Office
+                                        </FormLabel>
+
+                                        {isEditing || isAddingChild ? (
+                                            <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3 shadow-sm ring-1 ring-black/5 ring-inset">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background shadow-sm">
+                                                    <span className="text-lg">
+                                                        🏢
+                                                    </span>
+                                                </div>
+                                                <div className="flex min-w-0 flex-col">
+                                                    <span className="truncate text-sm font-semibold">
+                                                        {offices.find(
+                                                            (o) =>
+                                                                o.id.toString() ===
+                                                                field.value,
+                                                        )?.name || 'Loading...'}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground uppercase italic">
+                                                        Inherited from parent
+                                                        (Locked)
+                                                    </span>
+                                                </div>
+                                                {/* Hidden input to ensure the value is still sent with the form */}
+                                                <input
+                                                    type="hidden"
+                                                    {...form.register(
+                                                        'office_id',
+                                                    )}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Select
+                                                onValueChange={field.onChange}
+                                                value={field.value}
                                             >
-                                                {office.title} (
-                                                {office.full_code})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            ) : (
-                                <div className="space-y-2">
-                                    <Input
-                                        value={
-                                            isEditing
-                                                ? data?.office?.title
-                                                : data?.office?.title ||
-                                                  data?.title
-                                        }
-                                        disabled
-                                        className="bg-muted"
-                                    />
-                                    <FormDescription>
-                                        Office is locked for{' '}
-                                        {isEditing
-                                            ? 'existing records'
-                                            : 'children elements'}
-                                        .
-                                    </FormDescription>
-                                    {/* Hidden input to ensure office_id is sent in child-add mode */}
-                                    <input
-                                        type="hidden"
-                                        {...form.register('office_id')}
-                                    />
-                                </div>
-                            )}
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-
-                {/* SHOW REFERENCE CODE PREVIEW IF EDITING */}
-                {isEditing && (
-                    <FormItem>
-                        <FormLabel>AIP Reference Code</FormLabel>
-                        <FormControl>
-                            <Input
-                                value={data?.reference_code}
-                                disabled
-                                className="bg-muted font-mono"
+                                                <FormControl>
+                                                    <SelectTrigger className="h-11 w-full shadow-sm">
+                                                        <SelectValue placeholder="Select implementing office..." />
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    {offices.map((o) => (
+                                                        <SelectItem
+                                                            key={o.id}
+                                                            value={o.id.toString()}
+                                                        >
+                                                            {o.name}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
                             />
-                        </FormControl>
-                    </FormItem>
-                )}
+                        </div>
 
-                {/* DESCRIPTION FIELD */}
-                <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>
-                                Program/Project/Activity Description
-                            </FormLabel>
-                            <FormControl>
-                                <Textarea
-                                    placeholder="e.g. Construction of Health Center"
-                                    className="min-h-[100px]"
-                                    {...field}
+                        {/* CODE SUFFIX */}
+                        <div className="grid grid-cols-5 gap-4">
+                            <div className="col-span-2">
+                                <FormField
+                                    className="flex flex-1"
+                                    control={form.control}
+                                    name="code_suffix"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                Suffix (Sequence)
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="e.g. 001"
+                                                    {...field}
+                                                    // maxLength={3}
+                                                />
+                                            </FormControl>
+                                            <FormDescription>
+                                                3-digit code for the reference
+                                                ID.
+                                            </FormDescription>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            </form>
-        </Form>
+                            </div>
+
+                            <div className="col-span-3">
+                                <FormField
+                                    control={form.control}
+                                    name="is_active"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4 shadow-sm">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={field.value}
+                                                    onCheckedChange={
+                                                        field.onChange
+                                                    }
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 leading-none">
+                                                <FormLabel className="cursor-pointer">
+                                                    Active Entry
+                                                </FormLabel>
+                                                <FormDescription>
+                                                    Only active PPAs can be
+                                                    selected for annual budget
+                                                    planning.
+                                                </FormDescription>
+                                            </div>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </div>
+
+                        {/* TITLE FIELD */}
+                        <FormField
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Official Title</FormLabel>
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder={`Enter the name of the ${form.watch('type').toLowerCase()}...`}
+                                            className="min-h-[100px] resize-none"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* Hidden field to ensure type is always submitted */}
+                        <input type="hidden" {...form.register('type')} />
+                    </form>
+                </Form>
+
+                <DialogFooter className="gap-2 sm:gap-0">
+                    <Button
+                        variant="ghost"
+                        onClick={() => setIsDialogOpen(false)}
+                    >
+                        Cancel
+                    </Button>
+
+                    <Button type="submit" form="ppa-form">
+                        {dialogMode === 'add' ? 'Create PPA' : 'Save Changes'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

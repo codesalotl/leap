@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Ppa;
 use App\Models\Office;
+use App\Models\Sector;
 use App\Http\Requests\StorePpaRequest;
 use App\Http\Requests\UpdatePpaRequest;
+use App\Models\LguLevel;
+use App\Models\OfficeType;
 use Inertia\Inertia;
 
 class PpaController extends Controller
@@ -15,25 +18,23 @@ class PpaController extends Controller
      */
     public function index()
     {
-        $ppaTree = Ppa::whereNull('parent_id')->with('children')->get();
+        // Load children and their parents recursively
+        $ppaTree = Ppa::whereNull('parent_id')
+            ->with([
+                'office.sector',
+                'office.lguLevel',
+                'office.officeType',
+                'children.children', // Load deeper levels
+            ])
+            ->get();
+
+        $offices = Office::with(['sector', 'lguLevel', 'officeType'])->get();
 
         return Inertia::render('ppa/index', [
             'ppaTree' => $ppaTree,
-            'offices' => Office::all(),
+            'offices' => $offices,
         ]);
     }
-
-    /**
-     * Recursive helper to ensure children is never null
-     */
-    private function formatPpa($ppa)
-    {
-        $ppa->children = $ppa->children->map(
-            fn($child) => $this->formatPpa($child),
-        );
-        return $ppa;
-    }
-
     /**
      * Show the form for creating a new resource.
      */

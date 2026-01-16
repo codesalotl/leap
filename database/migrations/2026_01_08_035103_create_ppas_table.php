@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('ppas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('office_id')->constrained('offices');
+            $table->foreignId('office_id')->constrained();
 
             // Self-referencing parent
             $table
@@ -28,7 +28,7 @@ return new class extends Migration {
 
             // The suffix (e.g., 001).
             // We should probably ensure code_suffix is unique per office + parent_id
-            $table->string('code_suffix', 4)->nullable();
+            $table->string('code_suffix', 4);
 
             $table->boolean('is_active')->default(true);
             $table->timestamps();

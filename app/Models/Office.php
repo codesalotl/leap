@@ -4,7 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // ADD THIS
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Office extends Model
 {
@@ -19,6 +20,22 @@ class Office extends Model
         'name',
         'is_lee',
     ];
+
+    protected $appends = ['full_code'];
+
+    protected function fullCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => sprintf(
+                '%s-%s-%s-%s-%s',
+                $this->sector?->code ?? '0000',
+                '000',
+                $this->lguLevel?->code ?? '0',
+                $this->officeType?->code ?? '00',
+                $this->code,
+            ),
+        );
+    }
 
     public function sector(): BelongsTo
     {

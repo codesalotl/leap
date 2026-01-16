@@ -45,6 +45,8 @@ import {
     MoreHorizontal,
     BadgeCheckIcon,
     BadgeX,
+    CheckCircle2,
+    XCircle,
 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -109,7 +111,7 @@ export const columns: ColumnDef<Aip>[] = [
                     variant={`${status === 'Open' ? 'secondary' : 'destructive'}`}
                     className="secondary text-white"
                 >
-                    {status === 'Open' ? <BadgeCheckIcon /> : <BadgeX />}
+                    {status === 'Open' ? <CheckCircle2 /> : <XCircle />}
                     {status}
                 </Badge>
             );
