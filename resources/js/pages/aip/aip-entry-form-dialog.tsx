@@ -3,9 +3,18 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Decimal from 'decimal.js';
+import { router } from '@inertiajs/react'; // Import Inertia router
 
-// If you are using shadcn/ui, keep these imports as they are.
-// If this is for a pure sandbox, you'd replace these with standard HTML tags.
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
     Form,
     FormControl,
@@ -14,10 +23,7 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
-// --- SCHEMA DEFINITION ---
 const amountSchema = z
     .string()
     .trim()
@@ -51,19 +57,16 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-// --- MOCK PROPS FOR INDEPENDENT VIEWING ---
 interface AipFormProps {
-    id?: number | null;
-    data?: any;
-    mode?: 'create' | 'add' | 'edit';
-    onSuccess?: (values: FormValues) => void;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    data: any;
 }
 
 const CustomField = ({
     control,
     name,
     label,
-    placeholder = '...',
     readOnly = false,
     type = 'text',
 }: any) => (
@@ -72,13 +75,12 @@ const CustomField = ({
         name={name}
         render={({ field }) => (
             <FormItem className="w-full">
-                <FormLabel className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                <FormLabel className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
                     {label}
                 </FormLabel>
                 <FormControl>
                     <Input
                         type={type}
-                        placeholder={placeholder}
                         {...field}
                         readOnly={readOnly}
                         className={readOnly ? 'bg-muted/50 font-mono' : ''}
@@ -90,45 +92,49 @@ const CustomField = ({
     />
 );
 
-export default function AipFormStandalone({
-    id = null,
-    data = null,
-    mode = 'create',
-    onSuccess,
+export default function AipEntryFormDialog({
+    open,
+    onOpenChange,
+    data,
 }: AipFormProps) {
-    // 1. Setup Default Values
-    const defaultValues: FormValues = {
-        aipRefCode: data?.aipRefCode || '',
-        ppaDescription: data?.ppaDescription || '',
+    // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
+    const getInitialValues = (d: any): FormValues => ({
+        aipRefCode: d?.aip_ref_code || '',
+        ppaDescription: d?.ppa_desc || '',
         implementingOfficeDepartmentLocation:
-            data?.implementingOfficeDepartmentLocation || '',
+            d?.implementing_office_department || '',
         scheduleOfImplementation: {
-            startingDate: data?.scheduleOfImplementation?.startingDate || '',
+            startingDate:
+                d?.sched_implementation?.start_date || d?.start_date || '',
             completionDate:
-                data?.scheduleOfImplementation?.completionDate || '',
+                d?.sched_implementation?.completion_date || d?.end_date || '',
         },
-        expectedOutputs: data?.expectedOutputs || '',
-        fundingSource: data?.fundingSource || '',
+        expectedOutputs: d?.expected_outputs || d?.expected_output || '',
+        fundingSource: d?.funding_source || '',
         amount: {
-            ps: data?.amount?.ps || '0.00',
-            mooe: data?.amount?.mooe || '0.00',
-            fe: data?.amount?.fe || '0.00',
-            co: data?.amount?.co || '0.00',
-            total: data?.amount?.total || '0.00',
+            ps: d?.amount?.ps || '0.00',
+            mooe: d?.amount?.mooe || '0.00',
+            fe: d?.amount?.fe || '0.00',
+            co: d?.amount?.co || '0.00',
+            total: d?.amount?.total || '0.00',
         },
         amountOfCcExpenditure: {
-            ccAdaptation: data?.amountOfCcExpenditure?.ccAdaptation || '0.00',
-            ccMitigation: data?.amountOfCcExpenditure?.ccMitigation || '0.00',
+            // Note: In your JSON, these are top-level keys
+            ccAdaptation: d?.cc_adaptation || d?.ccet_adaptation || '0.00',
+            ccMitigation: d?.cc_mitigation || d?.ccet_mitigation || '0.00',
         },
-        ccTypologyCode: data?.ccTypologyCode || '',
-    };
+        ccTypologyCode: d?.cc_typology_code || '',
+    });
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues,
+        defaultValues: getInitialValues(data),
     });
 
-    // 2. Auto-calculation Logic
+    useEffect(() => {
+        if (open) form.reset(getInitialValues(data));
+    }, [data, open, form]);
+
     const watchedAmounts = useWatch({ control: form.control, name: 'amount' });
 
     useEffect(() => {
@@ -139,62 +145,61 @@ export default function AipFormStandalone({
                 .plus(fe || 0)
                 .plus(co || 0)
                 .toFixed(2);
-
-            if (watchedAmounts?.total !== total) {
+            if (watchedAmounts?.total !== total)
                 form.setValue('amount.total', total);
-            }
-        } catch (e) {
-            /* Ignore parsing errors during typing */
-        }
+        } catch (e) {}
     }, [watchedAmounts, form]);
 
-    // 3. Independent Submit Handler
+    // Submission Handler
     function onSubmit(values: FormValues) {
-        console.log('Form Submitted Successfully:', values);
-        alert('Form Submitted! Check console for payload.');
-        onSuccess?.(values);
+        if (!data?.id) return;
+
+        // Perform the Inertia PUT request to your defined route
+        router.put(`/aip-entries/${data.id}`, values, {
+            onSuccess: () => {
+                onOpenChange(false);
+                // Optional: Show a success toast here
+            },
+            preserveScroll: true,
+        });
     }
 
     return (
-        <div className="mx-auto max-w-5xl rounded-xl border bg-background p-6 shadow-sm">
-            <div className="mb-6 border-b pb-4">
-                <h2 className="text-xl font-semibold capitalize">
-                    {mode} AIP PPA
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                    Fill out the details for the Annual Investment Program.
-                </p>
-            </div>
-
-            <Form {...form}>
-                <form
-                    onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-8"
-                >
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                        {/* Left Column */}
-                        <div className="space-y-5">
-                            <CustomField
-                                control={form.control}
-                                name="aipRefCode"
-                                label="AIP Ref. Code"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="ppaDescription"
-                                label="PPA Description"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="implementingOfficeDepartmentLocation"
-                                label="Implementing Office"
-                            />
-
-                            <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
-                                <p className="text-sm font-bold">
-                                    Schedule of Implementation
-                                </p>
-                                <div className="grid grid-cols-2 gap-4">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
+                <DialogHeader>
+                    <DialogTitle>Edit AIP Entry</DialogTitle>
+                    <DialogDescription>
+                        Modify the details for this program/project allocation.
+                    </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form
+                        id="aip-entry-form"
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="space-y-6"
+                    >
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                            {/* Left Column */}
+                            <div className="space-y-4">
+                                <CustomField
+                                    control={form.control}
+                                    name="aipRefCode"
+                                    label="AIP Ref. Code"
+                                    readOnly
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="ppaDescription"
+                                    label="PPA Description"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="implementingOfficeDepartmentLocation"
+                                    label="Office/Dept"
+                                    readOnly
+                                />
+                                <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
                                     <CustomField
                                         control={form.control}
                                         name="scheduleOfImplementation.startingDate"
@@ -209,31 +214,24 @@ export default function AipFormStandalone({
                                     />
                                 </div>
                             </div>
-                        </div>
-
-                        {/* Right Column */}
-                        <div className="space-y-5">
-                            <CustomField
-                                control={form.control}
-                                name="expectedOutputs"
-                                label="Expected Outputs"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="fundingSource"
-                                label="Funding Source"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="ccTypologyCode"
-                                label="CC Typology Code"
-                            />
-
-                            <div className="space-y-4 rounded-lg border bg-blue-50/30 p-4">
-                                <p className="text-sm font-bold">
-                                    Climate Change Expenditure
-                                </p>
-                                <div className="grid grid-cols-2 gap-4">
+                            {/* Right Column */}
+                            <div className="space-y-4">
+                                <CustomField
+                                    control={form.control}
+                                    name="expectedOutputs"
+                                    label="Expected Outputs"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="fundingSource"
+                                    label="Funding Source"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="ccTypologyCode"
+                                    label="CC Typology Code"
+                                />
+                                <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
                                     <CustomField
                                         control={form.control}
                                         name="amountOfCcExpenditure.ccAdaptation"
@@ -247,57 +245,60 @@ export default function AipFormStandalone({
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Financial Allocation Row */}
-                    <div className="rounded-lg border bg-primary/5 p-5">
-                        <p className="mb-4 text-sm font-bold">
-                            Financial Allocation (PHP)
-                        </p>
-                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-                            <CustomField
-                                control={form.control}
-                                name="amount.ps"
-                                label="PS"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="amount.mooe"
-                                label="MOOE"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="amount.fe"
-                                label="FE"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="amount.co"
-                                label="CO"
-                            />
-                            <CustomField
-                                control={form.control}
-                                name="amount.total"
-                                label="Total"
-                                readOnly
-                            />
+                        {/* Financial Allocation */}
+                        <div className="rounded-lg border bg-muted/30 p-4">
+                            <p className="mb-4 text-xs font-bold text-muted-foreground uppercase">
+                                Financial Allocation (PHP)
+                            </p>
+                            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+                                <CustomField
+                                    control={form.control}
+                                    name="amount.ps"
+                                    label="PS"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="amount.mooe"
+                                    label="MOOE"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="amount.fe"
+                                    label="FE"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="amount.co"
+                                    label="CO"
+                                />
+                                <CustomField
+                                    control={form.control}
+                                    name="amount.total"
+                                    label="Total"
+                                    readOnly
+                                />
+                            </div>
                         </div>
-                    </div>
-
-                    <div className="flex justify-end gap-3 border-t pt-6">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => form.reset()}
-                        >
-                            Reset Form
-                        </Button>
-                        <Button type="submit">
-                            {mode === 'edit' ? 'Update Entry' : 'Save Entry'}
-                        </Button>
-                    </div>
-                </form>
-            </Form>
-        </div>
+                    </form>
+                </Form>
+                <DialogFooter>
+                    <Button
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        type="submit"
+                        form="aip-entry-form"
+                        disabled={form.formState.isSubmitting}
+                    >
+                        {form.formState.isSubmitting
+                            ? 'Saving...'
+                            : 'Save changes'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }

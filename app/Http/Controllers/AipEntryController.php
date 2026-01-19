@@ -52,7 +52,7 @@ class AipEntryController extends Controller
                     'completion_date' => $entry->end_date,
                 ],
                 'expected_outputs' => $entry->expected_output,
-                'funding_source' => 'General Fund',
+                'funding_source' => '',
                 'amount' => [
                     'ps' => number_format($ps, 2, '.', ''),
                     'mooe' => number_format($mooe, 2, '.', ''),
@@ -169,7 +169,39 @@ class AipEntryController extends Controller
      */
     public function update(UpdateAipEntryRequest $request, AipEntry $aipEntry)
     {
-        //
+        // 1. Validate the data
+        $validated = $request->validate([
+            'scheduleOfImplementation.startingDate' => 'required|date',
+            'scheduleOfImplementation.completionDate' => 'required|date',
+            'expectedOutputs' => 'required|string',
+            'amount.ps' => 'required|numeric',
+            'amount.mooe' => 'required|numeric',
+            'amount.fe' => 'required|numeric',
+            'amount.co' => 'required|numeric',
+            'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
+            'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
+            // 'ccTypologyCode' => 'required|string', // Add if you've uncommented this in DB
+        ]);
+
+        // 2. Map and Update
+        $aipEntry->update([
+            'start_date' =>
+                $validated['scheduleOfImplementation']['startingDate'],
+            'end_date' =>
+                $validated['scheduleOfImplementation']['completionDate'],
+            'expected_output' => $validated['expectedOutputs'],
+            'ps_amount' => $validated['amount']['ps'],
+            'mooe_amount' => $validated['amount']['mooe'],
+            'fe_amount' => $validated['amount']['fe'],
+            'co_amount' => $validated['amount']['co'],
+            'ccet_adaptation' =>
+                $validated['amountOfCcExpenditure']['ccAdaptation'],
+            'ccet_mitigation' =>
+                $validated['amountOfCcExpenditure']['ccMitigation'],
+        ]);
+
+        // 3. Return back with a success message
+        return back()->with('success', 'AIP Entry updated successfully.');
     }
 
     /**
@@ -177,6 +209,57 @@ class AipEntryController extends Controller
      */
     public function destroy(AipEntry $aipEntry)
     {
-        //
+        try {
+            DB::beginTransaction();
+
+            // We only care about the PPA hierarchy to know WHICH entries to remove
+            $fiscalYearId = $aipEntry->fiscal_year_id;
+            $targetPpaId = $aipEntry->ppa_id;
+
+            // 1. We look at the 'ppas' table ONLY to find the IDs of the children.
+            // No PPA records are deleted here.
+            $descendantPpaIds = $this->getDescendantPpaIds($targetPpaId);
+
+            // 2. We combine the clicked PPA ID with all its child PPA IDs.
+            $ppaIdsToRemoveFromAip = array_merge(
+                [$targetPpaId],
+                $descendantPpaIds,
+            );
+
+            // 3. This is the ONLY delete command.
+            // It only removes records from 'aip_entries' (the budget allocations).
+            // The 'ppas' table (the PPA Library) is NOT affected.
+            AipEntry::where('fiscal_year_id', $fiscalYearId)
+                ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
+                ->delete();
+
+            DB::commit();
+
+            return back()->with('success', 'Removed from AIP summary.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors([
+                'error' => 'Failed to remove entry: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function getDescendantPpaIds($parentId)
+    {
+        // Querying the Library to find sub-projects/activities
+        $children = DB::table('ppas')
+            ->where('parent_id', $parentId)
+            ->pluck('id')
+            ->toArray();
+
+        $descendants = $children;
+        foreach ($children as $childId) {
+            $descendants = array_merge(
+                $descendants,
+                $this->getDescendantPpaIds($childId),
+            );
+        }
+
+        return $descendants;
     }
 }
