@@ -14,6 +14,7 @@ use App\Http\Controllers\SectorController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\AipEntryController;
 use App\Http\Controllers\AipSummaryController;
+use App\Http\Controllers\FiscalYearController;
 
 Route::get(
     '/',
@@ -74,10 +75,16 @@ Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
     'offices.destroy',
 );
 
-Route::get('aip', [AipController::class, 'index']);
-Route::post('aip', [AipController::class, 'store']);
-Route::get('aip/{aip}', [AipController::class, 'show']);
-Route::patch('/aip/{aip}/status', [AipController::class, 'update']);
+// aip
+Route::get('aip', [FiscalYearController::class, 'index']);
+Route::post('aip', [FiscalYearController::class, 'store']);
+Route::patch('/aip/{aip}', [FiscalYearController::class, 'update']);
+// Route::get('aip/{aip}', [FiscalYearController::class, 'show']);
+
+// aip summary
+Route::prefix('aip/{fiscalYear}')->group(function () {
+    Route::get('summary', [AipEntryController::class, 'index']);
+});
 
 // Route::get('ppa', [PpaController::class, 'index']);
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
@@ -91,13 +98,13 @@ Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
 
 Route::get('aip-entries', [AipEntryController::class, 'index']);
 // View the AIP Summary Table
-Route::get('/aip/{aip}/summary', [AipEntryController::class, 'show'])->name(
-    'aip.summary',
-);
+// Route::get('/aip/{aip}/summary', [AipEntryController::class, 'show'])->name(
+//     'aip.summary',
+// );
 // Handle the Import Modal Logic
-Route::post('/aip/{aip}/import', [AipController::class, 'importPpas'])->name(
-    'aip.import-ppas',
-);
+// Route::post('/aip/{aip}/import', [AipController::class, 'importPpas'])->name(
+//     'aip.import-ppas',
+// );
 
 Route::get('aip-summary', [AipSummaryController::class, 'index']);
 

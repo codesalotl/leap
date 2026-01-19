@@ -12,10 +12,7 @@ return new class extends Migration {
     {
         Schema::create('aip_entries', function (Blueprint $table) {
             $table->id();
-            $table
-                ->foreignId('aip_id')
-                ->constrained('aips')
-                ->onDelete('cascade');
+            $table->foreignId('fiscal_year_id')->constrained();
             $table
                 ->foreignId('ppa_id')
                 ->constrained('ppas')

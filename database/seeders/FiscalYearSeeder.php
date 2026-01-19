@@ -20,11 +20,7 @@ class FiscalYearSeeder extends Seeder
         ];
 
         foreach ($fiscalYears as $fiscalYear) {
-            // FiscalYear::create($fiscalYear);
-            FiscalYear::updateOrCreate(
-                ['year' => $fiscalYear['year']],
-                ['status' => $fiscalYear['status']],
-            );
+            FiscalYear::create($fiscalYear);
         }
     }
 }

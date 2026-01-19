@@ -4,7 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Aip;
+// use App\Models\Aip;
+use App\Models\FiscalYear;
 use App\Models\Ppa;
 use App\Models\AipEntry;
 use Carbon\Carbon;
@@ -18,21 +19,21 @@ class AipEntrySeeder extends Seeder
     {
         // 1. Get the AIP (The Binder) we want to populate (e.g., AIP 2025)
         // Ensure you run AipSeeder first!
-        $aip = Aip::first();
+        $fiscalYear = FiscalYear::first();
 
         // 2. Get the Master List of PPAs
         // Ensure you run PpaSeeder first!
         $ppas = Ppa::all();
 
         // Safety check
-        if (!$aip || $ppas->isEmpty()) {
+        if (!$fiscalYear || $ppas->isEmpty()) {
             $this->command->error(
                 'Error: No AIP or PPAs found. Please seed those tables first.',
             );
             return;
         }
 
-        $year = $aip->year; // Assuming your 'aips' table has a 'year' column
+        $year = $fiscalYear->year; // Assuming your 'aips' table has a 'year' column
 
         foreach ($ppas as $index => $ppa) {
             // Logic: Generate different types of costs based on the PPA Sector/Type
@@ -57,7 +58,7 @@ class AipEntrySeeder extends Seeder
             }
 
             AipEntry::create([
-                'aip_id' => $aip->id,
+                'fiscal_year_id' => $fiscalYear->id,
                 'ppa_id' => $ppa->id, // Links to your Master List
 
                 // Set dates within the budget year
@@ -66,7 +67,7 @@ class AipEntrySeeder extends Seeder
 
                 'expected_output' =>
                     'Successfully implemented ' .
-                    $ppa->description .
+                    $ppa->title .
                     ' with 100% utilization rate.',
 
                 // Financial Targets

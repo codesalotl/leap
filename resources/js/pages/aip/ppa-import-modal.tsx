@@ -45,14 +45,14 @@ interface PpaImportModalProps {
     isOpen: boolean;
     onClose: () => void;
     ppaTree: Ppa[];
-    aipId: number;
+    fiscalYearsId: number;
 }
 
 export default function PpaImportModal({
     isOpen,
     onClose,
     ppaTree,
-    aipId,
+    fiscalYearsId,
 }: PpaImportModalProps) {
     const [rowSelection, setRowSelection] = useState({});
     const [globalFilter, setGlobalFilter] = useState('');
@@ -188,7 +188,7 @@ export default function PpaImportModal({
 
         setLoading(true);
         router.post(
-            `/aip/${aipId}/import`,
+            `/aip/${fiscalYearsId}/import`,
             { ids: selectedIds },
             {
                 onSuccess: () => {

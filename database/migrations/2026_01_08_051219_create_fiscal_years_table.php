@@ -10,9 +10,10 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('aip_collections', function (Blueprint $table) {
+        Schema::create('fiscal_years', function (Blueprint $table) {
             $table->id();
-            $table->year('year');
+            $table->year('year')->unique();
+            $table->string('status', 20)->nullable();
             $table->timestamps();
         });
     }
@@ -22,6 +23,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('aip_collections');
+        Schema::dropIfExists('fiscal_years');
     }
 };

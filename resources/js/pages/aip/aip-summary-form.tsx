@@ -38,11 +38,6 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import PpaImportModal from '@/pages/aip/ppa-import-modal';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Annual Investment Programs', href: '/aip' },
-    { title: 'AIP Summary', href: '#' },
-];
-
 export interface AipEntry {
     id: number;
     aip_ref_code: string;
@@ -69,8 +64,8 @@ export interface AipEntry {
 }
 
 interface AipSummaryTableProp {
-    aip: { id: number; year: number };
-    aip_entries: AipEntry[];
+    fiscalYears: { id: number; year: number };
+    aipEntries: AipEntry[];
     masterPpas: any[];
 }
 
@@ -101,14 +96,14 @@ const columns = [
         enableSorting: false,
         enableHiding: false,
     }),
-
     columnHelper.accessor('aip_ref_code', {
         header: 'Ref Code',
         cell: (info) => (
-            <span className="font-mono text-[11px]">{info.getValue()}</span>
+            <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
+                {info.getValue()}
+            </code>
         ),
     }),
-
     columnHelper.accessor('ppa_desc', {
         header: 'PPA Description',
         cell: ({ row, getValue }) => (
@@ -116,25 +111,23 @@ const columns = [
                 style={{ paddingLeft: `${row.depth * 20}px` }} // Indentation logic
                 className="flex items-center gap-2"
             >
-                {row.depth > 0 && (
-                    <span className="font-mono text-muted-foreground opacity-50">
-                        ↳
-                    </span>
-                )}
-                <div className="max-w-[400px] py-1 leading-tight font-medium">
-                    {getValue()}
-                </div>
+                {
+                    row.depth > 0 &&
+                        // <span className="font-mono text-muted-foreground opacity-50">
+                        '↳'
+                    // </span>
+                }
+                <div className="py-1">{getValue()}</div>
             </div>
         ),
     }),
 
     columnHelper.accessor('implementing_office_department', {
         header: 'Department',
-        cell: (info) => (
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-                {info.getValue()}
-            </span>
-        ),
+        cell: (info) =>
+            // <span className="text-[10px] font-semibold text-muted-foreground uppercase">
+            info.getValue(),
+        // </span>
     }),
 
     columnHelper.group({
@@ -142,15 +135,11 @@ const columns = [
         columns: [
             columnHelper.accessor('sched_implementation.start_date', {
                 header: 'Start',
-                cell: (info) => (
-                    <span className="text-[11px]">{info.getValue()}</span>
-                ),
+                cell: (info) => info.getValue(),
             }),
             columnHelper.accessor('sched_implementation.completion_date', {
                 header: 'End',
-                cell: (info) => (
-                    <span className="text-[11px]">{info.getValue()}</span>
-                ),
+                cell: (info) => info.getValue(),
             }),
         ],
     }),
@@ -164,17 +153,11 @@ const columns = [
             columnHelper.accessor('amount.co', { header: 'CO' }),
             columnHelper.accessor('amount.total', {
                 header: 'Total',
-                cell: (info) => (
-                    <span className="font-bold text-primary">
-                        {info.getValue()}
-                    </span>
-                ),
+                cell: (info) => info.getValue(),
             }),
         ],
     }),
-
     columnHelper.accessor('funding_source', { header: 'Source' }),
-
     columnHelper.display({
         id: 'actions',
         enableHiding: false,
@@ -212,10 +195,17 @@ const columns = [
 ];
 
 export default function AipSummaryTable({
-    aip,
-    aip_entries,
+    fiscalYears,
+    aipEntries,
     masterPpas,
 }: AipSummaryTableProp) {
+    console.log(fiscalYears);
+
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Annual Investment Programs', href: '/aip' },
+        { title: `AIP Summary Form ${fiscalYears.year}`, href: '#' },
+    ];
+
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
@@ -225,13 +215,13 @@ export default function AipSummaryTable({
     const [isImportOpen, setIsImportOpen] = React.useState(false);
 
     const table = useReactTable({
-        data: aip_entries,
+        data: aipEntries,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getSubRows: (row) => row.children, // Ensure children are processed
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
+        // getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
@@ -311,19 +301,19 @@ export default function AipSummaryTable({
                     isOpen={isImportOpen}
                     onClose={() => setIsImportOpen(false)}
                     ppaTree={masterPpas}
-                    aipId={aip.id}
+                    fiscalYearsId={fiscalYears.id}
                 />
 
-                <div className="overflow-hidden rounded-md border bg-card">
+                <div className="overflow-hidden rounded-md border">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
                                         <TableHead
                                             key={header.id}
                                             colSpan={header.colSpan}
-                                            className="border-r border-b bg-muted/50 text-center text-[11px] font-bold tracking-wider text-muted-foreground uppercase last:border-r-0"
+                                            className="text-sm text-muted-foreground"
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -337,6 +327,7 @@ export default function AipSummaryTable({
                                 </TableRow>
                             ))}
                         </TableHeader>
+
                         <TableBody>
                             {table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
@@ -345,13 +336,9 @@ export default function AipSummaryTable({
                                         data-state={
                                             row.getIsSelected() && 'selected'
                                         }
-                                        className="hover:bg-muted/30"
                                     >
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell
-                                                key={cell.id}
-                                                className="border-r border-b px-2 py-0 last:border-r-0"
-                                            >
+                                            <TableCell key={cell.id}>
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
                                                     cell.getContext(),
@@ -364,10 +351,9 @@ export default function AipSummaryTable({
                                 <TableRow>
                                     <TableCell
                                         colSpan={table.getAllColumns().length}
-                                        className="h-32 text-center text-muted-foreground"
                                     >
                                         No AIP entries found for fiscal year{' '}
-                                        {aip.year}.
+                                        {fiscalYears.year}.
                                     </TableCell>
                                 </TableRow>
                             )}

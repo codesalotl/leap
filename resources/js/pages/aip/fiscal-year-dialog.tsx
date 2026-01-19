@@ -72,7 +72,6 @@ export default function FiscalYearDialog() {
     return (
         <Dialog>
             <Form {...form}>
-                {/* <form id="year-dialog" onSubmit={onSubmit}> */}
                 <form
                     id="year-dialog"
                     onSubmit={form.handleSubmit(onSubmit)}

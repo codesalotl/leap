@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { router } from '@inertiajs/react';
-
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import FiscalYearDialog from '@/pages/aip/fiscal-year-dialog';
-
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -26,7 +24,6 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-
 import {
     flexRender,
     getCoreRowModel,
@@ -39,7 +36,6 @@ import {
     type SortingState,
     type VisibilityState,
 } from '@tanstack/react-table';
-
 import {
     ChevronDown,
     MoreHorizontal,
@@ -51,12 +47,12 @@ import {
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Annual Invesment Programs',
+        title: 'Annual Investment Programs',
         href: '/aip',
     },
 ];
 
-interface Aip {
+interface FiscalYear {
     id: number;
     year: number;
     status: string;
@@ -65,10 +61,10 @@ interface Aip {
 }
 
 interface AipProp {
-    aip: Aip[];
+    fiscalYears: FiscalYear[];
 }
 
-export const columns: ColumnDef<Aip>[] = [
+export const columns: ColumnDef<FiscalYear>[] = [
     {
         id: 'select',
         header: ({ table }) => (
@@ -93,10 +89,6 @@ export const columns: ColumnDef<Aip>[] = [
         enableSorting: false,
         enableHiding: false,
     },
-    // {
-    //     accessorKey: 'id',
-    //     header: 'ID',
-    // },
     {
         accessorKey: 'year',
         header: 'Year',
@@ -149,17 +141,13 @@ export const columns: ColumnDef<Aip>[] = [
         cell: ({ row }) => {
             const aip = row.original;
 
-            // Placeholder function for your backend integration later
             const handleStatusChange = (newStatus: string) => {
                 router.patch(
-                    `/aip/${aip.id}/status`,
+                    `/aip/${aip.id}`,
                     { status: newStatus },
-                    {
-                        preserveScroll: true,
-                        onStart: () => {
-                            // Optional: You could trigger a global loading bar here
-                        },
-                    },
+                    // {
+                    //     preserveScroll: true,
+                    // },
                 );
             };
 
@@ -176,7 +164,9 @@ export const columns: ColumnDef<Aip>[] = [
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
                         <DropdownMenuItem
-                            onClick={() => router.visit(`/aip/${aip.id}`)}
+                            onClick={() =>
+                                router.visit(`/aip/${aip.id}/summary`)
+                            }
                         >
                             Open AIP Summary
                         </DropdownMenuItem>
@@ -184,9 +174,6 @@ export const columns: ColumnDef<Aip>[] = [
                         <DropdownMenuSeparator />
 
                         {/* Status Toggle Sub-menu */}
-                        {/*<DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-                            Update Status
-                        </DropdownMenuLabel>*/}
                         <DropdownMenuItem
                             disabled={aip.status === 'Open'}
                             onClick={() => handleStatusChange('Open')}
@@ -206,8 +193,8 @@ export const columns: ColumnDef<Aip>[] = [
     },
 ];
 
-export default function Sectors({ aip }: AipProp) {
-    // console.log(aip);
+export default function Aip({ fiscalYears }: AipProp) {
+    // console.log(fiscalYears);
 
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -215,8 +202,9 @@ export default function Sectors({ aip }: AipProp) {
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+
     const table = useReactTable({
-        data: aip,
+        data: fiscalYears,
         columns,
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,

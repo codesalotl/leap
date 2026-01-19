@@ -9,4 +9,11 @@ class FiscalYear extends Model
 {
     /** @use HasFactory<\Database\Factories\FiscalYearFactory> */
     use HasFactory;
+
+    protected $fillable = ['year', 'status'];
+
+    // Optional: Set default values for new records
+    protected $attributes = [
+        'status' => 'Open',
+    ];
 }

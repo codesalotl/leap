@@ -48,28 +48,19 @@ class Ppa extends Model
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Relationship: Recursive children
-     */
+    public function office()
+    {
+        return $this->belongsTo(Office::class);
+    }
+
     public function children()
     {
         return $this->hasMany(Ppa::class, 'parent_id')->with('children');
     }
 
-    /**
-     * Relationship: Immediate parent
-     */
     public function parent()
     {
         return $this->belongsTo(Ppa::class, 'parent_id');
-    }
-
-    /**
-     * Relationship: Office/Department
-     */
-    public function office()
-    {
-        return $this->belongsTo(Office::class);
     }
 
     public function sector(): BelongsTo

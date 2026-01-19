@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
         $this->call([
-            FiscalYearSeeder::class,
             LguLevelSeeder::class,
 
             // ---
@@ -46,7 +45,8 @@ class DatabaseSeeder extends Seeder
             AccountGroupSeeder::class,
             ChartOfAccountSeeder::class,
 
-            AipSeeder::class,
+            // AipSeeder::class,
+            FiscalYearSeeder::class,
 
             // ---
 
