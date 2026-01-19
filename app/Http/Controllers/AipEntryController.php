@@ -18,6 +18,7 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
+        // ppa import list
         $masterPpaTree = Ppa::whereNull('parent_id')
             ->where('is_active', true)
             ->with([
@@ -28,6 +29,7 @@ class AipEntryController extends Controller
             ])
             ->get();
 
+        // aip entry
         $aip_entries = AipEntry::with(['ppa.office', 'ppa.parent'])
             ->where('fiscal_year_id', $fiscalYear->id)
             ->get();

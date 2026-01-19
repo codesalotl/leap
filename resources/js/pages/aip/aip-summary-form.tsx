@@ -200,6 +200,8 @@ export default function AipSummaryTable({
     masterPpas,
 }: AipSummaryTableProp) {
     console.log(fiscalYears);
+    console.log(aipEntries);
+    console.log(masterPpas);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
