@@ -85,6 +85,8 @@ Route::patch('/aip/{aip}', [FiscalYearController::class, 'update']);
 Route::prefix('aip/{fiscalYear}')->group(function () {
     Route::get('summary', [AipEntryController::class, 'index']);
 });
+Route::post('aip/{aip_id}/import', [AipEntryController::class, 'store']);
+Route::get('aipentry', fn() => Inertia::render('aip/aip-entry-form-dialog'));
 
 // Route::get('ppa', [PpaController::class, 'index']);
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');

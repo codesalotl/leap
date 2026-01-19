@@ -122,18 +122,8 @@ class AipEntryController extends Controller
      */
     public function store(StoreAipEntryRequest $request, $aip_id)
     {
-        // 1. Validation
-        // Note: StoreAipEntryRequest should handle 'ppa_ids' => 'required|array'
-        $request->validate([
-            'ppa_ids' => 'required|array|min:1',
-            'ppa_ids.*' => 'exists:ppas,id',
-        ]);
+        $aip = FiscalYear::findOrFail($aip_id);
 
-        // 2. Locate the parent AIP record and get the year
-        $aip = Aip::findOrFail($aip_id);
-        $year = $aip->year;
-
-        // 3. Fetch only the PPAs from the request that are actually ACTIVE
         $activePpaIds = Ppa::whereIn('id', $request->ppa_ids)
             ->where('is_active', true)
             ->pluck('id');
@@ -145,39 +135,17 @@ class AipEntryController extends Controller
             );
         }
 
-        // 4. Perform the import in a transaction for data integrity
-        DB::transaction(function () use ($activePpaIds, $aip, $year) {
+        DB::transaction(function () use ($activePpaIds, $aip) {
             foreach ($activePpaIds as $ppaId) {
                 AipEntry::firstOrCreate(
                     [
-                        'aip_id' => $aip->id,
+                        'fiscal_year_id' => $aip->id,
                         'ppa_id' => $ppaId,
                     ],
-                    [
-                        // Default implementation schedule: Full Fiscal Year
-                        'start_date' => "{$year}-01-01",
-                        'end_date' => "{$year}-12-31",
-                        'expected_output' => 'To be defined...',
-
-                        // Defaulting all budget tranches to zero (matching migration)
-                        'ps_amount' => 0,
-                        'mooe_amount' => 0,
-                        'fe_amount' => 0,
-                        'co_amount' => 0,
-
-                        // Climate Change Expenditure Tagging (CCET) defaults
-                        'ccet_adaptation' => 0, // Using the field name from your show() logic
-                        'ccet_mitigation' => 0,
-                    ],
+                    [],
                 );
             }
         });
-
-        return back()->with(
-            'success',
-            $activePpaIds->count() .
-                " PPAs successfully linked to the {$year} AIP Summary.",
-        );
     }
 
     /**
