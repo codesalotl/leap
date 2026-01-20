@@ -29,9 +29,4 @@ class AipEntry extends Model
     {
         return $this->belongsTo(Ppa::class);
     }
-
-    public function aip(): BelongsTo
-    {
-        return $this->belongsTo(Aip::class);
-    }
 }

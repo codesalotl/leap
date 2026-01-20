@@ -17,9 +17,9 @@ return new class extends Migration {
                 ->foreignId('ppa_id')
                 ->constrained('ppas')
                 ->onDelete('cascade');
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->text('expected_output');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->text('expected_output')->nullable();
             // $table
             //     ->foreignId('funding_source_id')
             //     ->nullable() // temporary null

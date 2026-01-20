@@ -184,12 +184,15 @@ export default function PpaImportModal({
             .getSelectedRowModel()
             .flatRows.map((row) => row.original.id);
 
+        console.log('selectedIds', selectedIds);
+
         if (selectedIds.length === 0) return;
 
         setLoading(true);
+
         router.post(
             `/aip/${fiscalYearsId}/import`,
-            { ids: selectedIds },
+            { ppa_ids: selectedIds },
             {
                 onSuccess: () => {
                     setLoading(false);
