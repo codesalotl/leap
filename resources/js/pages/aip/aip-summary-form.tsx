@@ -114,10 +114,10 @@ export default function AipSummaryTable({
     console.log(aipEntries);
     console.log(masterPpas);
 
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Annual Investment Programs', href: '/aip' },
-        { title: `AIP Summary Form ${fiscalYears.year}`, href: '#' },
-    ];
+    // const breadcrumbs: BreadcrumbItem[] = [
+    //     { title: 'Annual Investment Programs', href: '/aip' },
+    //     { title: `AIP Summary Form ${fiscalYears.year}`, href: '#' },
+    // ];
 
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
