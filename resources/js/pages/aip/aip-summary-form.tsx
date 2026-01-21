@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     createColumnHelper,
     flexRender,
@@ -12,6 +12,7 @@ import {
     type VisibilityState,
 } from '@tanstack/react-table';
 import {
+    Plus,
     ChevronDown,
     MoreHorizontal,
     Library,
@@ -53,14 +54,11 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import PpaImportModal from '@/pages/aip/ppa-import-modal';
 import AipEntryFormDialog from '@/pages/aip/aip-entry-form-dialog';
 import { router } from '@inertiajs/react';
-
-// Export Libraries
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -89,10 +87,43 @@ export interface AipEntry {
     children?: AipEntry[];
 }
 
+interface LguLevel {
+    code: string;
+    created_at: string;
+    id: number;
+    level: string;
+    updated_at: string;
+}
+
+interface OfficeType {
+    code: string;
+    created_at: string;
+    id: number;
+    type: string;
+    updated_at: string;
+}
+
+interface Office {
+    code: string;
+    created_at: string;
+    full_code: string;
+    id: number;
+    is_lee: boolean;
+    lgu_level: LguLevel;
+    lgu_level_id: number;
+    name: string;
+    office_type: OfficeType;
+    office_type_id: number;
+    sector: string | null;
+    sector_id: string | null;
+    update_at: string;
+}
+
 interface AipSummaryTableProp {
     fiscalYears: { id: number; year: number };
     aipEntries: AipEntry[];
     masterPpas: any[];
+    offices: Office[];
 }
 
 const formatNumber = (val: string) => {
@@ -109,30 +140,26 @@ export default function AipSummaryTable({
     fiscalYears,
     aipEntries,
     masterPpas,
+    offices,
 }: AipSummaryTableProp) {
-    console.log(fiscalYears);
+    // console.log(fiscalYears);
     console.log(aipEntries);
-    console.log(masterPpas);
+    // console.log(masterPpas);
+    // console.log(offices);
 
-    // const breadcrumbs: BreadcrumbItem[] = [
-    //     { title: 'Annual Investment Programs', href: '/aip' },
-    //     { title: `AIP Summary Form ${fiscalYears.year}`, href: '#' },
-    // ];
-
-    const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({});
-    const [rowSelection, setRowSelection] = React.useState({});
-    const [isImportOpen, setIsImportOpen] = React.useState(false);
+    const [sorting, setSorting] = useState<SortingState>([]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+    const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+        {},
+    );
+    const [rowSelection, setRowSelection] = useState({});
+    const [isImportOpen, setIsImportOpen] = useState(false);
 
     // Modal States
-    const [isEditOpen, setIsEditOpen] = React.useState(false);
-    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = React.useState(false);
-    const [selectedEntry, setSelectedEntry] = React.useState<AipEntry | null>(
-        null,
-    );
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState<AipEntry | null>(null);
+    const [mode, setMode] = useState<string>(null);
 
     // --- DELETE LOGIC ---
     const handleDelete = (entry: AipEntry) => {
@@ -263,7 +290,7 @@ export default function AipSummaryTable({
     // --- TABLE DEFINITION ---
     const columnHelper = createColumnHelper<AipEntry>();
 
-    const columns = React.useMemo(
+    const columns = useMemo(
         () => [
             columnHelper.display({
                 id: 'select',
@@ -388,15 +415,29 @@ export default function AipSummaryTable({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
                                 <DropdownMenuItem
                                     onClick={() => {
                                         setSelectedEntry(entry);
                                         setIsEditOpen(true);
+                                        setMode('add');
+                                    }}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" /> Add Entry
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        setSelectedEntry(entry);
+                                        setIsEditOpen(true);
+                                        setMode('edit');
                                     }}
                                 >
                                     <Edit className="mr-2 h-4 w-4" /> Edit Entry
                                 </DropdownMenuItem>
+
                                 <DropdownMenuSeparator />
+
                                 <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => {
@@ -493,6 +534,8 @@ export default function AipSummaryTable({
                     open={isEditOpen}
                     onOpenChange={setIsEditOpen}
                     data={selectedEntry}
+                    mode={mode}
+                    offices={offices}
                 />
 
                 <AlertDialog

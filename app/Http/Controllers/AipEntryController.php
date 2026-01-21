@@ -8,6 +8,7 @@ use App\Models\FiscalYear;
 use App\Models\Ppa;
 use App\Http\Requests\StoreAipEntryRequest;
 use App\Http\Requests\UpdateAipEntryRequest;
+use App\Models\Office;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
@@ -87,10 +88,13 @@ class AipEntryController extends Controller
         // 4. Build the tree structure for the Summary Table
         $aipTree = $this->buildAipTree($mappedEntries);
 
+        $offices = Office::all();
+
         return Inertia::render('aip/aip-summary-form', [
             'fiscalYears' => $fiscalYear,
             'aipEntries' => $aipTree,
             'masterPpas' => $masterPpaTree, // Hierarchical library for the modal
+            'offices' => $offices,
         ]);
     }
 
@@ -173,16 +177,21 @@ class AipEntryController extends Controller
     {
         // 1. Validate the data
         $validated = $request->validate([
-            'scheduleOfImplementation.startingDate' => 'required|date',
-            'scheduleOfImplementation.completionDate' => 'required|date',
-            'expectedOutputs' => 'required|string',
+            'aipRefCode' => 'required|string',
             'amount.ps' => 'required|numeric',
             'amount.mooe' => 'required|numeric',
             'amount.fe' => 'required|numeric',
             'amount.co' => 'required|numeric',
+            'amount.total' => 'required|numeric',
             'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
             'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
-            // 'ccTypologyCode' => 'required|string', // Add if you've uncommented this in DB
+            'ccTypologyCode' => 'required|string',
+            'expectedOutputs' => 'required|string',
+            'fundingSource' => 'required|string',
+            'implementingOfficeDepartmentLocation' => 'required|string',
+            'ppaDescription' => 'required|string',
+            'scheduleOfImplementation.startingDate' => 'required|date',
+            'scheduleOfImplementation.completionDate' => 'required|date',
         ]);
 
         // 2. Map and Update
@@ -201,9 +210,6 @@ class AipEntryController extends Controller
             'ccet_mitigation' =>
                 $validated['amountOfCcExpenditure']['ccMitigation'],
         ]);
-
-        // 3. Return back with a success message
-        return back()->with('success', 'AIP Entry updated successfully.');
     }
 
     /**
