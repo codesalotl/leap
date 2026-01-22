@@ -109,7 +109,8 @@ interface AipFormProps {
 const amountSchema = z
     .string()
     .trim()
-    .regex(/^([0-9]\d*|0)(\.\d{1,2})?$/, 'Invalid amount');
+    .refine((val) => !val || !isNaN(Number(val)), 'Must be a valid number')
+    .refine((val) => Number(val) >= 0, 'Amount must be positive');
 
 const formSchema = z.object({
     ppa_id: z.number(),
@@ -137,6 +138,21 @@ const formSchema = z.object({
     }),
     ccTypologyCode: z.string().min(1, 'Typology code is required'),
 });
+
+// Helper to remove all non-numeric characters except the decimal point
+const stripCommas = (val: string) => val.replace(/,/g, '');
+
+// Helper to format string into currency with commas
+const formatCurrency = (val: string) => {
+    if (!val) return '';
+    const numericValue = stripCommas(val);
+    if (isNaN(Number(numericValue))) return val;
+
+    return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(parseFloat(numericValue));
+};
 
 export default function AipEntryFormDialog({
     open,
@@ -193,15 +209,20 @@ export default function AipEntryFormDialog({
         const { ps, mooe, fe, co } = watchedAmounts || {};
 
         try {
-            const total = new Decimal(ps || 0)
-                .plus(mooe || 0)
-                .plus(fe || 0)
-                .plus(co || 0)
-                .toFixed(2);
-            if (watchedAmounts?.total !== total)
-                form.setValue('amount.total', total);
+            const sum = new Decimal(stripCommas(ps || '0') || 0)
+                .plus(stripCommas(mooe || '0') || 0)
+                .plus(stripCommas(fe || '0') || 0)
+                .plus(stripCommas(co || '0') || 0);
+
+            const totalValue = sum.toFixed(2);
+
+            const formattedTotal = formatCurrency(totalValue);
+
+            if (watchedAmounts?.total !== formattedTotal) {
+                form.setValue('amount.total', formattedTotal);
+            }
         } catch (e) {
-            // form.setValue('amount.total', '0.00');
+            console.error('Calculation error', e);
         }
     }, [watchedAmounts, form]);
 
@@ -639,33 +660,65 @@ export default function AipEntryFormDialog({
                                 <Controller
                                     name="amount.ps"
                                     control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                PS
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
+                                    render={({ field, fieldState }) => {
+                                        // We create a "display value"
+                                        // If the input is focused, show the raw string (no commas) for easy editing
+                                        // If it's NOT focused, show the formatted string (commas + 2 decimals)
+                                        const [isFocused, setIsFocused] =
+                                            React.useState(false);
+
+                                        const displayValue = isFocused
+                                            ? field.value // Raw string: "1000.55"
+                                            : formatCurrency(field.value); // Formatted: "1,000.55"
+
+                                        return (
+                                            <Field
+                                                data-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                            />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    PS
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                    type="number"
+                                                    onBlur={(e) => {
+                                                        const val =
+                                                            e.target.value;
+                                                        if (
+                                                            val &&
+                                                            !isNaN(Number(val))
+                                                        ) {
+                                                            const roundedValue =
+                                                                parseFloat(
+                                                                    val,
+                                                                ).toFixed(2);
+                                                            field.onChange(
+                                                                roundedValue,
+                                                            );
+                                                        }
+                                                        field.onBlur();
+                                                    }}
                                                 />
-                                            )}
-                                        </Field>
-                                    )}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        );
+                                    }}
                                 />
 
                                 <Controller
@@ -686,6 +739,23 @@ export default function AipEntryFormDialog({
                                                 }
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
+                                                type="number"
+                                                onBlur={(e) => {
+                                                    const val = e.target.value;
+                                                    if (
+                                                        val &&
+                                                        !isNaN(Number(val))
+                                                    ) {
+                                                        const roundedValue =
+                                                            parseFloat(
+                                                                val,
+                                                            ).toFixed(2);
+                                                        field.onChange(
+                                                            roundedValue,
+                                                        );
+                                                    }
+                                                    field.onBlur();
+                                                }}
                                             />
                                             {/*<FieldDescription>
                                                 Provide a concise title for your
@@ -718,6 +788,23 @@ export default function AipEntryFormDialog({
                                                 }
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
+                                                type="number"
+                                                onBlur={(e) => {
+                                                    const val = e.target.value;
+                                                    if (
+                                                        val &&
+                                                        !isNaN(Number(val))
+                                                    ) {
+                                                        const roundedValue =
+                                                            parseFloat(
+                                                                val,
+                                                            ).toFixed(2);
+                                                        field.onChange(
+                                                            roundedValue,
+                                                        );
+                                                    }
+                                                    field.onBlur();
+                                                }}
                                             />
                                             {/*<FieldDescription>
                                                 Provide a concise title for your
@@ -750,6 +837,23 @@ export default function AipEntryFormDialog({
                                                 }
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
+                                                type="number"
+                                                onBlur={(e) => {
+                                                    const val = e.target.value;
+                                                    if (
+                                                        val &&
+                                                        !isNaN(Number(val))
+                                                    ) {
+                                                        const roundedValue =
+                                                            parseFloat(
+                                                                val,
+                                                            ).toFixed(2);
+                                                        field.onChange(
+                                                            roundedValue,
+                                                        );
+                                                    }
+                                                    field.onBlur();
+                                                }}
                                             />
                                             {/*<FieldDescription>
                                                 Provide a concise title for your
@@ -784,10 +888,6 @@ export default function AipEntryFormDialog({
                                                 autoComplete="off"
                                                 readOnly
                                             />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
                                             {fieldState.invalid && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
