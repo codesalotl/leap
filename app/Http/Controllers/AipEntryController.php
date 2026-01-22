@@ -36,13 +36,8 @@ class AipEntryController extends Controller
             ->get();
 
         // 3. Map flat database rows to the structure expected by the React UI
-        $mappedEntries = $aip_entries->map(function ($entry) {
-            $ps = (float) $entry->ps_amount;
-            $mooe = (float) $entry->mooe_amount;
-            $fe = (float) $entry->fe_amount;
-            $co = (float) $entry->co_amount;
-
-            return [
+        $mappedEntries = $aip_entries->map(
+            fn($entry) => [
                 'id' => $entry->id,
                 'ppa_id' => $entry->ppa_id,
                 'parent_ppa_id' => $entry->ppa->parent_id, // Used for tree building
@@ -57,16 +52,11 @@ class AipEntryController extends Controller
                 'expected_outputs' => $entry->expected_output,
                 'funding_source' => '',
                 'amount' => [
-                    'ps' => number_format($ps, 2, '.', ''),
-                    'mooe' => number_format($mooe, 2, '.', ''),
-                    'fe' => number_format($fe, 2, '.', ''),
-                    'co' => number_format($co, 2, '.', ''),
-                    'total' => number_format(
-                        $ps + $mooe + $fe + $co,
-                        2,
-                        '.',
-                        '',
-                    ),
+                    'ps' => $entry->ps_amount,
+                    'mooe' => $entry->mooe_amount,
+                    'fe' => $entry->fe_amount,
+                    'co' => $entry->co_amount,
+                    'total' => $entry->total,
                 ],
                 'cc_adaptation' => number_format(
                     (float) $entry->ccet_adaptation,
@@ -82,13 +72,17 @@ class AipEntryController extends Controller
                 ),
                 'cc_typology_code' => $entry->typology_code ?? '',
                 'children' => [], // Placeholder for buildTree
-            ];
-        });
+            ],
+        );
+
+        // dd($mappedEntries);
 
         // 4. Build the tree structure for the Summary Table
         $aipTree = $this->buildAipTree($mappedEntries);
 
         $offices = Office::all();
+
+        // dd($aipTree);
 
         return Inertia::render('aip/aip-summary-form', [
             'fiscalYears' => $fiscalYear,
@@ -175,14 +169,17 @@ class AipEntryController extends Controller
      */
     public function update(UpdateAipEntryRequest $request, AipEntry $aipEntry)
     {
+        // dd($request);
+
         // 1. Validate the data
         $validated = $request->validate([
+            'ppa_id' => 'required|integer',
             'aipRefCode' => 'required|string',
             'amount.ps' => 'required|numeric',
             'amount.mooe' => 'required|numeric',
             'amount.fe' => 'required|numeric',
             'amount.co' => 'required|numeric',
-            'amount.total' => 'required|numeric',
+            'amount.total' => 'nullable|numeric',
             'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
             'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
             'ccTypologyCode' => 'required|string',
@@ -209,6 +206,10 @@ class AipEntryController extends Controller
                 $validated['amountOfCcExpenditure']['ccAdaptation'],
             'ccet_mitigation' =>
                 $validated['amountOfCcExpenditure']['ccMitigation'],
+        ]);
+
+        $affectedRows = PPA::where('id', $validated['ppa_id'])->update([
+            'title' => $validated['ppaDescription'],
         ]);
     }
 

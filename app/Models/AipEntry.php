@@ -25,8 +25,23 @@ class AipEntry extends Model
         'ccet_mitigation',
     ];
 
+    protected $casts = [
+        'ps_amount' => 'decimal:2',
+        'mooe_amount' => 'decimal:2',
+        'fe_amount' => 'decimal:2',
+        'co_amount' => 'decimal:2',
+    ];
+
     public function ppa(): BelongsTo
     {
         return $this->belongsTo(Ppa::class);
+    }
+
+    public function getTotalAttribute()
+    {
+        // Use bcadd to keep it 100% precise
+        $sum = bcadd($this->ps_amount, $this->mooe_amount, 2);
+        $sum = bcadd($sum, $this->fe_amount, 2);
+        return bcadd($sum, $this->co_amount, 2);
     }
 }

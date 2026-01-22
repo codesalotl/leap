@@ -65,6 +65,8 @@ import autoTable from 'jspdf-autotable';
 
 export interface AipEntry {
     id: number;
+    ppa_id: number;
+    parent_ppa_id: number | null;
     aip_ref_code: string;
     ppa_desc: string;
     implementing_office_department: string;

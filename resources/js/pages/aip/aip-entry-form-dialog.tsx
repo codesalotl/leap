@@ -3,7 +3,7 @@ import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Decimal from 'decimal.js';
-import { router } from '@inertiajs/react'; // Import Inertia router
+import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -22,16 +22,6 @@ import {
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
-import { toast } from 'sonner';
-
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     Field,
     FieldDescription,
@@ -40,12 +30,6 @@ import {
     FieldLabel,
     FieldContent,
 } from '@/components/ui/field';
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupText,
-    InputGroupTextarea,
-} from '@/components/ui/input-group';
 import {
     Select,
     SelectContent,
@@ -88,10 +72,36 @@ interface Office {
     update_at: string;
 }
 
+export interface AipEntry {
+    id: number;
+    ppa_id: number;
+    parent_ppa_id: number | null;
+    aip_ref_code: string;
+    ppa_desc: string;
+    implementing_office_department: string;
+    sched_implementation: {
+        start_date: string;
+        completion_date: string;
+    };
+    expected_outputs: string;
+    funding_source: string;
+    amount: {
+        ps: string;
+        mooe: string;
+        fe: string;
+        co: string;
+        total: string;
+    };
+    cc_adaptation: string;
+    cc_mitigation: string;
+    cc_typology_code: string;
+    children?: AipEntry[];
+}
+
 interface AipFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    data: any;
+    data: AipEntry;
     mode: string;
     offices: Office[];
 }
@@ -102,6 +112,7 @@ const amountSchema = z
     .regex(/^([0-9]\d*|0)(\.\d{1,2})?$/, 'Invalid amount');
 
 const formSchema = z.object({
+    ppa_id: z.number(),
     aipRefCode: z.string().min(1, 'Reference code is required'),
     ppaDescription: z.string().min(1, 'Description is required'),
     implementingOfficeDepartmentLocation: z
@@ -127,46 +138,6 @@ const formSchema = z.object({
     ccTypologyCode: z.string().min(1, 'Typology code is required'),
 });
 
-// type FormValues = z.infer<typeof formSchema>;
-
-// const CustomField = ({
-//     control,
-//     name,
-//     label,
-//     readOnly = false,
-//     type = 'text',
-// }: any) => (
-//     <Controller
-//         name={name}
-//         control={control}
-//         render={({ field, fieldState }) => (
-//             <Field className="w-full" data-invalid={fieldState.invalid}>
-//                 <FieldLabel
-//                     htmlFor={field.name}
-//                     className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
-//                 >
-//                     {label}
-//                 </FieldLabel>
-//                 {/*<FormControl>*/}
-//                 <Input
-//                     {...field}
-//                     type={type}
-//                     readOnly={readOnly}
-//                     className={readOnly ? 'bg-muted/50 font-mono' : ''}
-//                 />
-//                 {/*</FormControl>*/}
-//                 {/*<FormMessage />*/}
-//                 {/*<FieldDescription>
-//                     Provide a concise title for your bug report.
-//                 </FieldDescription>*/}
-//                 {fieldState.invalid && (
-//                     <FieldError errors={[fieldState.error]} />
-//                 )}
-//             </Field>
-//         )}
-//     />
-// );
-
 export default function AipEntryFormDialog({
     open,
     onOpenChange,
@@ -174,10 +145,12 @@ export default function AipEntryFormDialog({
     mode,
     offices,
 }: AipFormProps) {
+    console.log(data);
     // console.log(offices);
 
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
     const getInitialValues = (d: any): z.infer<typeof formSchema> => ({
+        ppa_id: d?.ppa_id || '',
         aipRefCode: d?.aip_ref_code || '',
         ppaDescription: d?.ppa_desc || '',
         implementingOfficeDepartmentLocation:
@@ -218,6 +191,7 @@ export default function AipEntryFormDialog({
 
     useEffect(() => {
         const { ps, mooe, fe, co } = watchedAmounts || {};
+
         try {
             const total = new Decimal(ps || 0)
                 .plus(mooe || 0)
@@ -226,11 +200,13 @@ export default function AipEntryFormDialog({
                 .toFixed(2);
             if (watchedAmounts?.total !== total)
                 form.setValue('amount.total', total);
-        } catch (e) {}
+        } catch (e) {
+            // form.setValue('amount.total', '0.00');
+        }
     }, [watchedAmounts, form]);
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log(values);
+        console.log('values', values);
 
         if (!data?.id) return;
 
@@ -264,12 +240,6 @@ export default function AipEntryFormDialog({
                         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                             {/* Left Column */}
                             <div className="space-y-4">
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="aipRefCode"
-                                    label="AIP Ref. Code"
-                                    readOnly
-                                />*/}
                                 <Controller
                                     name="aipRefCode"
                                     control={form.control}
@@ -288,6 +258,7 @@ export default function AipEntryFormDialog({
                                                 }
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
+                                                readOnly
                                             />
                                             {/*<FieldDescription>
                                                 Provide a concise title for your
@@ -302,11 +273,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="ppaDescription"
-                                    label="PPA Description"
-                                />*/}
                                 <Controller
                                     name="ppaDescription"
                                     control={form.control}
@@ -340,12 +306,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="implementingOfficeDepartmentLocation"
-                                    label="Office/Dept"
-                                    readOnly={mode !== 'add'}
-                                />*/}
                                 <Controller
                                     name="implementingOfficeDepartmentLocation"
                                     control={form.control}
@@ -413,12 +373,6 @@ export default function AipEntryFormDialog({
                                 />
 
                                 <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
-                                    {/*<CustomField
-                                        control={form.control}
-                                        name="scheduleOfImplementation.startingDate"
-                                        label="Start Date"
-                                        type="date"
-                                    />*/}
                                     <Controller
                                         name="scheduleOfImplementation.startingDate"
                                         control={form.control}
@@ -457,12 +411,6 @@ export default function AipEntryFormDialog({
                                         )}
                                     />
 
-                                    {/*<CustomField
-                                        control={form.control}
-                                        name="scheduleOfImplementation.completionDate"
-                                        label="End Date"
-                                        type="date"
-                                    />*/}
                                     <Controller
                                         name="scheduleOfImplementation.completionDate"
                                         control={form.control}
@@ -505,11 +453,6 @@ export default function AipEntryFormDialog({
 
                             {/* Right Column */}
                             <div className="space-y-4">
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="expectedOutputs"
-                                    label="Expected Outputs"
-                                />*/}
                                 <Controller
                                     name="expectedOutputs"
                                     control={form.control}
@@ -542,11 +485,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="fundingSource"
-                                    label="Funding Source"
-                                />*/}
                                 <Controller
                                     name="fundingSource"
                                     control={form.control}
@@ -579,11 +517,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="ccTypologyCode"
-                                    label="CC Typology Code"
-                                />*/}
                                 <Controller
                                     name="ccTypologyCode"
                                     control={form.control}
@@ -617,11 +550,6 @@ export default function AipEntryFormDialog({
                                 />
 
                                 <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
-                                    {/*<CustomField
-                                        control={form.control}
-                                        name="amountOfCcExpenditure.ccAdaptation"
-                                        label="Adaptation"
-                                    />*/}
                                     <Controller
                                         name="amountOfCcExpenditure.ccAdaptation"
                                         control={form.control}
@@ -660,11 +588,6 @@ export default function AipEntryFormDialog({
                                         )}
                                     />
 
-                                    {/*<CustomField
-                                        control={form.control}
-                                        name="amountOfCcExpenditure.ccMitigation"
-                                        label="Mitigation"
-                                    />*/}
                                     <Controller
                                         name="amountOfCcExpenditure.ccMitigation"
                                         control={form.control}
@@ -713,11 +636,6 @@ export default function AipEntryFormDialog({
                             </p>
 
                             <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="amount.ps"
-                                    label="PS"
-                                />*/}
                                 <Controller
                                     name="amount.ps"
                                     control={form.control}
@@ -750,11 +668,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="amount.mooe"
-                                    label="MOOE"
-                                />*/}
                                 <Controller
                                     name="amount.mooe"
                                     control={form.control}
@@ -787,11 +700,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="amount.fe"
-                                    label="FE"
-                                />*/}
                                 <Controller
                                     name="amount.fe"
                                     control={form.control}
@@ -824,11 +732,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="amount.co"
-                                    label="CO"
-                                />*/}
                                 <Controller
                                     name="amount.co"
                                     control={form.control}
@@ -861,12 +764,6 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
-                                {/*<CustomField
-                                    control={form.control}
-                                    name="amount.total"
-                                    label="Total"
-                                    readOnly
-                                />*/}
                                 <Controller
                                     name="amount.total"
                                     control={form.control}
@@ -885,6 +782,7 @@ export default function AipEntryFormDialog({
                                                 }
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
+                                                readOnly
                                             />
                                             {/*<FieldDescription>
                                                 Provide a concise title for your
