@@ -169,8 +169,6 @@ class AipEntryController extends Controller
      */
     public function update(UpdateAipEntryRequest $request, AipEntry $aipEntry)
     {
-        // dd($request);
-
         // 1. Validate the data
         $validated = $request->validate([
             'ppa_id' => 'required|integer',
@@ -179,7 +177,7 @@ class AipEntryController extends Controller
             'amount.mooe' => 'required|numeric',
             'amount.fe' => 'required|numeric',
             'amount.co' => 'required|numeric',
-            'amount.total' => 'nullable|numeric',
+            'amount.total' => 'nullable|string',
             'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
             'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
             'ccTypologyCode' => 'required|string',

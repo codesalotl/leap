@@ -256,11 +256,10 @@ export default function AipEntryFormDialog({
                     <form
                         id="aip-entry-form"
                         onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-6"
+                        // className="space-y-4"
                     >
-                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                            {/* Left Column */}
-                            <div className="space-y-4">
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
                                 <Controller
                                     name="aipRefCode"
                                     control={form.control}
@@ -281,10 +280,6 @@ export default function AipEntryFormDialog({
                                                 autoComplete="off"
                                                 readOnly
                                             />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
                                             {fieldState.invalid && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
@@ -294,6 +289,36 @@ export default function AipEntryFormDialog({
                                     )}
                                 />
 
+                                <Controller
+                                    name="expectedOutputs"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            <FieldLabel htmlFor={field.name}>
+                                                Expected Outputs
+                                            </FieldLabel>
+                                            <Input
+                                                {...field}
+                                                id={field.name}
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                                placeholder="Login button not working on mobile"
+                                                autoComplete="off"
+                                            />
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </Field>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
                                 <Controller
                                     name="ppaDescription"
                                     control={form.control}
@@ -314,189 +339,6 @@ export default function AipEntryFormDialog({
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="implementingOfficeDepartmentLocation"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            orientation="responsive"
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldContent>
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    Implementing
-                                                    Office/Department
-                                                </FieldLabel>
-                                                {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </FieldContent>
-                                            {/*<Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                            />*/}
-                                            <Select
-                                                name={field.name}
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                                disabled={mode !== 'add'}
-                                            >
-                                                <SelectTrigger
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    className="min-w-[120px]"
-                                                >
-                                                    <SelectValue placeholder="Select" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {offices?.map((office) => (
-                                                        <SelectItem
-                                                            key={office.id}
-                                                            value={office.name} // Or office.id, depending on what your schema expects
-                                                        >
-                                                            {office.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </Field>
-                                    )}
-                                />
-
-                                <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
-                                    <Controller
-                                        name="scheduleOfImplementation.startingDate"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    Start Date
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                />
-                                                {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="scheduleOfImplementation.completionDate"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    Completion Date
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                />
-                                                {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Right Column */}
-                            <div className="space-y-4">
-                                <Controller
-                                    name="expectedOutputs"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                Expected Outputs
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                            />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
                                             {fieldState.invalid && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
@@ -525,15 +367,78 @@ export default function AipEntryFormDialog({
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
                                             {fieldState.invalid && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
                                                 />
                                             )}
+                                        </Field>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <Controller
+                                    name="implementingOfficeDepartmentLocation"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            orientation="responsive"
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            <div className="flex flex-col space-y-3">
+                                                <FieldContent>
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        Implementing
+                                                        Office/Department
+                                                    </FieldLabel>
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </FieldContent>
+                                                <Select
+                                                    name={field.name}
+                                                    value={field.value}
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                    disabled={mode !== 'add'}
+                                                >
+                                                    <SelectTrigger
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
+                                                        }
+                                                        className="w-full"
+                                                    >
+                                                        <SelectValue placeholder="Select" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {offices?.map(
+                                                            (office) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        office.id
+                                                                    }
+                                                                    value={
+                                                                        office.name
+                                                                    } // Or office.id, depending on what your schema expects
+                                                                >
+                                                                    {
+                                                                        office.name
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </Field>
                                     )}
                                 />
@@ -557,10 +462,6 @@ export default function AipEntryFormDialog({
                                                 placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
                                             {fieldState.invalid && (
                                                 <FieldError
                                                     errors={[fieldState.error]}
@@ -569,8 +470,10 @@ export default function AipEntryFormDialog({
                                         </Field>
                                     )}
                                 />
+                            </div>
 
-                                <div className="grid grid-cols-2 gap-4 rounded-lg border bg-muted/30 p-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
                                     <Controller
                                         name="amountOfCcExpenditure.ccAdaptation"
                                         control={form.control}
@@ -593,11 +496,12 @@ export default function AipEntryFormDialog({
                                                     }
                                                     placeholder="Login button not working on mobile"
                                                     autoComplete="off"
+                                                    // className="bg-background"
                                                 />
                                                 {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
+                                                            Provide a concise title for your
+                                                            bug report.
+                                                        </FieldDescription>*/}
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -633,9 +537,87 @@ export default function AipEntryFormDialog({
                                                     autoComplete="off"
                                                 />
                                                 {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
+                                                            Provide a concise title for your
+                                                            bug report.
+                                                        </FieldDescription>*/}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
+                                    <Controller
+                                        name="scheduleOfImplementation.startingDate"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Start Date
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                />
+                                                {/*<FieldDescription>
+                                                            Provide a concise title for your
+                                                            bug report.
+                                                        </FieldDescription>*/}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+
+                                    <Controller
+                                        name="scheduleOfImplementation.completionDate"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Completion Date
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                />
+                                                {/*<FieldDescription>
+                                                            Provide a concise title for your
+                                                            bug report.
+                                                        </FieldDescription>*/}
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -648,30 +630,81 @@ export default function AipEntryFormDialog({
                                     />
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Financial Allocation */}
-                        <div className="rounded-lg border bg-muted/30 p-4">
-                            <p className="mb-4 text-xs font-bold text-muted-foreground uppercase">
-                                Financial Allocation (PHP)
-                            </p>
+                            <div className="rounded-md border p-4">
+                                <div className="grid grid-cols-5 gap-4">
+                                    <Controller
+                                        name="amount.ps"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => {
+                                            // We create a "display value"
+                                            // If the input is focused, show the raw string (no commas) for easy editing
+                                            // If it's NOT focused, show the formatted string (commas + 2 decimals)
+                                            const [isFocused, setIsFocused] =
+                                                React.useState(false);
 
-                            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-                                <Controller
-                                    name="amount.ps"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => {
-                                        // We create a "display value"
-                                        // If the input is focused, show the raw string (no commas) for easy editing
-                                        // If it's NOT focused, show the formatted string (commas + 2 decimals)
-                                        const [isFocused, setIsFocused] =
-                                            React.useState(false);
+                                            const displayValue = isFocused
+                                                ? field.value // Raw string: "1000.55"
+                                                : formatCurrency(field.value); // Formatted: "1,000.55"
 
-                                        const displayValue = isFocused
-                                            ? field.value // Raw string: "1000.55"
-                                            : formatCurrency(field.value); // Formatted: "1,000.55"
+                                            return (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        PS
+                                                    </FieldLabel>
+                                                    <Input
+                                                        {...field}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
+                                                        }
+                                                        placeholder="Login button not working on mobile"
+                                                        autoComplete="off"
+                                                        type="number"
+                                                        onBlur={(e) => {
+                                                            const val =
+                                                                e.target.value;
+                                                            if (
+                                                                val &&
+                                                                !isNaN(
+                                                                    Number(val),
+                                                                )
+                                                            ) {
+                                                                const roundedValue =
+                                                                    parseFloat(
+                                                                        val,
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    );
+                                                                field.onChange(
+                                                                    roundedValue,
+                                                                );
+                                                            }
+                                                            field.onBlur();
+                                                        }}
+                                                    />
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            );
+                                        }}
+                                    />
 
-                                        return (
+                                    <Controller
+                                        name="amount.mooe"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
                                             <Field
                                                 data-invalid={
                                                     fieldState.invalid
@@ -680,7 +713,7 @@ export default function AipEntryFormDialog({
                                                 <FieldLabel
                                                     htmlFor={field.name}
                                                 >
-                                                    PS
+                                                    MOOE
                                                 </FieldLabel>
                                                 <Input
                                                     {...field}
@@ -709,6 +742,10 @@ export default function AipEntryFormDialog({
                                                         field.onBlur();
                                                     }}
                                                 />
+                                                {/*<FieldDescription>
+                                                    Provide a concise title for your
+                                                    bug report.
+                                                </FieldDescription>*/}
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -717,185 +754,156 @@ export default function AipEntryFormDialog({
                                                     />
                                                 )}
                                             </Field>
-                                        );
-                                    }}
-                                />
+                                        )}
+                                    />
 
-                                <Controller
-                                    name="amount.mooe"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                MOOE
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
+                                    <Controller
+                                        name="amount.fe"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                                type="number"
-                                                onBlur={(e) => {
-                                                    const val = e.target.value;
-                                                    if (
-                                                        val &&
-                                                        !isNaN(Number(val))
-                                                    ) {
-                                                        const roundedValue =
-                                                            parseFloat(
-                                                                val,
-                                                            ).toFixed(2);
-                                                        field.onChange(
-                                                            roundedValue,
-                                                        );
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    FE
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
                                                     }
-                                                    field.onBlur();
-                                                }}
-                                            />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                    type="number"
+                                                    onBlur={(e) => {
+                                                        const val =
+                                                            e.target.value;
+                                                        if (
+                                                            val &&
+                                                            !isNaN(Number(val))
+                                                        ) {
+                                                            const roundedValue =
+                                                                parseFloat(
+                                                                    val,
+                                                                ).toFixed(2);
+                                                            field.onChange(
+                                                                roundedValue,
+                                                            );
+                                                        }
+                                                        field.onBlur();
+                                                    }}
                                                 />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
+                                                {/*<FieldDescription>
+                                                    Provide a concise title for your
+                                                    bug report.
+                                                </FieldDescription>*/}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
 
-                                <Controller
-                                    name="amount.fe"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                FE
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
+                                    <Controller
+                                        name="amount.co"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                                type="number"
-                                                onBlur={(e) => {
-                                                    const val = e.target.value;
-                                                    if (
-                                                        val &&
-                                                        !isNaN(Number(val))
-                                                    ) {
-                                                        const roundedValue =
-                                                            parseFloat(
-                                                                val,
-                                                            ).toFixed(2);
-                                                        field.onChange(
-                                                            roundedValue,
-                                                        );
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    CO
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
                                                     }
-                                                    field.onBlur();
-                                                }}
-                                            />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                    type="number"
+                                                    onBlur={(e) => {
+                                                        const val =
+                                                            e.target.value;
+                                                        if (
+                                                            val &&
+                                                            !isNaN(Number(val))
+                                                        ) {
+                                                            const roundedValue =
+                                                                parseFloat(
+                                                                    val,
+                                                                ).toFixed(2);
+                                                            field.onChange(
+                                                                roundedValue,
+                                                            );
+                                                        }
+                                                        field.onBlur();
+                                                    }}
                                                 />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
+                                                {/*<FieldDescription>
+                                                    Provide a concise title for your
+                                                    bug report.
+                                                </FieldDescription>*/}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
 
-                                <Controller
-                                    name="amount.co"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                CO
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
+                                    <Controller
+                                        name="amount.total"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                                type="number"
-                                                onBlur={(e) => {
-                                                    const val = e.target.value;
-                                                    if (
-                                                        val &&
-                                                        !isNaN(Number(val))
-                                                    ) {
-                                                        const roundedValue =
-                                                            parseFloat(
-                                                                val,
-                                                            ).toFixed(2);
-                                                        field.onChange(
-                                                            roundedValue,
-                                                        );
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    TOTAL
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
                                                     }
-                                                    field.onBlur();
-                                                }}
-                                            />
-                                            {/*<FieldDescription>
-                                                Provide a concise title for your
-                                                bug report.
-                                            </FieldDescription>*/}
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                    readOnly
                                                 />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="amount.total"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                TOTAL
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
-                                                readOnly
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </form>

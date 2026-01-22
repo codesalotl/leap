@@ -77,17 +77,37 @@ export default function PpaImportModal({
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => {
-                        // 1. Toggle the row and all its children (downward)
-                        row.toggleSelected(!!value);
+                        setRowSelection((prev) => {
+                            // 1. Start with the existing selection
+                            const next = { ...prev };
+                            const isChecked = !!value;
 
-                        // 2. Custom Logic: If checking a child, force all ancestors to be checked (upward)
-                        if (!!value) {
-                            let parent = row.getParentRow();
-                            while (parent) {
-                                parent.toggleSelected(true);
-                                parent = parent.getParentRow();
+                            if (isChecked) {
+                                // 2. Select the current row
+                                next[row.id] = true;
+
+                                // 3. Select all parents (Upward propagation)
+                                let parent = row.getParentRow();
+                                while (parent) {
+                                    next[parent.id] = true;
+                                    parent = parent.getParentRow();
+                                }
+                            } else {
+                                // 4. Unselect the current row
+                                delete next[row.id];
+
+                                // 5. Unselect all children (Downward propagation)
+                                const recursiveUncheck = (r: any) => {
+                                    r.subRows?.forEach((child: any) => {
+                                        delete next[child.id];
+                                        recursiveUncheck(child);
+                                    });
+                                };
+                                recursiveUncheck(row);
                             }
-                        }
+
+                            return next;
+                        });
                     }}
                     aria-label="Select row"
                 />
@@ -168,7 +188,8 @@ export default function PpaImportModal({
         onGlobalFilterChange: setGlobalFilter,
 
         // Ensure that selecting a parent row selects all sub-rows
-        enableSubRowSelection: true,
+        getRowId: (row) => row.id.toString(),
+        enableSubRowSelection: false,
 
         filterFromLeafRows: true,
         state: {
@@ -180,28 +201,38 @@ export default function PpaImportModal({
 
     const handleImport = () => {
         // USE flatRows TO GET EVERY SINGLE SELECTED CHILD/GRANDCHILD
-        const selectedIds = table
-            .getSelectedRowModel()
-            .flatRows.map((row) => row.original.id);
+        console.log('--- Debug Import ---');
+        console.log('Raw Row Selection State:', rowSelection);
 
-        console.log('selectedIds', selectedIds);
+        const selectedRows = table.getSelectedRowModel().flatRows;
+        console.log('Rows found by Table Model:', selectedRows.length);
 
-        if (selectedIds.length === 0) return;
+        const selectedIds = selectedRows.map((row) => row.original.id);
+        console.log('Final Database IDs:', selectedIds);
 
-        setLoading(true);
+        if (selectedIds.length === 0) {
+            console.warn(
+                'No IDs found! Check if RowSelection keys match Data IDs.',
+            );
+            return;
+        }
 
-        router.post(
-            `/aip/${fiscalYearsId}/import`,
-            { ppa_ids: selectedIds },
-            {
-                onSuccess: () => {
-                    setLoading(false);
-                    onClose();
-                    setRowSelection({}); // Clear checkboxes after import
-                },
-                onError: () => setLoading(false),
-            },
-        );
+        // if (selectedIds.length === 0) return;
+
+        // setLoading(true);
+
+        // router.post(
+        //     `/aip/${fiscalYearsId}/import`,
+        //     { ppa_ids: selectedIds },
+        //     {
+        //         onSuccess: () => {
+        //             setLoading(false);
+        //             onClose();
+        //             setRowSelection({}); // Clear checkboxes after import
+        //         },
+        //         onError: () => setLoading(false),
+        //     },
+        // );
     };
 
     return (
@@ -299,11 +330,15 @@ export default function PpaImportModal({
                             Cancel
                         </Button>
                         <Button
-                            onClick={handleImport}
-                            disabled={
-                                table.getSelectedRowModel().flatRows.length ===
-                                    0 || loading
-                            }
+                            onClick={() => {
+                                console.log('Button Clicked!');
+                                handleImport();
+                            }}
+                            // onClick={handleImport}
+                            // disabled={
+                            //     table.getSelectedRowModel().flatRows.length ===
+                            //         0 || loading
+                            // }        
                         >
                             <Download className="mr-2 h-4 w-4" />
                             {loading ? 'Importing...' : 'Import Selected'}
