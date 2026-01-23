@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     createColumnHelper,
     flexRender,
@@ -140,6 +140,17 @@ const formatNumber = (val: string) => {
           });
 };
 
+const findPpaInTree = (nodes, targetId) => {
+    for (const node of nodes) {
+        if (node.id === targetId) return node;
+        if (node.children && node.children.length > 0) {
+            const found = findPpaInTree(node.children, targetId);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
 export default function AipSummaryTable({
     fiscalYears,
     aipEntries,
@@ -147,8 +158,8 @@ export default function AipSummaryTable({
     offices,
 }: AipSummaryTableProp) {
     // console.log(fiscalYears);
-    console.log(aipEntries);
-    // console.log(masterPpas);
+    // console.log(aipEntries);
+    console.log(masterPpas);
     // console.log(offices);
 
     const [sorting, setSorting] = useState<SortingState>([]);
@@ -166,6 +177,10 @@ export default function AipSummaryTable({
     const [mode, setMode] = useState<string>(null);
     const [isAddEntryFormDialogOpen, setIsAddEntryFormDialogOpen] =
         useState<boolean>(false);
+
+    useEffect(() => {
+        console.log('Selected Entry changed to:', selectedEntry);
+    }, [selectedEntry]);
 
     // --- DELETE LOGIC ---
     const handleDelete = (entry: AipEntry) => {
@@ -413,6 +428,9 @@ export default function AipSummaryTable({
                 id: 'actions',
                 cell: ({ row }) => {
                     const entry = row.original;
+
+                    // console.log(entry);
+
                     return (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -424,11 +442,13 @@ export default function AipSummaryTable({
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
                                 <DropdownMenuItem
-                                    onSelect={() =>
-                                        setIsAddEntryFormDialogOpen(true)
-                                    }
+                                    onSelect={() => {
+                                        setSelectedEntry(entry);
+                                        setIsAddEntryFormDialogOpen(true);
+                                    }}
                                 >
-                                    <SquareArrowOutUpRight className="mr-2 h-4 w-4" /> Add Entry
+                                    <SquareArrowOutUpRight className="mr-2 h-4 w-4" />{' '}
+                                    Add Entry
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem
@@ -487,6 +507,27 @@ export default function AipSummaryTable({
         { title: 'Annual Investment Programs', href: '/aip' },
         { title: `AIP Summary FY ${fiscalYears.year}`, href: '#' },
     ];
+
+    const selectedPpaMasterData = useMemo(() => {
+        if (!selectedEntry || !masterPpas) return null;
+        return findPpaInTree(masterPpas, selectedEntry.ppa_id);
+    }, [selectedEntry, masterPpas]);
+
+    const existingPpaIds = useMemo(() => {
+        const ids = new Set<number>();
+
+        const extractIds = (entries: AipEntry[]) => {
+            entries.forEach((entry) => {
+                ids.add(entry.ppa_id);
+                if (entry.children && entry.children.length > 0) {
+                    extractIds(entry.children);
+                }
+            });
+        };
+
+        extractIds(aipEntries);
+        return ids;
+    }, [aipEntries]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -651,6 +692,9 @@ export default function AipSummaryTable({
             <AddEntryFormDialog
                 open={isAddEntryFormDialogOpen}
                 onOpenChange={setIsAddEntryFormDialogOpen}
+                ppaMasterData={selectedPpaMasterData}
+                fiscalYearsId={fiscalYears.id}
+                existingPpaIds={existingPpaIds} // <--- Pass the Set here
             />
         </AppLayout>
     );
