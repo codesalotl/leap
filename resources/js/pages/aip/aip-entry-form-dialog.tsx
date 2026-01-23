@@ -475,6 +475,84 @@ export default function AipEntryFormDialog({
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
                                     <Controller
+                                        name="scheduleOfImplementation.startingDate"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Start Date
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                />
+                                                {/*<FieldDescription>
+                                                            Provide a concise title for your
+                                                            bug report.
+                                                        </FieldDescription>*/}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+
+                                    <Controller
+                                        name="scheduleOfImplementation.completionDate"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Completion Date
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="Login button not working on mobile"
+                                                    autoComplete="off"
+                                                />
+                                                {/*<FieldDescription>
+                                                            Provide a concise title for your
+                                                            bug report.
+                                                        </FieldDescription>*/}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
+                                    <Controller
                                         name="amountOfCcExpenditure.ccAdaptation"
                                         control={form.control}
                                         render={({ field, fieldState }) => (
@@ -526,84 +604,6 @@ export default function AipEntryFormDialog({
                                                     htmlFor={field.name}
                                                 >
                                                     Climate Change Mitigation
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                />
-                                                {/*<FieldDescription>
-                                                            Provide a concise title for your
-                                                            bug report.
-                                                        </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-                                </div>
-
-                                <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
-                                    <Controller
-                                        name="scheduleOfImplementation.startingDate"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    Start Date
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                />
-                                                {/*<FieldDescription>
-                                                            Provide a concise title for your
-                                                            bug report.
-                                                        </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="scheduleOfImplementation.completionDate"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    Completion Date
                                                 </FieldLabel>
                                                 <Input
                                                     {...field}

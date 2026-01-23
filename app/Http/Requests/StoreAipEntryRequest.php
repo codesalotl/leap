@@ -22,10 +22,7 @@ class StoreAipEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Ensure ppa_ids is an array and not empty
-            'ppa_ids' => 'required|array|min:1',
-
-            // Ensure every ID inside the array exists in the ppas table
+            'ppa_ids' => 'required|array',
             'ppa_ids.*' => 'exists:ppas,id',
         ];
     }

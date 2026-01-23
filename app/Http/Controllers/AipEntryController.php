@@ -120,32 +120,60 @@ class AipEntryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreAipEntryRequest $request, $aip_id)
+    public function store(StoreAipEntryRequest $request, $fiscal_year_id)
     {
-        $aip = FiscalYear::findOrFail($aip_id);
+        // dd($fiscal_year_id);
 
-        $activePpaIds = Ppa::whereIn('id', $request->ppa_ids)
-            ->where('is_active', true)
-            ->pluck('id');
+        $validated = $request->validated();
 
-        if ($activePpaIds->isEmpty()) {
-            return back()->with(
-                'error',
-                'No active PPAs were found to import.',
-            );
-        }
+        // 2. Prepare the data for bulk insertion
+        $newEntries = collect($validated['ppa_ids'])
+            ->map(function ($ppaId) use ($fiscal_year_id) {
+                return [
+                    'fiscal_year_id' => $fiscal_year_id,
+                    'ppa_id' => $ppaId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                    // Amounts will default to 0 via your migration
+                ];
+            })
+            ->toArray();
 
-        DB::transaction(function () use ($activePpaIds, $aip) {
-            foreach ($activePpaIds as $ppaId) {
-                AipEntry::firstOrCreate(
-                    [
-                        'fiscal_year_id' => $aip->id,
-                        'ppa_id' => $ppaId,
-                    ],
-                    [],
-                );
-            }
-        });
+        // 3. Insert into the database
+        \DB::table('aip_entries')->insert($newEntries);
+
+        // 4. Return back to the frontend
+        return back()->with('success', 'PPAs imported successfully!');
+
+        // return back()->with(
+        //     'success',
+        //     count($newEntries) . ' PPAs successfully imported to the AIP.',
+        // );
+
+        // $aip = FiscalYear::findOrFail($aip_id);
+
+        // $activePpaIds = Ppa::whereIn('id', $request->ppa_ids)
+        //     ->where('is_active', true)
+        //     ->pluck('id');
+
+        // if ($activePpaIds->isEmpty()) {
+        //     return back()->with(
+        //         'error',
+        //         'No active PPAs were found to import.',
+        //     );
+        // }
+
+        // DB::transaction(function () use ($activePpaIds, $aip) {
+        //     foreach ($activePpaIds as $ppaId) {
+        //         AipEntry::firstOrCreate(
+        //             [
+        //                 'fiscal_year_id' => $aip->id,
+        //                 'ppa_id' => $ppaId,
+        //             ],
+        //             [],
+        //         );
+        //     }
+        // });
     }
 
     /**

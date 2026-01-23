@@ -178,7 +178,7 @@ export default function PpaImportModal({
     ];
 
     const table = useReactTable({
-        data: ppaTree || [],
+        data: ppaTree,
         columns,
         getSubRows: (row) => row.children,
         getCoreRowModel: getCoreRowModel(),
@@ -200,39 +200,34 @@ export default function PpaImportModal({
     });
 
     const handleImport = () => {
-        // USE flatRows TO GET EVERY SINGLE SELECTED CHILD/GRANDCHILD
-        console.log('--- Debug Import ---');
-        console.log('Raw Row Selection State:', rowSelection);
+        const selectedIds = table
+            .getSelectedRowModel()
+            .flatRows.map((row) => row.original.id);
+        console.log(selectedIds);
 
-        const selectedRows = table.getSelectedRowModel().flatRows;
-        console.log('Rows found by Table Model:', selectedRows.length);
-
-        const selectedIds = selectedRows.map((row) => row.original.id);
-        console.log('Final Database IDs:', selectedIds);
-
-        if (selectedIds.length === 0) {
-            console.warn(
-                'No IDs found! Check if RowSelection keys match Data IDs.',
-            );
-            return;
-        }
+        // if (selectedIds.length === 0) {
+        //     console.warn(
+        //         'No IDs found! Check if RowSelection keys match Data IDs.',
+        //     );
+        //     return;
+        // }
 
         // if (selectedIds.length === 0) return;
 
         // setLoading(true);
 
-        // router.post(
-        //     `/aip/${fiscalYearsId}/import`,
-        //     { ppa_ids: selectedIds },
-        //     {
-        //         onSuccess: () => {
-        //             setLoading(false);
-        //             onClose();
-        //             setRowSelection({}); // Clear checkboxes after import
-        //         },
-        //         onError: () => setLoading(false),
-        //     },
-        // );
+        router.post(
+            `/aip/${fiscalYearsId}/import`,
+            { ppa_ids: selectedIds },
+            {
+                onSuccess: () => {
+                    setLoading(false);
+                    onClose();
+                    setRowSelection({}); // Clear checkboxes after import
+                },
+                onError: () => setLoading(false),
+            },
+        );
     };
 
     return (
@@ -338,7 +333,7 @@ export default function PpaImportModal({
                             // disabled={
                             //     table.getSelectedRowModel().flatRows.length ===
                             //         0 || loading
-                            // }        
+                            // }
                         >
                             <Download className="mr-2 h-4 w-4" />
                             {loading ? 'Importing...' : 'Import Selected'}

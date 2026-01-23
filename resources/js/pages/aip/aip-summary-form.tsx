@@ -22,6 +22,7 @@ import {
     FileSpreadsheet,
     FileText,
     Edit,
+    SquareArrowOutUpRight,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,7 @@ import { router } from '@inertiajs/react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import AddEntryFormDialog from '@/pages/aip/table/dialog';
 
 export interface AipEntry {
     id: number;
@@ -162,6 +164,8 @@ export default function AipSummaryTable({
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<AipEntry | null>(null);
     const [mode, setMode] = useState<string>(null);
+    const [isAddEntryFormDialogOpen, setIsAddEntryFormDialogOpen] =
+        useState<boolean>(false);
 
     // --- DELETE LOGIC ---
     const handleDelete = (entry: AipEntry) => {
@@ -318,67 +322,65 @@ export default function AipSummaryTable({
             columnHelper.accessor('aip_ref_code', {
                 header: 'AIP Reference Code',
                 cell: (info) => (
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] font-bold">
+                    <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
                         {info.getValue()}
                     </code>
                 ),
             }),
             columnHelper.accessor('ppa_desc', {
-                header: 'Description',
+                header: 'Program/Project/Activty Description',
                 cell: ({ row, getValue }) => (
                     <div
                         style={{ paddingLeft: `${row.depth * 20}px` }}
-                        className="flex min-w-[300px] items-center gap-2 py-1"
+                        className="flex gap-2"
                     >
                         {row.depth > 0 && (
                             <span className="text-muted-foreground opacity-50">
                                 ↳
                             </span>
                         )}
-                        <span
-                            className={
-                                row.depth === 0
-                                    ? 'font-bold'
-                                    : 'text-muted-foreground'
-                            }
-                        >
-                            {getValue()}
-                        </span>
+                        <span>{getValue()}</span>
                     </div>
                 ),
             }),
             columnHelper.accessor('implementing_office_department', {
-                header: 'Office',
+                header: 'Implementing Office/Department',
             }),
             columnHelper.group({
-                header: 'Schedule',
+                header: 'Schedule of Implementation',
                 columns: [
                     columnHelper.accessor('sched_implementation.start_date', {
-                        header: 'Start',
+                        header: 'Start Date',
                     }),
                     columnHelper.accessor(
                         'sched_implementation.completion_date',
-                        { header: 'End' },
+                        { header: 'Completion Date' },
                     ),
                 ],
             }),
+            columnHelper.accessor('', {
+                header: 'Expected Outputs',
+            }),
+            columnHelper.accessor('', {
+                header: 'Funding Source',
+            }),
             columnHelper.group({
-                header: 'Amount (PHP)',
+                header: 'Amount (in thousand pesos)',
                 columns: [
                     columnHelper.accessor('amount.ps', {
-                        header: 'PS',
+                        header: 'Personal Services (PS)',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.mooe', {
-                        header: 'MOOE',
+                        header: 'Maintenace and Other Operating Expenses (MOOE)',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.fe', {
-                        header: 'FE',
+                        header: 'Financial Expenses (FE)',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.co', {
-                        header: 'CO',
+                        header: 'Capital Outaly (CO)',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.total', {
@@ -392,17 +394,20 @@ export default function AipSummaryTable({
                 ],
             }),
             columnHelper.group({
-                header: 'CC Expenditure',
+                header: 'Amount of Climate Change Expenditure (in thousand pesos)',
                 columns: [
                     columnHelper.accessor('cc_adaptation', {
-                        header: 'Adapt',
+                        header: 'Climate Change Adaptation',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('cc_mitigation', {
-                        header: 'Mitig',
+                        header: 'Climate Change Mitigation',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                 ],
+            }),
+            columnHelper.accessor('', {
+                header: 'CC Typology Code',
             }),
             columnHelper.display({
                 id: 'actions',
@@ -419,13 +424,11 @@ export default function AipSummaryTable({
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
                                 <DropdownMenuItem
-                                    onClick={() => {
-                                        setSelectedEntry(entry);
-                                        setIsEditOpen(true);
-                                        setMode('add');
-                                    }}
+                                    onSelect={() =>
+                                        setIsAddEntryFormDialogOpen(true)
+                                    }
                                 >
-                                    <Plus className="mr-2 h-4 w-4" /> Add Entry
+                                    <SquareArrowOutUpRight className="mr-2 h-4 w-4" /> Add Entry
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem
@@ -589,16 +592,18 @@ export default function AipSummaryTable({
                     fiscalYearsId={fiscalYears.id}
                 />
 
-                <div className="overflow-x-auto rounded-md border shadow-sm">
+                {/* <AddEntryFormDialog /> */}
+
+                <div className="overflow-hidden rounded-md border">
                     <Table>
-                        <TableHeader className="bg-muted/50">
+                        <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((hg) => (
                                 <TableRow key={hg.id}>
                                     {hg.headers.map((h) => (
                                         <TableHead
                                             key={h.id}
                                             colSpan={h.colSpan}
-                                            className="border-x border-b px-2 py-2 text-center text-[10px] font-bold tracking-tighter text-foreground uppercase"
+                                            className="text-sm text-muted-foreground"
                                         >
                                             {h.isPlaceholder
                                                 ? null
@@ -618,7 +623,7 @@ export default function AipSummaryTable({
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell
                                                 key={cell.id}
-                                                className="border-x px-2 py-1 text-[11px]"
+                                                className="text-[12px]"
                                             >
                                                 {flexRender(
                                                     cell.column.columnDef.cell,
@@ -632,7 +637,7 @@ export default function AipSummaryTable({
                                 <TableRow>
                                     <TableCell
                                         colSpan={columns.length}
-                                        className="h-24 text-center"
+                                        className="h-32 text-center text-muted-foreground"
                                     >
                                         No results found.
                                     </TableCell>
@@ -642,6 +647,11 @@ export default function AipSummaryTable({
                     </Table>
                 </div>
             </div>
+
+            <AddEntryFormDialog
+                open={isAddEntryFormDialogOpen}
+                onOpenChange={setIsAddEntryFormDialogOpen}
+            />
         </AppLayout>
     );
 }
