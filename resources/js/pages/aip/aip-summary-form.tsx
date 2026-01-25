@@ -64,6 +64,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import AddEntryFormDialog from '@/pages/aip/table/dialog';
+import MooeDialog from '@/pages/aip/mooe-dialog';
 
 export interface AipEntry {
     id: number;
@@ -123,11 +124,24 @@ interface Office {
     update_at: string;
 }
 
+export interface ChartOfAccount {
+    id: number;
+    account_code: string;
+    account_title: string;
+    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
+    parent_code: string | null;
+    is_postable: boolean;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 interface AipSummaryTableProp {
     fiscalYears: { id: number; year: number };
     aipEntries: AipEntry[];
     masterPpas: any[];
     offices: Office[];
+    chartOfAccounts: ChartOfAccount;
 }
 
 const formatNumber = (val: string) => {
@@ -156,11 +170,9 @@ export default function AipSummaryTable({
     aipEntries,
     masterPpas,
     offices,
+    chartOfAccounts,
 }: AipSummaryTableProp) {
-    // console.log(fiscalYears);
-    // console.log(aipEntries);
-    console.log(masterPpas);
-    // console.log(offices);
+    // console.log(chartOfAccounts);
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -172,6 +184,7 @@ export default function AipSummaryTable({
 
     // Modal States
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [isMooeOpen, setIsMooeOpen] = useState(false);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<AipEntry | null>(null);
     const [mode, setMode] = useState<string>(null);
@@ -181,6 +194,11 @@ export default function AipSummaryTable({
     useEffect(() => {
         console.log('Selected Entry changed to:', selectedEntry);
     }, [selectedEntry]);
+
+    const handleSwitchToMooe = () => {
+        setIsEditOpen(false); // Close AipEntryFormDialog
+        setIsMooeOpen(true); // Open MooeDialog
+    };
 
     // --- DELETE LOGIC ---
     const handleDelete = (entry: AipEntry) => {
@@ -576,65 +594,6 @@ export default function AipSummaryTable({
                     </div>
                 </div>
 
-                <AipEntryFormDialog
-                    open={isEditOpen}
-                    onOpenChange={setIsEditOpen}
-                    data={selectedEntry}
-                    mode={mode}
-                    offices={offices}
-                />
-
-                <AlertDialog
-                    open={isDeleteAlertOpen}
-                    onOpenChange={setIsDeleteAlertOpen}
-                >
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                Remove from AIP Summary?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to remove{' '}
-                                <span className="font-bold text-foreground">
-                                    "{selectedEntry?.ppa_desc}"
-                                </span>
-                                ?
-                                {selectedEntry?.children &&
-                                    selectedEntry.children.length > 0 && (
-                                        <span className="mt-2 block font-semibold text-destructive italic">
-                                            Warning: This will also remove all
-                                            nested sub-projects and activities.
-                                        </span>
-                                    )}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel
-                                onClick={() => setSelectedEntry(null)}
-                            >
-                                Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                                className="bg-destructive hover:bg-destructive/90"
-                                onClick={() =>
-                                    selectedEntry && handleDelete(selectedEntry)
-                                }
-                            >
-                                Confirm Removal
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-
-                <PpaImportModal
-                    isOpen={isImportOpen}
-                    onClose={() => setIsImportOpen(false)}
-                    ppaTree={masterPpas}
-                    fiscalYearsId={fiscalYears.id}
-                />
-
-                {/* <AddEntryFormDialog /> */}
-
                 <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader className="bg-muted">
@@ -688,6 +647,71 @@ export default function AipSummaryTable({
                     </Table>
                 </div>
             </div>
+
+            <AipEntryFormDialog
+                open={isEditOpen}
+                onOpenChange={setIsEditOpen}
+                onSwitch={handleSwitchToMooe}
+                data={selectedEntry}
+                mode={mode}
+                offices={offices}
+            />
+
+            <MooeDialog
+                open={isMooeOpen}
+                onOpenChange={setIsMooeOpen}
+                entry={selectedEntry}
+                chartOfAccounts={chartOfAccounts}
+            />
+
+            <AlertDialog
+                open={isDeleteAlertOpen}
+                onOpenChange={setIsDeleteAlertOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Remove from AIP Summary?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to remove{' '}
+                            <span className="font-bold text-foreground">
+                                "{selectedEntry?.ppa_desc}"
+                            </span>
+                            ?
+                            {selectedEntry?.children &&
+                                selectedEntry.children.length > 0 && (
+                                    <span className="mt-2 block font-semibold text-destructive italic">
+                                        Warning: This will also remove all
+                                        nested sub-projects and activities.
+                                    </span>
+                                )}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => setSelectedEntry(null)}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-destructive hover:bg-destructive/90"
+                            onClick={() =>
+                                selectedEntry && handleDelete(selectedEntry)
+                            }
+                        >
+                            Confirm Removal
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <PpaImportModal
+                isOpen={isImportOpen}
+                onClose={() => setIsImportOpen(false)}
+                ppaTree={masterPpas}
+                fiscalYearsId={fiscalYears.id}
+            />
 
             <AddEntryFormDialog
                 open={isAddEntryFormDialogOpen}

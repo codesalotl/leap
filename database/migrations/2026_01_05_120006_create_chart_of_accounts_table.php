@@ -12,33 +12,29 @@ return new class extends Migration {
     {
         Schema::create('chart_of_accounts', function (Blueprint $table) {
             $table->id();
-            $table->string('uacs_code', 20)->unique();
-            $table->string('account_title');
-            // $table->string('parent_id', 20)->nullable()->index();
-            $table->unsignedBigInteger('parent_id')->nullable()->index();
-            $table->enum('account_group', [
-                'Asset',
-                'Liability',
-                'Equity',
-                'Income',
-                'Expense',
-            ]);
-            $table
-                ->enum('budget_class', ['PS', 'MOOE', 'FE', 'CO', 'Non-Budget'])
-                ->nullable()
-                ->index();
-            $table->enum('normal_balance', ['Debit', 'Credit']);
-            $table->integer('level')->default(1);
-            $table->boolean('is_posting')->default(false); // FALSE = Folder/Header, TRUE = Selectable Item
-            $table->boolean('is_active')->default(true); // For soft deletes
-            $table->timestamps();
 
-            // Foreign Key Constraint
-            $table
-                ->foreign('parent_id')
-                ->references('id')
-                ->on('chart_of_accounts')
-                ->onDelete('restrict'); // Prevents deleting a parent if it has children
+            // The RCA Code (e.g., 5-02-03-010)
+            $table->string('account_code')->unique();
+
+            // The Account Title (e.g., Office Supplies Expenses)
+            $table->string('account_title');
+
+            // Categorization as per BOM 2023
+            // PS = Personal Services
+            // MOOE = Maintenance and Other Operating Expenses
+            // FE = Financial Expenses
+            // CO = Capital Outlay
+            $table->enum('expense_class', ['PS', 'MOOE', 'FE', 'CO'])->index();
+
+            // Optional: Helps in grouping sub-items
+            $table->string('parent_code')->nullable();
+
+            // Boolean to determine if this account can be directly selected in a PPA
+            // Some accounts are "Header" accounts (not for entry)
+            $table->boolean('is_postable')->default(true);
+
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
         });
     }
 

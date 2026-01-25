@@ -8,6 +8,7 @@ use App\Models\FiscalYear;
 use App\Models\Ppa;
 use App\Http\Requests\StoreAipEntryRequest;
 use App\Http\Requests\UpdateAipEntryRequest;
+use App\Models\ChartOfAccount;
 use App\Models\Office;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -89,6 +90,7 @@ class AipEntryController extends Controller
             'aipEntries' => $aipTree,
             'masterPpas' => $masterPpaTree, // Hierarchical library for the modal
             'offices' => $offices,
+            'chartOfAccounts' => ChartOfAccount::all(),
         ]);
     }
 

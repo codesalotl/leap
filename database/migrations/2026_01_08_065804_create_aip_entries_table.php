@@ -24,12 +24,16 @@ return new class extends Migration {
             //     ->foreignId('funding_source_id')
             //     ->nullable() // temporary null
             //     ->constrained('ref_fund_sources');
+
             $table->decimal('ps_amount', 19, 2)->default(0);
             $table->decimal('mooe_amount', 19, 2)->default(0);
             $table->decimal('fe_amount', 19, 2)->default(0);
             $table->decimal('co_amount', 19, 2)->default(0);
-            $table->decimal('ccet_adaptation', 15, 2)->default(0);
-            $table->decimal('ccet_mitigation', 15, 2)->default(0);
+
+            $table->decimal('total_amount', 19, 2)->default(0);
+
+            $table->decimal('ccet_adaptation', 19, 2)->default(0);
+            $table->decimal('ccet_mitigation', 19, 2)->default(0);
             // $table
             //     ->foreignId('ccet_typology_id')
             //     ->nullable()

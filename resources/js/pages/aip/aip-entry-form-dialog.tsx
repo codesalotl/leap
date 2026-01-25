@@ -39,6 +39,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { ListPlus, Eye } from 'lucide-react';
 
 interface LguLevel {
     code: string;
@@ -157,6 +158,7 @@ const formatCurrency = (val: string) => {
 export default function AipEntryFormDialog({
     open,
     onOpenChange,
+    onSwitch,
     data,
     mode,
     offices,
@@ -715,37 +717,31 @@ export default function AipEntryFormDialog({
                                                 >
                                                     MOOE
                                                 </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                    type="number"
-                                                    onBlur={(e) => {
-                                                        const val =
-                                                            e.target.value;
-                                                        if (
-                                                            val &&
-                                                            !isNaN(Number(val))
-                                                        ) {
-                                                            const roundedValue =
-                                                                parseFloat(
-                                                                    val,
-                                                                ).toFixed(2);
-                                                            field.onChange(
-                                                                roundedValue,
-                                                            );
+                                                <div className="flex gap-2">
+                                                    <Input
+                                                        {...field}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
                                                         }
-                                                        field.onBlur();
-                                                    }}
-                                                />
-                                                {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
+                                                        placeholder="0.00"
+                                                        readOnly // <--- CRITICAL: User cannot type here anymore
+                                                        className="cursor-not-allowed text-right font-mono"
+                                                        value={formatCurrency(
+                                                            field.value,
+                                                        )}
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                                        onClick={onSwitch}
+                                                        title="Manage Itemized MOOE"
+                                                    >
+                                                        <ListPlus className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -926,6 +922,8 @@ export default function AipEntryFormDialog({
                             ? 'Saving...'
                             : 'Save changes'}
                     </Button>
+
+                    {/* <Button onClick={onSwitch}>Open MOOE</Button> */}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

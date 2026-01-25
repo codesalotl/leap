@@ -61,6 +61,8 @@ class DatabaseSeeder extends Seeder
             PpaSeeder::class,
 
             AipEntrySeeder::class,
+
+            PpaItemizedCostSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
