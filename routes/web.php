@@ -51,7 +51,11 @@ Route::delete('/aip-ppa/{aipPpa}', [PpaController::class, 'destroy'])->name(
     'aip-ppa.destroy',
 );
 
-Route::get('chart-of-accounts', [ChartOfAccountController::class, 'index']);
+// chart of accounts
+Route::get('chart-of-accounts', [
+    ChartOfAccountController::class,
+    'index',
+])->name('coa.index');
 
 Route::get('sectors', [SectorController::class, 'index']);
 
