@@ -20,7 +20,6 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
-        // ppa import list
         $masterPpaTree = Ppa::whereNull('parent_id')
             ->where('is_active', true)
             ->with([
@@ -31,19 +30,33 @@ class AipEntryController extends Controller
             ])
             ->get();
 
-        // aip entry
-        $aip_entries = AipEntry::with(['ppa.office', 'ppa.parent'])
+        $aip_entries = AipEntry::with([
+            'ppa.office',
+            'ppa.parent',
+            'itemizedCosts.chartOfAccount',
+        ])
             ->where('fiscal_year_id', $fiscalYear->id)
             ->get();
 
-        // 3. Map flat database rows to the structure expected by the React UI
         $mappedEntries = $aip_entries->map(
             fn($entry) => [
                 'id' => $entry->id,
                 'ppa_id' => $entry->ppa_id,
-                'parent_ppa_id' => $entry->ppa->parent_id, // Used for tree building
-                'aip_ref_code' => $entry->ppa->full_code, // From your Model Attribute
+                'parent_ppa_id' => $entry->ppa->parent_id,
+                'aip_ref_code' => $entry->ppa->full_code,
                 'ppa_desc' => $entry->ppa->title,
+                'itemized_costs' => $entry->itemizedCosts->map(
+                    fn($cost) => [
+                        'id' => $cost->id,
+                        'aip_entry_id' => $cost->aip_entry_id,
+                        'account_code' => $cost->account_code,
+                        'item_description' => $cost->item_description,
+                        'quantity' => $cost->quantity,
+                        'unit_cost' => $cost->unit_cost,
+                        'amount' => $cost->amount,
+                        'chart_of_account' => $cost->chartOfAccount, // This is crucial for the frontend filter
+                    ],
+                ),
                 'implementing_office_department' =>
                     $entry->ppa->office->name ?? 'N/A',
                 'sched_implementation' => [
@@ -57,7 +70,7 @@ class AipEntryController extends Controller
                     'mooe' => $entry->mooe_amount,
                     'fe' => $entry->fe_amount,
                     'co' => $entry->co_amount,
-                    'total' => $entry->total,
+                    'total' => $entry->total_amount,
                 ],
                 'cc_adaptation' => number_format(
                     (float) $entry->ccet_adaptation,
@@ -72,23 +85,18 @@ class AipEntryController extends Controller
                     '',
                 ),
                 'cc_typology_code' => $entry->typology_code ?? '',
-                'children' => [], // Placeholder for buildTree
+                'children' => [],
             ],
         );
 
-        // dd($mappedEntries);
-
-        // 4. Build the tree structure for the Summary Table
         $aipTree = $this->buildAipTree($mappedEntries);
 
         $offices = Office::all();
 
-        // dd($aipTree);
-
         return Inertia::render('aip/aip-summary-form', [
             'fiscalYears' => $fiscalYear,
             'aipEntries' => $aipTree,
-            'masterPpas' => $masterPpaTree, // Hierarchical library for the modal
+            'masterPpas' => $masterPpaTree,
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
         ]);

@@ -79,6 +79,7 @@ export interface AipEntry {
     };
     expected_outputs: string;
     funding_source: string;
+    itemized_costs?: any[]; // Added to interface
     amount: {
         ps: string;
         mooe: string;
@@ -154,7 +155,22 @@ const formatNumber = (val: string) => {
           });
 };
 
-const findPpaInTree = (nodes, targetId) => {
+// Recursive helper to find an entry in the AIP Tree
+const findEntryInTree = (
+    nodes: AipEntry[],
+    targetId: number,
+): AipEntry | null => {
+    for (const node of nodes) {
+        if (node.id === targetId) return node;
+        if (node.children && node.children.length > 0) {
+            const found = findEntryInTree(node.children, targetId);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
+const findPpaInTree = (nodes: any[], targetId: number) => {
     for (const node of nodes) {
         if (node.id === targetId) return node;
         if (node.children && node.children.length > 0) {
@@ -172,8 +188,6 @@ export default function AipSummaryTable({
     offices,
     chartOfAccounts,
 }: AipSummaryTableProp) {
-    // console.log(chartOfAccounts);
-
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -187,20 +201,29 @@ export default function AipSummaryTable({
     const [isMooeOpen, setIsMooeOpen] = useState(false);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<AipEntry | null>(null);
-    const [mode, setMode] = useState<string>(null);
+    const [mode, setMode] = useState<string | null>(null);
     const [isAddEntryFormDialogOpen, setIsAddEntryFormDialogOpen] =
         useState<boolean>(false);
 
+    /**
+     * SYNC EFFECT:
+     * This is the fix. When aipEntries (props) changes after a save,
+     * we find the "new" version of our selected entry so the Dialog table updates.
+     */
     useEffect(() => {
-        console.log('Selected Entry changed to:', selectedEntry);
-    }, [selectedEntry]);
+        if (selectedEntry) {
+            const updated = findEntryInTree(aipEntries, selectedEntry.id);
+            if (updated) {
+                setSelectedEntry(updated);
+            }
+        }
+    }, [aipEntries]);
 
     const handleSwitchToMooe = () => {
-        setIsEditOpen(false); // Close AipEntryFormDialog
-        setIsMooeOpen(true); // Open MooeDialog
+        setIsEditOpen(false);
+        setIsMooeOpen(true);
     };
 
-    // --- DELETE LOGIC ---
     const handleDelete = (entry: AipEntry) => {
         router.delete(`/aip-entries/${entry.id}`, {
             preserveScroll: true,
@@ -258,7 +281,7 @@ export default function AipSummaryTable({
     };
 
     const exportToPDF = () => {
-        const doc = new jsPDF('l', 'mm', 'a4'); // Landscape A4
+        const doc = new jsPDF('l', 'mm', 'a4');
         const flatData = flattenForExport(aipEntries);
 
         doc.setFontSize(10);
@@ -306,27 +329,19 @@ export default function AipSummaryTable({
                 formatNumber(e.cc_mitigation ?? '0'),
                 e.cc_typology_code ?? '',
             ]),
-            styles: {
-                fontSize: 5.5, // Reduced font size to fit all 15 columns
-                cellPadding: 1,
-                valign: 'middle',
-            },
-            headStyles: {
-                fillColor: [40, 40, 40],
-                halign: 'center',
-            },
+            styles: { fontSize: 5.5, cellPadding: 1, valign: 'middle' },
+            headStyles: { fillColor: [40, 40, 40], halign: 'center' },
             columnStyles: {
-                1: { cellWidth: 40 }, // Description
-                5: { cellWidth: 25 }, // Expected Outputs
-                6: { cellWidth: 20 }, // Source
+                1: { cellWidth: 40 },
+                5: { cellWidth: 25 },
+                6: { cellWidth: 20 },
             },
-            margin: { left: 5, right: 5 }, // Wider margins for more space
+            margin: { left: 5, right: 5 },
         });
 
         doc.save(`AIP_Summary_${fiscalYears.year}.pdf`);
     };
 
-    // --- TABLE DEFINITION ---
     const columnHelper = createColumnHelper<AipEntry>();
 
     const columns = useMemo(
@@ -391,29 +406,29 @@ export default function AipSummaryTable({
                     ),
                 ],
             }),
-            columnHelper.accessor('', {
+            columnHelper.accessor('expected_outputs', {
                 header: 'Expected Outputs',
             }),
-            columnHelper.accessor('', {
+            columnHelper.accessor('funding_source', {
                 header: 'Funding Source',
             }),
             columnHelper.group({
                 header: 'Amount (in thousand pesos)',
                 columns: [
                     columnHelper.accessor('amount.ps', {
-                        header: 'Personal Services (PS)',
+                        header: 'PS',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.mooe', {
-                        header: 'Maintenace and Other Operating Expenses (MOOE)',
+                        header: 'MOOE',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.fe', {
-                        header: 'Financial Expenses (FE)',
+                        header: 'FE',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.co', {
-                        header: 'Capital Outaly (CO)',
+                        header: 'CO',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('amount.total', {
@@ -427,28 +442,25 @@ export default function AipSummaryTable({
                 ],
             }),
             columnHelper.group({
-                header: 'Amount of Climate Change Expenditure (in thousand pesos)',
+                header: 'CC Expenditure',
                 columns: [
                     columnHelper.accessor('cc_adaptation', {
-                        header: 'Climate Change Adaptation',
+                        header: 'Adaptation',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                     columnHelper.accessor('cc_mitigation', {
-                        header: 'Climate Change Mitigation',
+                        header: 'Mitigation',
                         cell: (i) => formatNumber(i.getValue()),
                     }),
                 ],
             }),
-            columnHelper.accessor('', {
+            columnHelper.accessor('cc_typology_code', {
                 header: 'CC Typology Code',
             }),
             columnHelper.display({
                 id: 'actions',
                 cell: ({ row }) => {
                     const entry = row.original;
-
-                    // console.log(entry);
-
                     return (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -458,7 +470,6 @@ export default function AipSummaryTable({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
                                 <DropdownMenuItem
                                     onSelect={() => {
                                         setSelectedEntry(entry);
@@ -468,7 +479,6 @@ export default function AipSummaryTable({
                                     <SquareArrowOutUpRight className="mr-2 h-4 w-4" />{' '}
                                     Add Entry
                                 </DropdownMenuItem>
-
                                 <DropdownMenuItem
                                     onClick={() => {
                                         setSelectedEntry(entry);
@@ -478,9 +488,7 @@ export default function AipSummaryTable({
                                 >
                                     <Edit className="mr-2 h-4 w-4" /> Edit Entry
                                 </DropdownMenuItem>
-
                                 <DropdownMenuSeparator />
-
                                 <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => {
@@ -497,7 +505,7 @@ export default function AipSummaryTable({
                 },
             }),
         ],
-        [],
+        [columnHelper],
     );
 
     const table = useReactTable({
@@ -533,16 +541,13 @@ export default function AipSummaryTable({
 
     const existingPpaIds = useMemo(() => {
         const ids = new Set<number>();
-
         const extractIds = (entries: AipEntry[]) => {
             entries.forEach((entry) => {
                 ids.add(entry.ppa_id);
-                if (entry.children && entry.children.length > 0) {
+                if (entry.children && entry.children.length > 0)
                     extractIds(entry.children);
-                }
             });
         };
-
         extractIds(aipEntries);
         return ids;
     }, [aipEntries]);
@@ -586,7 +591,6 @@ export default function AipSummaryTable({
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
-
                         <Button onClick={() => setIsImportOpen(true)}>
                             <Library className="mr-2 h-4 w-4" /> Import from
                             Library
@@ -660,7 +664,7 @@ export default function AipSummaryTable({
             <MooeDialog
                 open={isMooeOpen}
                 onOpenChange={setIsMooeOpen}
-                entry={selectedEntry}
+                entry={selectedEntry} // This now receives the synced entry
                 chartOfAccounts={chartOfAccounts}
             />
 
@@ -718,7 +722,7 @@ export default function AipSummaryTable({
                 onOpenChange={setIsAddEntryFormDialogOpen}
                 ppaMasterData={selectedPpaMasterData}
                 fiscalYearsId={fiscalYears.id}
-                existingPpaIds={existingPpaIds} // <--- Pass the Set here
+                existingPpaIds={existingPpaIds}
             />
         </AppLayout>
     );

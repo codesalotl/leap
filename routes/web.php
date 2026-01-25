@@ -15,6 +15,7 @@ use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\AipEntryController;
 use App\Http\Controllers\AipSummaryController;
 use App\Http\Controllers\FiscalYearController;
+use App\Http\Controllers\AipCostingController;
 
 Route::get(
     '/',
@@ -29,21 +30,11 @@ Route::middleware(['auth', 'verified'])->group(
     ),
 );
 
-// Route::get('aip', [AipController::class, 'index']);
-// Route::post('aip/{id}', [AipController::class, 'storeChild']);
-// Route::post('aip', [AipController::class, 'store']);
-// Route::patch('aip/{id}', [AipController::class, 'update']);
-// Route::delete('aip/{id}', [AipController::class, 'destroy']);
-
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
 
 Route::get('home', function () {
     return Inertia::render('home');
 });
-
-// Route::get('aip-collections', [AipCollectionController::class, 'index']);
-// Route::get('aip-collections/{id}', [AipCollectionController::class, 'show']);
-// Route::post('aip-collections', [AipCollectionController::class, 'store']);
 
 Route::get('ppa-list', [PpaListController::class, 'index']);
 Route::patch('ppa-list/{program}', [PpaListController::class, 'update']);
@@ -79,7 +70,6 @@ Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
 Route::get('aip', [FiscalYearController::class, 'index']);
 Route::post('aip', [FiscalYearController::class, 'store']);
 Route::patch('/aip/{aip}', [FiscalYearController::class, 'update']);
-// Route::get('aip/{aip}', [FiscalYearController::class, 'show']);
 
 // aip summary
 Route::prefix('aip/{fiscalYear}')->group(function () {
@@ -91,9 +81,7 @@ Route::delete('/aip-entries/{aipEntry}', [
     AipEntryController::class,
     'destroy',
 ]);
-// Route::get('aipentry', fn() => Inertia::render('aip/aip-entry-form-dialog'));
 
-// Route::get('ppa', [PpaController::class, 'index']);
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
 Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
 Route::patch('ppas/{ppa}', [PpaController::class, 'update'])->name(
@@ -104,15 +92,16 @@ Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
 );
 
 Route::get('aip-entries', [AipEntryController::class, 'index']);
-// View the AIP Summary Table
-// Route::get('/aip/{aip}/summary', [AipEntryController::class, 'show'])->name(
-//     'aip.summary',
-// );
-// Handle the Import Modal Logic
-// Route::post('/aip/{aip}/import', [AipController::class, 'importPpas'])->name(
-//     'aip.import-ppas',
-// );
 
 Route::get('aip-summary', [AipSummaryController::class, 'index']);
+
+Route::post('/aip-costing/{aipEntry}', [
+    AipCostingController::class,
+    'store',
+])->name('aip-costing.store');
+Route::delete('/aip-costing/{id}', [
+    AipCostingController::class,
+    'destroy',
+])->name('aip-costing.destroy');
 
 require __DIR__ . '/settings.php';
