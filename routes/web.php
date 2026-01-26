@@ -17,6 +17,8 @@ use App\Http\Controllers\AipSummaryController;
 use App\Http\Controllers\FiscalYearController;
 use App\Http\Controllers\AipCostingController;
 use App\Http\Controllers\PpmpPriceListController;
+use App\Http\Controllers\PpmpHeaderController;
+use App\Http\Controllers\PpmpItemController;
 
 Route::get(
     '/',
@@ -113,5 +115,14 @@ Route::get('/ppmp-price-list', [PpmpPriceListController::class, 'index'])->name(
 Route::post('/ppmp-price-list', [PpmpPriceListController::class, 'store'])->name('ppmp-price-list.store');
 Route::put('/ppmp-price-list/{ppmpPriceList}', [PpmpPriceListController::class, 'update'])->name('ppmp-price-list.update');
 Route::delete('/ppmp-price-list/{ppmpPriceList}', [PpmpPriceListController::class, 'destroy'])->name('ppmp-price-list.destroy');
+
+// PPMP Headers Routes
+Route::get('/ppmp-headers', [PpmpHeaderController::class, 'index'])->name('ppmp-headers.index');
+Route::post('/ppmp-headers', [PpmpHeaderController::class, 'store'])->name('ppmp-headers.store');
+
+// PPMP Items Routes
+Route::get('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 'index'])->name('ppmp-items.index');
+Route::get('/ppmp-headers/{ppmpHeaderId}/items/create', [PpmpItemController::class, 'create'])->name('ppmp-items.create');
+Route::post('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 'store'])->name('ppmp-items.store');
 
 require __DIR__ . '/settings.php';

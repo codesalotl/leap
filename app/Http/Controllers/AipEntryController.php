@@ -10,6 +10,7 @@ use App\Http\Requests\StoreAipEntryRequest;
 use App\Http\Requests\UpdateAipEntryRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Office;
+use App\Models\PpmpPriceList;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
@@ -54,6 +55,8 @@ class AipEntryController extends Controller
                         'quantity' => $cost->quantity,
                         'unit_cost' => $cost->unit_cost,
                         'amount' => $cost->amount,
+                        'ppmp_price_list_id' => $cost->ppmp_price_list_id,
+                        'requires_procurement' => $cost->requires_procurement,
                         'chart_of_account' => $cost->chartOfAccount, // This is crucial for the frontend filter
                     ],
                 ),
@@ -99,6 +102,7 @@ class AipEntryController extends Controller
             'masterPpas' => $masterPpaTree,
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
+            'ppmpPriceList' => PpmpPriceList::all(),
         ]);
     }
 

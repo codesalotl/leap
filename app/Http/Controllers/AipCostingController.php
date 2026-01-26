@@ -19,6 +19,10 @@ class AipCostingController extends Controller
             // Numeric values for the math
             'quantity' => 'required|numeric|min:0.01',
             'unit_cost' => 'required|numeric|min:0',
+
+            // PPMP Integration fields
+            'ppmp_price_list_id' => 'nullable|exists:ppmp_price_lists,id',
+            'requires_procurement' => 'boolean',
         ]);
 
         // Create the line item.

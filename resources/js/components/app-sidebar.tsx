@@ -13,9 +13,14 @@ import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
-    // BookOpen,
-    // Folder,
     LayoutGrid,
+    FileText,
+    ShoppingCart,
+    DollarSign,
+    Building,
+    Users,
+    BookOpen,
+    FolderTree,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -28,53 +33,38 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Annual Investment Programs',
         href: '/aip',
-        icon: LayoutGrid,
+        icon: FolderTree,
     },
     {
         title: 'PPA Masterlist',
         href: '/ppa',
-        icon: LayoutGrid,
+        icon: FileText,
+    },
+    {
+        title: 'PPMP Management',
+        href: '/ppmp-headers',
+        icon: ShoppingCart,
     },
     {
         title: 'PPMP Price List',
         href: '/ppmp-price-list',
-        icon: LayoutGrid,
+        icon: DollarSign,
     },
     {
         title: 'Chart of Accounts',
         href: '/chart-of-accounts',
-        icon: LayoutGrid,
+        icon: BookOpen,
     },
     {
         title: 'Sectors',
         href: '/sectors',
-        icon: LayoutGrid,
+        icon: Building,
     },
     {
         title: 'Offices',
         href: '/offices',
-        icon: LayoutGrid,
+        icon: Users,
     },
-    // {
-    //     title: 'AIP Collections',
-    //     href: '/aip-collections',
-    //     icon: LayoutGrid,
-    // },
-    // {
-    //     title: 'AIP PPA',
-    //     href: '/aip-ppa',
-    //     icon: LayoutGrid,
-    // },
-    // {
-    //     title: 'Manage PPA',
-    //     href: '/ppa-list',
-    //     icon: LayoutGrid,
-    // },
-    // {
-    //     title: 'LGU Profile',
-    //     href: '/lgu-profile',
-    //     icon: LayoutGrid,
-    // },
 ];
 
 // const footerNavItems: NavItem[] = [

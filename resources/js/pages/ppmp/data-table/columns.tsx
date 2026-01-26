@@ -27,7 +27,7 @@ export interface PpmpPriceList {
     created_at: string; // ISO Timestamp
 }
 
-export const createColumns = (onEdit?: (item: PpmpPriceList) => void): ColumnDef<PpmpPriceList>[] => [
+export const createColumns = (onEdit?: (item: PpmpPriceList) => void, onDelete?: (item: PpmpPriceList) => void): ColumnDef<PpmpPriceList>[] => [
     {
         accessorKey: 'id',
         header: 'ID',
@@ -99,10 +99,7 @@ export const createColumns = (onEdit?: (item: PpmpPriceList) => void): ColumnDef
                             Edit item
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                            onClick={() => {
-                                // TODO: Delete item
-                                console.log('Delete item:', item)
-                            }}
+                            onClick={() => onDelete?.(item)}
                             className="text-red-600"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />

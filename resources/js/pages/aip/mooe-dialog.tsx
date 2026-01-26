@@ -27,18 +27,21 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Plus, Loader2 } from 'lucide-react';
+import { Trash2, Plus, Loader2, ShoppingCart } from 'lucide-react';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, Controller } from 'react-hook-form';
+import { Badge } from '@/components/ui/badge';
 
 /** * 1. Define the Schema and Types
  */
 const formSchema = z.object({
     account_code: z.string().min(1, 'Account code is required'),
+    ppmp_price_list_id: z.string().optional(),
     item_description: z.string().min(1, 'Description is required'),
     quantity: z.number().min(0.01, 'Quantity must be greater than 0'),
     unit_cost: z.number().min(0, 'Unit cost cannot be negative'),
+    requires_procurement: z.boolean(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -52,7 +55,21 @@ export interface PpaItemizedCost {
     quantity: string | number;
     unit_cost: string | number;
     amount: string | number;
+    ppmp_price_list_id?: number;
+    requires_procurement?: boolean;
     chart_of_account?: ChartOfAccount;
+}
+
+export interface PpmpPriceList {
+    id: number;
+    item_code: string;
+    item_description: string;
+    unit: string;
+    unit_price: string | number;
+    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
+    account_code: string;
+    procurement_type: 'Goods' | 'Services' | 'Civil Works' | 'Consulting';
+    standard_specifications?: string;
 }
 
 export interface AipEntry {
@@ -79,6 +96,7 @@ interface MooeDialogProps {
     onOpenChange: (open: boolean) => void;
     entry: AipEntry | null;
     chartOfAccounts: ChartOfAccount[];
+    ppmpPriceList: PpmpPriceList[];
 }
 
 export default function MooeDialog({
@@ -86,15 +104,18 @@ export default function MooeDialog({
     onOpenChange,
     entry,
     chartOfAccounts,
+    ppmpPriceList,
 }: MooeDialogProps) {
     // Initialize React Hook Form
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             account_code: '',
+            ppmp_price_list_id: '',
             item_description: '',
             quantity: 1,
             unit_cost: 0,
+            requires_procurement: false,
         },
     });
 
@@ -104,12 +125,40 @@ export default function MooeDialog({
         );
     }, [chartOfAccounts]);
 
+    const filteredPpmpPriceList = React.useMemo(() => {
+        const selectedAccountCode = form.watch('account_code');
+        if (!selectedAccountCode) return [];
+        return ppmpPriceList.filter(
+            (item) => item.account_code === selectedAccountCode && item.expense_class === 'MOOE'
+        );
+    }, [ppmpPriceList, form.watch('account_code')]);
+
     const existingMooeItems = React.useMemo(() => {
         if (!entry?.itemized_costs) return [];
         return entry.itemized_costs.filter(
             (item) => item.chart_of_account?.expense_class === 'MOOE',
         );
     }, [entry]);
+
+    // Handle PPMP Price List selection
+    const handlePpmpItemSelect = (ppmpItemId: string) => {
+        const selectedItem = ppmpPriceList.find(item => item.id.toString() === ppmpItemId);
+        if (selectedItem) {
+            form.setValue('ppmp_price_list_id', ppmpItemId);
+            form.setValue('item_description', selectedItem.item_description);
+            form.setValue('unit_cost', parseFloat(selectedItem.unit_price as string));
+            form.setValue('requires_procurement', true);
+        }
+    };
+
+    // Handle account code change
+    const handleAccountCodeChange = (accountCode: string) => {
+        form.setValue('account_code', accountCode);
+        form.setValue('ppmp_price_list_id', '');
+        form.setValue('item_description', '');
+        form.setValue('unit_cost', 0);
+        form.setValue('requires_procurement', false);
+    };
 
     // Live calculation for the UI
     const watchQty = form.watch('quantity');
@@ -132,9 +181,11 @@ export default function MooeDialog({
             onSuccess: (page) => {
                 form.reset({
                     ...form.getValues(),
+                    ppmp_price_list_id: '',
                     item_description: '',
                     quantity: 1,
                     unit_cost: 0,
+                    requires_procurement: false,
                 });
             },
         });
@@ -144,6 +195,65 @@ export default function MooeDialog({
         if (confirm('Are you sure?')) {
             router.delete(`/aip-costing/${id}`, { preserveScroll: true });
         }
+    };
+
+    const handleCreatePpmp = (mooeItem: PpaItemizedCost) => {
+        if (!mooeItem.ppmp_price_list_id) {
+            alert('This item is not linked to PPMP Price List. Please select an item from the catalog first.');
+            return;
+        }
+
+        const ppmpData = {
+            aip_entry_id: entry?.id,
+            office_id: 1, // You might need to get this from somewhere
+            procurement_type: 'Goods', // Default, you might want to get this from PPMP price list
+            procurement_method: 'Shopping', // Default
+            implementation_schedule: new Date().toISOString().split('T')[0],
+            source_of_funds: `MOOE - ${mooeItem.account_code}`,
+            approved_budget: parseFloat(mooeItem.amount as string),
+        };
+
+        router.post('/ppmp-headers', ppmpData, {
+            onSuccess: (page) => {
+                // After creating PPMP header, create the PPMP item
+                const ppmpHeaderId = page.props.ppmpHeader?.id;
+                if (ppmpHeaderId) {
+                    const ppmpItemData = {
+                        ppmp_price_list_id: mooeItem.ppmp_price_list_id,
+                        quantity: parseFloat(mooeItem.quantity as string),
+                        unit_price: parseFloat(mooeItem.unit_cost as string),
+                        total_amount: parseFloat(mooeItem.amount as string),
+                        specifications: '', // You might want to get this from PPMP price list
+                        // Add monthly distribution (simple example - all in current month)
+                        jan_qty: 0, jan_amount: 0,
+                        feb_qty: 0, feb_amount: 0,
+                        mar_qty: 0, mar_amount: 0,
+                        apr_qty: 0, apr_amount: 0,
+                        may_qty: 0, may_amount: 0,
+                        jun_qty: 0, jun_amount: 0,
+                        jul_qty: 0, jul_amount: 0,
+                        aug_qty: 0, aug_amount: 0,
+                        sep_qty: 0, sep_amount: 0,
+                        oct_qty: 0, oct_amount: 0,
+                        nov_qty: 0, nov_amount: 0,
+                        dec_qty: parseFloat(mooeItem.quantity as string), 
+                        dec_amount: parseFloat(mooeItem.amount as string),
+                    };
+
+                    router.post(`/ppmp-headers/${ppmpHeaderId}/items`, ppmpItemData, {
+                        onSuccess: () => {
+                            alert('PPMP created successfully!');
+                        },
+                        onError: (error) => {
+                            alert('Error creating PPMP item: ' + error);
+                        }
+                    });
+                }
+            },
+            onError: (error) => {
+                alert('Error creating PPMP: ' + error);
+            }
+        });
     };
 
     return (
@@ -177,7 +287,7 @@ export default function MooeDialog({
                                 <div className="space-y-2">
                                     <Label>Official Account Code</Label>
                                     <Select
-                                        onValueChange={field.onChange}
+                                        onValueChange={handleAccountCodeChange}
                                         value={field.value}
                                     >
                                         <SelectTrigger
@@ -207,6 +317,49 @@ export default function MooeDialog({
                                 </div>
                             )}
                         />
+
+                        {/* PPMP Price List Selection */}
+                        {form.watch('account_code') && (
+                            <Controller
+                                name="ppmp_price_list_id"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <div className="space-y-2">
+                                        <Label>PPMP Price List Item</Label>
+                                        <Select
+                                            onValueChange={handlePpmpItemSelect}
+                                            value={field.value}
+                                        >
+                                            <SelectTrigger
+                                                aria-invalid={fieldState.invalid}
+                                            >
+                                                <SelectValue placeholder="Select from PPMP Catalog" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {filteredPpmpPriceList.map((item) => (
+                                                    <SelectItem
+                                                        key={item.id}
+                                                        value={item.id.toString()}
+                                                    >
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium">{item.item_description}</span>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {item.item_code} - ₱{parseFloat(item.unit_price as string).toLocaleString()}/{item.unit}
+                                                            </span>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        {fieldState.error && (
+                                            <p className="text-[10px] text-destructive">
+                                                {fieldState.error.message}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            />
+                        )}
 
                         {/* Description */}
                         <Controller
@@ -307,7 +460,7 @@ export default function MooeDialog({
                                     <TableHead className="text-right">
                                         Total Amount
                                     </TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead className="w-[120px]">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -341,16 +494,29 @@ export default function MooeDialog({
                                                 })}
                                             </TableCell>
                                             <TableCell>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-destructive"
-                                                    onClick={() =>
-                                                        handleDelete(item.id)
-                                                    }
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                <div className="flex gap-1">
+                                                    {item.ppmp_price_list_id && (
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="text-green-600"
+                                                            onClick={() => handleCreatePpmp(item)}
+                                                        >
+                                                            <ShoppingCart className="h-3 w-3 mr-1" />
+                                                            Create PPMP
+                                                        </Button>
+                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-destructive"
+                                                        onClick={() =>
+                                                            handleDelete(item.id)
+                                                        }
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))

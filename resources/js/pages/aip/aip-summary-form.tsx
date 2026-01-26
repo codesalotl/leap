@@ -143,6 +143,7 @@ interface AipSummaryTableProp {
     masterPpas: any[];
     offices: Office[];
     chartOfAccounts: ChartOfAccount;
+    ppmpPriceList: any[];
 }
 
 const formatNumber = (val: string) => {
@@ -187,6 +188,7 @@ export default function AipSummaryTable({
     masterPpas,
     offices,
     chartOfAccounts,
+    ppmpPriceList,
 }: AipSummaryTableProp) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -666,6 +668,7 @@ export default function AipSummaryTable({
                 onOpenChange={setIsMooeOpen}
                 entry={selectedEntry} // This now receives the synced entry
                 chartOfAccounts={chartOfAccounts}
+                ppmpPriceList={ppmpPriceList}
             />
 
             <AlertDialog

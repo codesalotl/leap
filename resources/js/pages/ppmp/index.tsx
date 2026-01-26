@@ -1,10 +1,12 @@
 import PpmpPriceListTable from '@/pages/ppmp/data-table/page';
 import { PpmpPriceList } from '@/pages/ppmp/data-table/columns';
 import PpmpPriceListFormDialog from '@/pages/ppmp/form-dialog';
+import DeleteDialog from '@/pages/ppmp/delete-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import React, { useState } from 'react';
+import { router } from '@inertiajs/react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,6 +27,9 @@ export default function PpmpPriceListPage({
     const [open, setOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<PpmpPriceList | null>(null);
     const [mode, setMode] = useState<'create' | 'edit'>('create');
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<PpmpPriceList | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleEdit = (item: PpmpPriceList) => {
         setEditingItem(item);
@@ -44,6 +49,38 @@ export default function PpmpPriceListPage({
         setMode('create');
     };
 
+    const handleDelete = (item: PpmpPriceList) => {
+        setItemToDelete(item);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (!itemToDelete) return;
+
+        setIsDeleting(true);
+        
+        router.delete(
+            `/ppmp-price-list/${itemToDelete.id}`,
+            {
+                onSuccess: () => {
+                    setDeleteDialogOpen(false);
+                    setItemToDelete(null);
+                },
+                onError: (errors) => {
+                    console.error('Delete error:', errors);
+                },
+                onFinish: () => {
+                    setIsDeleting(false);
+                },
+            }
+        );
+    };
+
+    const handleDeleteCancel = () => {
+        setDeleteDialogOpen(false);
+        setItemToDelete(null);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
@@ -54,7 +91,7 @@ export default function PpmpPriceListPage({
                         </Button>
                     </div>
 
-                    <PpmpPriceListTable data={priceList} onEdit={handleEdit} />
+                    <PpmpPriceListTable data={priceList} onEdit={handleEdit} onDelete={handleDelete} />
                 </div>
 
                 <PpmpPriceListFormDialog 
@@ -63,6 +100,14 @@ export default function PpmpPriceListPage({
                     chartOfAccounts={chartOfAccounts}
                     editingItem={editingItem}
                     mode={mode}
+                />
+
+                <DeleteDialog
+                    open={deleteDialogOpen}
+                    onOpenChange={handleDeleteCancel}
+                    item={itemToDelete}
+                    onConfirm={handleDeleteConfirm}
+                    isDeleting={isDeleting}
                 />
             </div>
         </AppLayout>

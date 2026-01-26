@@ -17,6 +17,8 @@ class PpaItemizedCost extends Model
         'quantity',
         'unit_cost',
         'amount',
+        'ppmp_price_list_id',
+        'requires_procurement',
     ];
 
     // Add this to handle Decimals correctly in PHP
@@ -38,6 +40,11 @@ class PpaItemizedCost extends Model
             'account_code',
             'account_code',
         );
+    }
+
+    public function ppmpPriceList()
+    {
+        return $this->belongsTo(PpmpPriceList::class, 'ppmp_price_list_id');
     }
 
     protected static function booted()
