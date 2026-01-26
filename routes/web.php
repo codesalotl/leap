@@ -16,6 +16,7 @@ use App\Http\Controllers\AipEntryController;
 use App\Http\Controllers\AipSummaryController;
 use App\Http\Controllers\FiscalYearController;
 use App\Http\Controllers\AipCostingController;
+use App\Http\Controllers\PpmpPriceListController;
 
 Route::get(
     '/',
@@ -107,5 +108,8 @@ Route::delete('/aip-costing/{id}', [
     AipCostingController::class,
     'destroy',
 ])->name('aip-costing.destroy');
+
+Route::get('/ppmp-price-list', [PpmpPriceListController::class, 'index'])->name('ppmp-price-list.index');
+Route::post('/ppmp-price-list', [PpmpPriceListController::class, 'store'])->name('ppmp-price-list.store');
 
 require __DIR__ . '/settings.php';

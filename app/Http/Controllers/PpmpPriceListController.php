@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\PpmpPriceList;
+use App\Models\ChartOfAccount;
 use App\Http\Requests\StorePpmpPriceListRequest;
-use App\Http\Requests\UpdatePpmpPriceListRequest;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PpmpPriceListController extends Controller
 {
@@ -13,7 +15,13 @@ class PpmpPriceListController extends Controller
      */
     public function index()
     {
-        //
+        $priceList = PpmpPriceList::all();
+        $chartOfAccounts = ChartOfAccount::all();
+
+        return Inertia::render('ppmp/index', [
+            'priceList' => $priceList,
+            'chartOfAccounts' => $chartOfAccounts,
+        ]);
     }
 
     /**
@@ -29,7 +37,11 @@ class PpmpPriceListController extends Controller
      */
     public function store(StorePpmpPriceListRequest $request)
     {
-        //
+        $validated = $request->validated();
+        
+        $priceList = PpmpPriceList::create($validated);
+        
+        return back()->with('success', 'Price list item created successfully!');
     }
 
     /**
@@ -51,8 +63,10 @@ class PpmpPriceListController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePpmpPriceListRequest $request, PpmpPriceList $ppmpPriceList)
-    {
+    public function update(
+        UpdatePpmpPriceListRequest $request,
+        PpmpPriceList $ppmpPriceList,
+    ) {
         //
     }
 

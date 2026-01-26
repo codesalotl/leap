@@ -13,7 +13,20 @@ return new class extends Migration
     {
         Schema::create('ppmp_price_lists', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string('item_code', 50)->unique();
+            $table->text('item_description');
+            $table->string('unit', 20);
+            $table->decimal('unit_price', 10, 2);
+            $table->enum('expense_class', ['PS', 'MOOE', 'FE', 'CO']);
+            $table->string('account_code', 20);
+            $table->enum('procurement_type', ['Goods', 'Services', 'Civil Works', 'Consulting']);
+            $table->text('standard_specifications')->nullable();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
+            $table->timestamp('created_at')->useCurrent();
+            
+            $table->index('item_code');
+            $table->index('account_code');
+            $table->index('expense_class');
         });
     }
 

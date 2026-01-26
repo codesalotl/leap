@@ -36,6 +36,11 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'PPMP Price List',
+        href: '/ppmp-price-list',
+        icon: LayoutGrid,
+    },
+    {
         title: 'Chart of Accounts',
         href: '/chart-of-accounts',
         icon: LayoutGrid,
