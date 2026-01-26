@@ -111,5 +111,7 @@ Route::delete('/aip-costing/{id}', [
 
 Route::get('/ppmp-price-list', [PpmpPriceListController::class, 'index'])->name('ppmp-price-list.index');
 Route::post('/ppmp-price-list', [PpmpPriceListController::class, 'store'])->name('ppmp-price-list.store');
+Route::put('/ppmp-price-list/{ppmpPriceList}', [PpmpPriceListController::class, 'update'])->name('ppmp-price-list.update');
+Route::delete('/ppmp-price-list/{ppmpPriceList}', [PpmpPriceListController::class, 'destroy'])->name('ppmp-price-list.destroy');
 
 require __DIR__ . '/settings.php';

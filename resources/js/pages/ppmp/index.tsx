@@ -15,27 +15,55 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type PpmpPriceListPageProps = {
     priceList: PpmpPriceList[];
+    chartOfAccounts: any[];
 };
 
 export default function PpmpPriceListPage({
     priceList,
+    chartOfAccounts,
 }: PpmpPriceListPageProps) {
     const [open, setOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<PpmpPriceList | null>(null);
+    const [mode, setMode] = useState<'create' | 'edit'>('create');
+
+    const handleEdit = (item: PpmpPriceList) => {
+        setEditingItem(item);
+        setMode('edit');
+        setOpen(true);
+    };
+
+    const handleCreate = () => {
+        setEditingItem(null);
+        setMode('create');
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setEditingItem(null);
+        setMode('create');
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
                 <div className="flex flex-col gap-4">
                     <div>
-                        <Button onClick={() => setOpen(true)}>
+                        <Button onClick={handleCreate}>
                             Create PPMP Price List
                         </Button>
                     </div>
 
-                    <PpmpPriceListTable data={priceList} />
+                    <PpmpPriceListTable data={priceList} onEdit={handleEdit} />
                 </div>
 
-                <PpmpPriceListFormDialog open={open} onOpenChange={setOpen} />
+                <PpmpPriceListFormDialog 
+                    open={open} 
+                    onOpenChange={handleClose} 
+                    chartOfAccounts={chartOfAccounts}
+                    editingItem={editingItem}
+                    mode={mode}
+                />
             </div>
         </AppLayout>
     );

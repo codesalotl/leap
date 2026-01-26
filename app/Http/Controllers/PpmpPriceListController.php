@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PpmpPriceList;
 use App\Models\ChartOfAccount;
 use App\Http\Requests\StorePpmpPriceListRequest;
+use App\Http\Requests\UpdatePpmpPriceListRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -67,7 +68,11 @@ class PpmpPriceListController extends Controller
         UpdatePpmpPriceListRequest $request,
         PpmpPriceList $ppmpPriceList,
     ) {
-        //
+        $validated = $request->validated();
+        
+        $ppmpPriceList->update($validated);
+        
+        return back()->with('success', 'Price list item updated successfully!');
     }
 
     /**
@@ -75,6 +80,8 @@ class PpmpPriceListController extends Controller
      */
     public function destroy(PpmpPriceList $ppmpPriceList)
     {
-        //
+        $ppmpPriceList->delete();
+        
+        return back()->with('success', 'Price list item deleted successfully!');
     }
 }

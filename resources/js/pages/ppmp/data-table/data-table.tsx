@@ -17,11 +17,13 @@ import {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+    onEdit?: (item: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
     columns,
     data,
+    onEdit,
 }: DataTableProps<TData, TValue>) {
     console.log(data);
 
