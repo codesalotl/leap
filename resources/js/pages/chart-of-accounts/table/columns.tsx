@@ -21,57 +21,116 @@ import {
 
 export type ChartOfAccount = {
     id: number;
-    account_code: string;
+    account_number: string;
     account_title: string;
-    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
-    parent_code: string | null;
+    account_type: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
+    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO' | null;
+    account_series: string;
+    parent_id: number | null;
+    level: number;
     is_postable: boolean;
     is_active: boolean;
+    normal_balance: 'DEBIT' | 'CREDIT';
+    description: string | null;
     created_at?: string | Date;
     updated_at?: string | Date;
+    children?: ChartOfAccount[]; // For hierarchical structure
 };
 
 export const columns: ColumnDef<ChartOfAccount>[] = [
     {
-        accessorKey: 'id',
-        header: 'ID',
-    },
-    {
-        accessorKey: 'account_code',
-        header: 'Account Code',
+        accessorKey: 'account_number',
+        header: 'Account Number',
     },
     {
         accessorKey: 'account_title',
         header: 'Account Title',
+        cell: ({ row }) => {
+            const level = row.original.level;
+            const isPostable = row.original.is_postable;
+            const indent = (level - 1) * 24;
+            
+            return (
+                <div style={{ paddingLeft: `${indent}px` }}>
+                    {level > 1 && <span className="mr-2 text-gray-400">⤷</span>}
+                    <span className={isPostable ? 'font-normal' : 'font-semibold'}>
+                        {row.getValue('account_title')}
+                    </span>
+                    {!isPostable && (
+                        <span className="ml-2 text-xs text-gray-500">(Header)</span>
+                    )}
+                </div>
+            );
+        },
     },
+    // {
+    //     accessorKey: 'account_type',
+    //     header: 'Account Type',
+    // },
     {
         accessorKey: 'expense_class',
         header: 'Expense Class',
+        cell: ({ row }) => {
+            const value = row.getValue('expense_class');
+            return value || '-';
+        },
     },
-    {
-        accessorKey: 'parent_code',
-        header: 'Parent Code',
-    },
+    // {
+    //     accessorKey: 'account_series',
+    //     header: 'Series',
+    // },
+    // {
+    //     accessorKey: 'parent_id',
+    //     header: 'Parent ID',
+    //     cell: ({ row }) => {
+    //         const value = row.getValue('parent_id');
+    //         return value || '-';
+    //     },
+    // },
     {
         accessorKey: 'is_postable',
-        header: 'Is Postable',
+        header: 'Postable',
+        cell: ({ row }) => {
+            const value = row.getValue('is_postable');
+            return value ? 'Yes' : 'No';
+        },
     },
     {
         accessorKey: 'is_active',
-        header: 'Is Active',
+        header: 'Active',
+        cell: ({ row }) => {
+            const value = row.getValue('is_active');
+            return value ? 'Yes' : 'No';
+        },
     },
+    // {
+    //     accessorKey: 'normal_balance',
+    //     header: 'Normal Balance',
+    // },
     {
-        accessorKey: 'created_at',
-        header: 'Created At',
+        accessorKey: 'description',
+        header: 'Description',
     },
+    // {
+    //     accessorKey: 'created_at',
+    //     header: 'Created At',
+    //     cell: ({ row }) => {
+    //         const value = row.getValue('created_at');
+    //         return value ? new Date(value as string).toLocaleDateString() : '-';
+    //     },
+    // },
     {
         accessorKey: 'updated_at',
         header: 'Updated At',
+        cell: ({ row }) => {
+            const value = row.getValue('updated_at');
+            return value ? new Date(value as string).toLocaleDateString() : '-';
+        },
     },
     {
         id: 'actions',
-        cell: () => {
-            // const payment = row.original;
+        cell: ({ row }) => {
+            const account = row.original;
 
             return (
                 <DropdownMenu>
@@ -85,17 +144,14 @@ export const columns: ColumnDef<ChartOfAccount>[] = [
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
                             onClick={() =>
-                                // navigator.clipboard.writeText(payment.id)
-                                console.log('clicked')
+                                navigator.clipboard.writeText(account.account_number)
                             }
                         >
-                            Copy payment ID
+                            Copy account number
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>View customer</DropdownMenuItem>
-                        <DropdownMenuItem>
-                            View payment details
-                        </DropdownMenuItem>
+                        <DropdownMenuItem>View details</DropdownMenuItem>
+                        <DropdownMenuItem>Edit account</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             );
