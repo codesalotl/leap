@@ -53,10 +53,10 @@ export const createColumns = (
             return <div className="text-right font-medium">{formatted}</div>;
         },
     },
-    // {
-    //     accessorKey: 'chart_of_account_id',
-    //     header: 'Chart of Account ID',
-    // },
+    {
+        accessorKey: 'chart_of_account_id',
+        // header: 'Chart of Account ID',
+    },
     {
         id: 'actions',
         cell: ({ row }) => {

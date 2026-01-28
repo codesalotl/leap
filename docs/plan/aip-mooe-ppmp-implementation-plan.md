@@ -1,202 +1,133 @@
-# AIP-MOOE-PPMP Implementation Plan
+# AIP-MOOE-PPMP Implementation Plan - Unified Approach
 
 ## Overview
-This implementation plan outlines the development of a comprehensive budgeting and procurement management system that integrates Annual Investment Program (AIP), Maintenance and Other Operating Expenses (MOOE) breakdown, and Procurement Plan Management Process (PPMP) based on the BOM 2023 manual requirements.
+This implementation plan outlines the development of a **simplified unified budgeting and procurement management system** that integrates Annual Investment Program (AIP) and PPMP functionality in a **single-table approach** for better user experience.
 
 ## System Architecture
 
 ### Core Modules
 1. **AIP Management Module**
-2. **MOOE Breakdown Module** 
-3. **PPMP Generation Module**
-4. **Procurement Tracking Module**
-5. **Reporting & Analytics Module**
+2. **Unified PPMP Module** (combines MOOE + PPMP)
+3. **Reporting & Analytics Module**
 
 ## Implementation Phases
 
-### **Phase 1: Foundation & Unified Modal (Weeks 1-4)**
+### **Phase 1: Foundation & Unified Table (Weeks 1-3)**
 
 #### Week 1: Database Setup
-- [ ] Create unified `mooe_ppmp_items` table
-- [ ] Create `mooe_expense_accounts` table (optional grouping)
+- [ ] Create `unified_ppmp_items` table
 - [ ] Update AIP entries table for unified integration
 - [ ] Set up relationships and constraints
 - [ ] Create seeders for initial data
 
 #### Week 2: Unified Modal Foundation
-- [ ] Create `UnifiedMOOEPPMPModal.tsx` component
+- [ ] Create `UnifiedPPMPModal.tsx` component
 - [ ] Implement expense account selector
-- [ ] Create item input field with dropdown + text input
-- [ ] Basic CRUD operations for items and accounts
+- [ ] Create item input with price list integration
+- [ ] Basic CRUD operations for unified items
 
-#### Week 3: Smart Input Features
-- [ ] Dropdown integration with PPMP price list
-- [ ] Text input for custom item descriptions
+#### Week 3: Smart Features
+- [ ] Auto-distribute quantities across months
 - [ ] Real-time cost calculations
-- [ ] Standalone item support (no expense account required)
+- [ ] Monthly quantity editing with validation
+- [ ] Auto-calculation of totals
 
-#### Week 4: Integration & Testing
-- [ ] Integration with AIP entries
-- [ ] Save all functionality
-- [ ] Modal state management
-- [ ] Basic validation and error handling
+### **Phase 2: Advanced Features (Weeks 4-6)**
 
-### **Phase 2: Advanced Features & Workflow (Weeks 5-8)**
-
-#### Week 5: Advanced Item Management
+#### Week 4: User Experience
 - [ ] Bulk item operations (add, edit, delete)
-- [ ] Item templates and presets
-- [ ] Drag-and-drop reordering
 - [ ] Copy items between expense accounts
-
-#### Week 6: PPMP Integration
-- [ ] Auto-generate PPMP from unified items
-- [ ] Quarterly scheduling interface
-- [ ] Procurement method determination
-- [ ] PPMP status tracking
-
-#### Week 7: User Experience Enhancements
 - [ ] Keyboard shortcuts and navigation
 - [ ] Advanced search and filtering
-- [ ] Item categorization and tagging
-- [ ] Undo/redo functionality
 
-#### Week 8: Testing & Optimization
+#### Week 5: Validation & Controls
+- [ ] Budget validation (cannot exceed AIP allocation)
+- [ ] Monthly quantity validation
+- [ ] Auto-save functionality
+- [ ] Error handling and user feedback
+
+#### Week 6: Integration & Testing
+- [ ] Integration with AIP entries
 - [ ] Performance optimization for large datasets
 - [ ] Cross-browser compatibility testing
-- [ ] Mobile responsiveness testing
 - [ ] User acceptance testing
 
-### **Phase 3: Analytics & Reporting (Weeks 9-12)**
+### **Phase 3: Analytics & Reporting (Weeks 7-9)**
 
-#### Week 9: Dashboard Development
-- [ ] Unified MOOE/PPMP dashboard
+#### Week 7: Dashboard Development
+- [ ] Unified PPMP dashboard
 - [ ] Real-time cost tracking
-- [ ] Item categorization analytics
+- [ ] Monthly spending analytics
 - [ ] Budget utilization reports
 
-#### Week 10: Advanced Analytics
+#### Week 8: Advanced Analytics
 - [ ] Item cost trends and forecasting
-- [ ] Expense account analysis
-- [ ] PPMP efficiency metrics
+- [ ] Monthly spending patterns
+- [ ] Budget vs actual comparisons
 - [ ] Custom report builder
 
-#### Week 11: Integration & APIs
-- [ ] REST API for unified data
+#### Week 9: Export & Integration
 - [ ] Export functionality (Excel, PDF)
+- [ ] REST API for unified data
 - [ ] Third-party system integration
-- [ ] Webhook notifications
-
-#### Week 12: Final Testing & Deployment
-- [ ] Comprehensive system testing
-- [ ] Security audit and validation
-- [ ] Performance testing
-- [ ] Production deployment
-
-### **Phase 4: Optimization & Support (Weeks 13-16)**
-
-#### Week 13-14: Performance Optimization
-- [ ] Database query optimization
-- [ ] Frontend performance tuning
-- [ ] Caching implementation
-- [ ] Load testing
-
-#### Week 15-16: Documentation & Training
-- [ ] User documentation and guides
-- [ ] Admin training materials
-- [ ] Video tutorials
-- [ ] Post-launch support plan
+- [ ] Final testing & deployment
 
 ## Technical Specifications
 
 ### Database Schema
 
-#### AIP Entries Table
-```sql
-CREATE TABLE aip_entries (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    ppa_code VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT NOT NULL,
-    implementing_office VARCHAR(100) NOT NULL,
-    ps_amount DECIMAL(15,2) DEFAULT 0,
-    mooe_amount DECIMAL(15,2) DEFAULT 0,
-    fe_amount DECIMAL(15,2) DEFAULT 0,
-    co_amount DECIMAL(15,2) DEFAULT 0,
-    total_amount DECIMAL(15,2) GENERATED ALWAYS AS (ps_amount + mooe_amount + fe_amount + co_amount) STORED,
-    status ENUM('draft', 'submitted', 'approved', 'rejected') DEFAULT 'draft',
-    fiscal_year INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-```
+#### Core Tables (Existing)
+- `chart_of_accounts` ✅
+- `ppmp_price_lists` ✅  
+- `aip_entries` ✅
+- `fiscal_years` ✅
+- `ppas` ✅
 
-#### Unified MOOE/PPMP Items Table
+#### New Unified Table
 ```sql
-CREATE TABLE mooe_ppmp_items (
+CREATE TABLE unified_ppmp_items (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     aip_entry_id BIGINT NOT NULL,
-    expense_account_id BIGINT NULL, -- Can be null for standalone items
+    expense_account_id BIGINT NULL,
+    ppmp_price_list_id BIGINT NULL,
     item_description TEXT NOT NULL,
     quantity DECIMAL(10,2) NOT NULL,
     unit VARCHAR(50) NOT NULL,
-    unit_cost DECIMAL(15,2) NOT NULL,
-    total_cost DECIMAL(15,2) GENERATED ALWAYS AS (quantity * unit_cost) STORED,
-    ppmp_price_list_id BIGINT NULL, -- Reference to PPMP catalog
+    unit_price DECIMAL(15,2) NOT NULL,
+    total_amount DECIMAL(15,2) GENERATED ALWAYS AS (quantity * unit_price) STORED,
     specifications TEXT,
+    
+    -- Monthly breakdown
+    jan_qty DECIMAL(10,2) DEFAULT 0,
+    jan_amount DECIMAL(15,2) DEFAULT 0,
+    feb_qty DECIMAL(10,2) DEFAULT 0,
+    feb_amount DECIMAL(15,2) DEFAULT 0,
+    mar_qty DECIMAL(10,2) DEFAULT 0,
+    mar_amount DECIMAL(15,2) DEFAULT 0,
+    apr_qty DECIMAL(10,2) DEFAULT 0,
+    apr_amount DECIMAL(15,2) DEFAULT 0,
+    may_qty DECIMAL(10,2) DEFAULT 0,
+    may_amount DECIMAL(15,2) DEFAULT 0,
+    jun_qty DECIMAL(10,2) DEFAULT 0,
+    jun_amount DECIMAL(15,2) DEFAULT 0,
+    jul_qty DECIMAL(10,2) DEFAULT 0,
+    jul_amount DECIMAL(15,2) DEFAULT 0,
+    aug_qty DECIMAL(10,2) DEFAULT 0,
+    aug_amount DECIMAL(15,2) DEFAULT 0,
+    sep_qty DECIMAL(10,2) DEFAULT 0,
+    sep_amount DECIMAL(15,2) DEFAULT 0,
+    oct_qty DECIMAL(10,2) DEFAULT 0,
+    oct_amount DECIMAL(15,2) DEFAULT 0,
+    nov_qty DECIMAL(10,2) DEFAULT 0,
+    nov_amount DECIMAL(15,2) DEFAULT 0,
+    dec_qty DECIMAL(10,2) DEFAULT 0,
+    dec_amount DECIMAL(15,2) DEFAULT 0,
+    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (aip_entry_id) REFERENCES aip_entries(id) ON DELETE CASCADE,
     FOREIGN KEY (expense_account_id) REFERENCES chart_of_accounts(id) ON DELETE SET NULL,
-    FOREIGN KEY (ppmp_price_list_id) REFERENCES ppmp_price_list(id) ON DELETE SET NULL
-);
-```
-
-#### Expense Accounts Table (Optional grouping)
-```sql
-CREATE TABLE mooe_expense_accounts (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    aip_entry_id BIGINT NOT NULL,
-    chart_of_account_id BIGINT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (aip_entry_id) REFERENCES aip_entries(id) ON DELETE CASCADE,
-    FOREIGN KEY (chart_of_account_id) REFERENCES chart_of_accounts(id) ON DELETE CASCADE
-);
-```
-
-#### PPMP Table
-```sql
-CREATE TABLE ppmps (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    ppmp_code VARCHAR(50) UNIQUE NOT NULL,
-    aip_entry_id BIGINT NOT NULL,
-    office VARCHAR(100) NOT NULL,
-    total_budget DECIMAL(15,2) NOT NULL,
-    status ENUM('pending', 'ongoing', 'completed', 'delayed') DEFAULT 'pending',
-    fiscal_year INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (aip_entry_id) REFERENCES aip_entries(id) ON DELETE CASCADE
-);
-```
-
-#### PPMP Items Table
-```sql
-CREATE TABLE ppmp_items (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    ppmp_id BIGINT NOT NULL,
-    mooe_item_id BIGINT,
-    description TEXT NOT NULL,
-    quantity DECIMAL(10,2) NOT NULL,
-    unit VARCHAR(50) NOT NULL,
-    estimated_cost DECIMAL(15,2) NOT NULL,
-    procurement_method ENUM('shopping', 'small_value', 'competitive', 'public_bidding', 'direct_contracting') NOT NULL,
-    quarter ENUM('Q1', 'Q2', 'Q3', 'Q4') NOT NULL,
-    status ENUM('pending', 'procured', 'delivered', 'cancelled') DEFAULT 'pending',
-    remarks TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (ppmp_id) REFERENCES ppmps(id) ON DELETE CASCADE,
-    FOREIGN KEY (mooe_item_id) REFERENCES mooe_items(id) ON DELETE SET NULL
+    FOREIGN KEY (ppmp_price_list_id) REFERENCES ppmp_price_lists(id) ON DELETE SET NULL
 );
 ```
 
@@ -204,70 +135,71 @@ CREATE TABLE ppmp_items (
 
 ### **Core Workflow**
 1. **AIP Table** → Click MOOE button
-2. **Unified MOOE/PPMP Modal** → Opens directly showing PPMP interface
-3. **Add Expense Accounts** → Select from standard MOOE categories
-4. **Add Items** → Can be added under expense accounts OR as standalone items
-5. **Save** → All changes saved to AIP entry
+2. **Unified PPMP Modal** → Opens directly with full table view
+3. **Add Items** → Auto-fills from price list + distributes quantities
+4. **Edit Monthly** → Adjust quantities per month as needed
+5. **Save** → All changes saved with validation
 
 ### **Key Requirements**
-- ✅ **Unified Interface**: Single modal handles both MOOE and PPMP
-- ✅ **Flexible Item Management**: Items can be added with or without expense account association
-- ✅ **No Budget Limits**: No per-expense-account budget restrictions
-- ✅ **Smart Input Fields**: Text input + dropdown for item selection
-- ✅ **Direct PPMP Access**: MOOE modal opens directly as PPMP interface
+- ✅ **Single Interface**: One modal handles everything
+- ✅ **Auto-Distribution**: Evenly spread quantities across months
+- ✅ **Real-Time Calculations**: Instant total updates
+- ✅ **Monthly Editing**: Flexible quantity adjustments
+- ✅ **Budget Validation**: Cannot exceed AIP allocation
 
-### **Unified MOOE/PPMP Modal Structure**
+### **Unified PPMP Modal Structure**
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ MOOE & PPMP Management - Health Services Enhancement      │
+│ PPMP Management - Health Services Enhancement           │
 ├─────────────────────────────────────────────────────────┤
-│                                                         │
-│ Left Panel: Expense Accounts        │ Right Panel: Items │
-│ ┌─────────────────────────────────┐ │ ┌───────────────┐ │
-│ │ Travel Expenses                 │ │ │ Item Details  │ │
-│ │ ├─ [Dropdown+Text] Airfare     │ │ │ Description:  │ │
-│ │ ├─ [Dropdown+Text] Hotel        │ │ │ [Text Input]  │ │
-│ │ └─ [+ Add Item]                │ │ │ Or Select:    │ │
-│ └─────────────────────────────────┘ │ │ [Dropdown]    │ │
-│                                   │ │ Quantity:     │ │
-│ Office Supplies                   │ │ [Input]       │ │
-│ ├─ [Dropdown+Text] Paper          │ │ Unit Cost:    │ │
-│ └─ [+ Add Item]                  │ │ [Input]       │ │
-│                                   │ │ Total: ₱X     │ │
-│ [+ Add Expense Account]           │ │ [Save Item]   │ │
-│                                   │ └───────────────┘ │
-│ Standalone Items (No Account)     │                   │
-│ ├─ [Dropdown+Text] Equipment      │                   │
-│ └─ [+ Add Item]                  │                   │
+│ [Add Item] [Bulk Import] [Export]                      │
 ├─────────────────────────────────────────────────────────┤
-│ Total MOOE Items: X items | Total Cost: ₱XXX           │
-│ [Save All] [Cancel]                                   │
+│ Expense │ Item # │ Description │ Unit │ Price │ 2025 Qty │ Total │ Jan │ Feb │ Mar │ ... │ Dec │
+│ Account │       │              │      │       │          │       │ Qty │ Qty │ Qty │     │ Qty │
+├─────────────────────────────────────────────────────────┤
+│ Travel  │ 001   │ Airfare      │ trip │ 5000  │ 4        │ 20000 │ 1   │ 0   │ 1   │ ... │ 2   │
+│ Supplies│ 025   │ Paper A4     │ ream │ 500   │ 24       │ 12000 │ 2   │ 2   │ 2   │ ... │ 2   │
+│ ...     │ ...   │ ...          │ ...  │ ...   │ ...      │ ...   │ ... │ ... │ ... │     │ ... │
+├─────────────────────────────────────────────────────────┤
+│ Totals:        │              │      │       │ 28 items │ ₱32000│ 3   │ 2   │ 3   │ ... │ 4   │
+├─────────────────────────────────────────────────────────┤
+│ Budget Allocation: ₱50,000 | Used: ₱32,000 | Remaining: ₱18,000 │
+├─────────────────────────────────────────────────────────┤
+│ [Save All] [Cancel] [Export Excel]                      │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ### **Frontend Components**
 
-#### AIP Management Components
+#### Unified PPMP Components
 ```
 components/
 ├── aip/
 │   ├── AIPTable.tsx
-│   ├── UnifiedMOOEPPMPModal.tsx
+│   ├── UnifiedPPMPModal.tsx
 │   └── AIPActions.tsx
-├── mooe/
-│   ├── ExpenseAccountSelector.tsx
-│   ├── ItemInputField.tsx
-│   └── ItemList.tsx
-├── ppmp/
-│   ├── PPMPDashboard.tsx
-│   └── PPMPStatusTracker.tsx
-└── shared/
-    ├── Modal.tsx
-    ├── DataTable.tsx
-    └── BudgetCalculator.tsx
+├── unified-ppmp/
+│   ├── PPMPDataTable.tsx
+│   ├── ItemSelector.tsx
+│   ├── MonthlyEditor.tsx
+│   └── BudgetValidator.tsx
+├── shared/
+│   ├── Modal.tsx
+│   ├── DataTable.tsx
+│   └── CostCalculator.tsx
 ```
 
 ### API Endpoints
+
+#### Unified PPMP Management
+```
+GET    /api/aip/{id}/unified-ppmp     - Get unified PPMP data
+POST   /api/aip/{id}/unified-ppmp     - Add new item
+PUT    /api/unified-ppmp/{id}         - Update item
+DELETE /api/unified-ppmp/{id}         - Delete item
+POST   /api/unified-ppmp/bulk         - Bulk operations
+GET    /api/unified-ppmp/validate     - Validate budget constraints
+```
 
 #### AIP Management
 ```
@@ -280,59 +212,23 @@ POST   /api/aip/{id}/submit        - Submit AIP for approval
 POST   /api/aip/{id}/approve       - Approve AIP entry
 ```
 
-#### MOOE Management
-```
-GET    /api/aip/{id}/mooe-ppmp          - Get unified MOOE/PPMP data
-POST   /api/aip/{id}/mooe-ppmp          - Save unified MOOE/PPMP data
-PUT    /api/aip/{id}/mooe-ppmp/items/{itemId}  - Update item
-DELETE /api/aip/{id}/mooe-ppmp/items/{itemId}  - Delete item
-POST   /api/aip/{id}/mooe-ppmp/accounts     - Add expense account
-DELETE /api/aip/{id}/mooe-ppmp/accounts/{accountId} - Delete expense account
-```
-
-#### PPMP Management
-```
-GET    /api/ppmp                   - List all PPMPs
-GET    /api/ppmp/{id}              - Get specific PPMP
-POST   /api/ppmp/generate          - Generate PPMP from AIP
-PUT    /api/ppmp/{id}              - Update PPMP
-GET    /api/ppmp/{id}/items        - Get PPMP items
-POST   /api/ppmp/{id}/items        - Add PPMP item
-PUT    /api/ppmp/items/{id}        - Update PPMP item
-DELETE /api/ppmp/items/{id}        - Delete PPMP item
-```
-
 ## User Roles & Permissions
 
 ### System Roles
 1. **Department Head**
    - Create AIP entries
-   - Manage MOOE breakdown
-   - Generate and manage PPMP
+   - Manage unified PPMP items
    - View department reports
 
 2. **Budget Officer**
    - Review and approve AIP entries
    - Monitor budget allocations
    - Generate budget reports
-   - System administration
 
-3. **Procurement Officer**
-   - Review PPMP items
-   - Update procurement status
-   - Generate procurement reports
-   - Manage vendor information
-
-4. **Sanggunian Member**
-   - View approved AIP entries
-   - Generate legislative reports
-   - Monitor budget utilization
-
-5. **System Administrator**
+3. **System Administrator**
    - User management
    - System configuration
    - Backup and maintenance
-   - Technical support
 
 ## Compliance Requirements
 
@@ -344,9 +240,9 @@ DELETE /api/ppmp/items/{id}        - Delete PPMP item
 
 ### Data Validation Rules
 - MOOE amounts must be positive numbers
-- PPMP items cannot exceed MOOE budget allocation
-- Procurement method must follow amount thresholds
-- Quarterly scheduling must consider procurement lead time
+- Unified PPMP items cannot exceed MOOE budget allocation
+- Monthly quantities must sum to annual quantity
+- Monthly amounts must sum to annual total cost
 
 ### Audit Trail
 - All CRUD operations must be logged
@@ -363,15 +259,15 @@ DELETE /api/ppmp/items/{id}        - Delete PPMP item
 - [ ] Business logic tests
 
 ### Integration Testing
-- [ ] AIP to MOOE integration
-- [ ] MOOE to PPMP generation
+- [ ] AIP to unified PPMP integration
 - [ ] Budget calculation accuracy
+- [ ] Monthly quantity validation
 - [ ] Data consistency checks
 
 ### User Acceptance Testing
 - [ ] Department workflow testing
 - [ ] Budget officer approval process
-- [ ] Procurement officer operations
+- [ ] Monthly editing functionality
 - [ ] Report generation accuracy
 
 ### Performance Testing
@@ -419,47 +315,25 @@ DELETE /api/ppmp/items/{id}        - Delete PPMP item
 
 ### System Performance
 - Response time < 2 seconds for all operations
-- 99.9% system uptime
 - Support for 100+ concurrent users
 - Mobile-friendly interface
 
 ### Business Impact
-- 50% reduction in budget preparation time
-- 90% accuracy in budget calculations
-- 100% compliance with government regulations
-- Improved transparency and accountability
-
-## Post-Implementation Support
-
-### Training Programs
-- Department head training (2 days)
-- Budget officer training (3 days)
-- Procurement officer training (2 days)
-- System administrator training (1 week)
-
-### Documentation
-- User manuals for each role
-- Technical documentation
-- API documentation
-- Troubleshooting guides
-
-### Maintenance Plan
-- Regular system updates
-- Security patches
-- Performance monitoring
-- User feedback collection
+- 70% reduction in data entry time
+- 95% accuracy in budget calculations
+- Improved user satisfaction
+- Single source of truth for budget and procurement
 
 ## Timeline Summary
 
 | Phase | Duration | Key Deliverables |
 |-------|----------|------------------|
-| Phase 1 | Weeks 1-4 | AIP core functionality, basic MOOE |
-| Phase 2 | Weeks 5-8 | Complete MOOE item management, PPMP generation |
-| Phase 3 | Weeks 9-12 | Procurement workflow, user management |
-| Phase 4 | Weeks 13-16 | Analytics, reporting, deployment |
+| Phase 1 | Weeks 1-3 | Unified table, basic modal functionality |
+| Phase 2 | Weeks 4-6 | Advanced features, validation, testing |
+| Phase 3 | Weeks 7-9 | Analytics, reporting, deployment |
 
-**Total Implementation Time: 16 weeks (4 months)**
+**Total Implementation Time: 9 weeks (2.25 months)**
 
 ---
 
-*This implementation plan provides a comprehensive roadmap for developing a fully integrated AIP-MOOE-PPMP system that complies with government regulations and meets the needs of local government units.*
+*This simplified implementation plan focuses on user experience with a unified approach that eliminates complex multi-table workflows while maintaining full functionality for budget and procurement management.*

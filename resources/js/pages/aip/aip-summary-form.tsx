@@ -65,6 +65,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import AddEntryFormDialog from '@/pages/aip/table/dialog';
 import MooeDialog from '@/pages/aip/mooe-dialog';
+import PpmpDialog from '@/pages/aip/ppmp-dialog';
 
 export interface AipEntry {
     id: number;
@@ -663,13 +664,15 @@ export default function AipSummaryTable({
                 offices={offices}
             />
 
-            <MooeDialog
+            {/* <MooeDialog
                 open={isMooeOpen}
                 onOpenChange={setIsMooeOpen}
                 entry={selectedEntry} // This now receives the synced entry
                 chartOfAccounts={chartOfAccounts}
                 ppmpPriceList={ppmpPriceList}
-            />
+            /> */}
+
+            <PpmpDialog open={isMooeOpen} onOpenChange={setIsMooeOpen} />
 
             <AlertDialog
                 open={isDeleteAlertOpen}
