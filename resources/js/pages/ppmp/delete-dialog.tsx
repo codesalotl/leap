@@ -34,11 +34,11 @@ export default function DeleteDialog({
                         This action cannot be undone. This will permanently delete the PPMP price list item:
                         <br />
                         <br />
-                        <strong>Item Code:</strong> {item?.item_code}
+                        <strong>Item Code:</strong> {item?.item_number}
                         <br />
-                        <strong>Description:</strong> {item?.item_description}
+                        <strong>Description:</strong> {item?.description}
                         <br />
-                        <strong>Unit Price:</strong> ₱{item?.unit_price}/{item?.unit}
+                        <strong>Unit Price:</strong> ₱{item?.price}/{item?.unit_of_measurement}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

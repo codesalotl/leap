@@ -7,7 +7,12 @@ type PpmpPriceListTableProps = {
     onDelete?: (item: PpmpPriceList) => void;
 };
 
-export default function PpmpPriceListTable({ data, onEdit, onDelete }: PpmpPriceListTableProps) {
+export default function PpmpPriceListTable({
+    data,
+    onEdit,
+    onDelete,
+}: PpmpPriceListTableProps) {
     const columns = createColumns(onEdit, onDelete);
+
     return <DataTable columns={columns} data={data} />;
 }

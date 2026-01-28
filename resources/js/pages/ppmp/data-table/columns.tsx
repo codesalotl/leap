@@ -1,5 +1,5 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -12,71 +12,55 @@ import {
 
 export interface PpmpPriceList {
     id: number;
-    item_code: string;
-    item_description: string;
-    unit: string;
-    /** * Represented as string to maintain precision from decimal(10,2)
-     * or number if you handle conversion in the API transformer.
-     */
-    unit_price: string | number;
-    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
-    account_code: string;
-    procurement_type: 'Goods' | 'Services' | 'Civil Works' | 'Consulting';
-    standard_specifications: string | null;
-    updated_at: string; // ISO Timestamp
-    created_at: string; // ISO Timestamp
+    item_number: number;
+    description: string;
+    unit_of_measurement: string;
+    price: string;
+    chart_of_account_id: number;
+    updated_at: string;
+    created_at: string;
 }
 
-export const createColumns = (onEdit?: (item: PpmpPriceList) => void, onDelete?: (item: PpmpPriceList) => void): ColumnDef<PpmpPriceList>[] => [
+export const createColumns = (
+    onEdit?: (item: PpmpPriceList) => void,
+    onDelete?: (item: PpmpPriceList) => void,
+): ColumnDef<PpmpPriceList>[] => [
+    // {
+    //     accessorKey: 'id',
+    //     header: 'ID',
+    // },
     {
-        accessorKey: 'id',
-        header: 'ID',
+        accessorKey: 'item_number',
+        header: 'Item Number',
     },
     {
-        accessorKey: 'item_code',
-        header: 'Item Code',
+        accessorKey: 'description',
+        header: 'Description',
     },
     {
-        accessorKey: 'item_description',
-        header: 'Item Description',
+        accessorKey: 'unit_of_measurement',
+        header: 'Unit of Measurement',
     },
     {
-        accessorKey: 'unit',
-        header: 'Unit',
+        accessorKey: 'price',
+        header: 'Price',
+        cell: ({ row }) => {
+            const amount = parseFloat(row.getValue('price'));
+            const formatted = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'PHP',
+            }).format(amount);
+            return <div className="text-right font-medium">{formatted}</div>;
+        },
     },
-    {
-        accessorKey: 'unit_price',
-        header: 'Unit Price',
-    },
-    {
-        accessorKey: 'expense_class',
-        header: 'Expense Class',
-    },
-    {
-        accessorKey: 'account_code',
-        header: 'Account Code',
-    },
-    {
-        accessorKey: 'procurement_type',
-        header: 'Procurement Type',
-    },
-    {
-        accessorKey: 'standard_specifications',
-        header: 'Specifications',
-    },
-    {
-        accessorKey: 'updated_at',
-        header: 'Last Updated',
-    },
-    {
-        accessorKey: 'created_at',
-        header: 'Created At',
-    },
+    // {
+    //     accessorKey: 'chart_of_account_id',
+    //     header: 'Chart of Account ID',
+    // },
     {
         id: 'actions',
-        header: 'Actions',
         cell: ({ row }) => {
-            const item = row.original
+            const item = row.original;
 
             return (
                 <DropdownMenu>
@@ -88,26 +72,19 @@ export const createColumns = (onEdit?: (item: PpmpPriceList) => void, onDelete?:
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(item.id.toString())}
-                        >
-                            Copy item ID
+                        <DropdownMenuItem onClick={() => onEdit?.(item)}>
+                            Edit
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onEdit?.(item)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit item
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                            onClick={() => onDelete?.(item)}
+                        <DropdownMenuItem
                             className="text-red-600"
+                            onClick={() => onDelete?.(item)}
                         >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete item
+                            Delete
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )
+            );
         },
     },
 ];

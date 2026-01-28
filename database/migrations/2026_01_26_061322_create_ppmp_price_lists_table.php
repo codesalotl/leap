@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('ppmp_price_lists', function (Blueprint $table) {
             $table->id();
-            $table->integer('item_number');
+            $table->integer('item_number')->unique();
             $table->text('description');
             $table->string('unit_of_measurement', 20);
             $table->decimal('price', 19, 2);

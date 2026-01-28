@@ -15,9 +15,26 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+type ChartOfAccount = {
+    id: number;
+    account_number: string;
+    account_title: string;
+    account_type: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
+    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
+    account_series: string;
+    parent_id: number;
+    level: number;
+    is_postable: boolean;
+    is_active: boolean;
+    normal_balance: 'DEBIT' | 'CREDIT';
+    description: string;
+    created_at: string;
+    updated_at: string;
+};
+
 type PpmpPriceListPageProps = {
     priceList: PpmpPriceList[];
-    chartOfAccounts: any[];
+    chartOfAccounts: ChartOfAccount[];
 };
 
 export default function PpmpPriceListPage({
@@ -28,7 +45,9 @@ export default function PpmpPriceListPage({
     const [editingItem, setEditingItem] = useState<PpmpPriceList | null>(null);
     const [mode, setMode] = useState<'create' | 'edit'>('create');
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<PpmpPriceList | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<PpmpPriceList | null>(
+        null,
+    );
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleEdit = (item: PpmpPriceList) => {
@@ -38,7 +57,7 @@ export default function PpmpPriceListPage({
     };
 
     const handleCreate = () => {
-        setEditingItem(null);
+        setEditingItem(null); // clears editing item
         setMode('create');
         setOpen(true);
     };
@@ -58,22 +77,19 @@ export default function PpmpPriceListPage({
         if (!itemToDelete) return;
 
         setIsDeleting(true);
-        
-        router.delete(
-            `/ppmp-price-list/${itemToDelete.id}`,
-            {
-                onSuccess: () => {
-                    setDeleteDialogOpen(false);
-                    setItemToDelete(null);
-                },
-                onError: (errors) => {
-                    console.error('Delete error:', errors);
-                },
-                onFinish: () => {
-                    setIsDeleting(false);
-                },
-            }
-        );
+
+        router.delete(`/ppmp-price-list/${itemToDelete.id}`, {
+            onSuccess: () => {
+                setDeleteDialogOpen(false);
+                setItemToDelete(null);
+            },
+            onError: (errors) => {
+                console.error('Delete error:', errors);
+            },
+            onFinish: () => {
+                setIsDeleting(false);
+            },
+        });
     };
 
     const handleDeleteCancel = () => {
@@ -91,12 +107,16 @@ export default function PpmpPriceListPage({
                         </Button>
                     </div>
 
-                    <PpmpPriceListTable data={priceList} onEdit={handleEdit} onDelete={handleDelete} />
+                    <PpmpPriceListTable
+                        data={priceList}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                    />
                 </div>
 
-                <PpmpPriceListFormDialog 
-                    open={open} 
-                    onOpenChange={handleClose} 
+                <PpmpPriceListFormDialog
+                    open={open}
+                    onOpenChange={handleClose}
                     chartOfAccounts={chartOfAccounts}
                     editingItem={editingItem}
                     mode={mode}
