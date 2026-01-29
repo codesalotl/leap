@@ -94,37 +94,37 @@ export interface AipEntry {
     children?: AipEntry[];
 }
 
-interface LguLevel {
-    code: string;
-    created_at: string;
-    id: number;
-    level: string;
-    updated_at: string;
-}
+// interface LguLevel {
+//     id: number;
+//     code: string;
+//     level: string;
+//     created_at: string | null;
+//     updated_at: string | null;
+// }
 
-interface OfficeType {
-    code: string;
-    created_at: string;
-    id: number;
-    type: string;
-    updated_at: string;
-}
+// interface OfficeType {
+//     id: number;
+//     code: string;
+//     type: string;
+//     created_at: string | null;
+//     updated_at: string | null;
+// }
 
-interface Office {
-    code: string;
-    created_at: string;
-    full_code: string;
-    id: number;
-    is_lee: boolean;
-    lgu_level: LguLevel;
-    lgu_level_id: number;
-    name: string;
-    office_type: OfficeType;
-    office_type_id: number;
-    sector: string | null;
-    sector_id: string | null;
-    update_at: string;
-}
+// interface Office {
+//     code: string;
+//     created_at: string;
+//     full_code: string;
+//     id: number;
+//     is_lee: boolean;
+//     lgu_level: LguLevel;
+//     lgu_level_id: number;
+//     name: string;
+//     office_type: OfficeType;
+//     office_type_id: number;
+//     sector: string | null;
+//     sector_id: string | null;
+//     update_at: string;
+// }
 
 export interface ChartOfAccount {
     id: number;
@@ -138,10 +138,74 @@ export interface ChartOfAccount {
     updated_at: string;
 }
 
+type FiscalYear = {
+    id: number;
+    year: number;
+    status: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+type Sector = {
+    id: number;
+    code: string;
+    sector: string;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+type LguLevel = {
+    id: number;
+    code: '1' | '2' | '3';
+    level: 'Province' | 'City' | 'Municipality';
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+type OfficeType = {
+    id: number;
+    code: '01' | '02' | '03';
+    type: 'Mandatory' | 'Optional' | 'Others';
+    created_at: string | null;
+    updated_at: string | null;
+};
+
+type Office = {
+    id: number;
+    sector_id: number | null;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    id_lee: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    sector: Sector;
+    lgu_level: LguLevel;
+    office_type: OfficeType;
+    full_code: string; // full_code of the office combined
+};
+
+type Ppa = {
+    id: number;
+    office_id: number;
+    parent_id: number | null;
+    parent: Ppa | null;
+    title: string;
+    type: 'Program' | 'Project' | 'Activity';
+    code_suffix: string;
+    is_active: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    office: Office;
+    children: Ppa[];
+    full_code: string; // full_code of the office combined + this ppa's code
+};
+
 interface AipSummaryTableProp {
-    fiscalYears: { id: number; year: number };
+    fiscalYear: FiscalYear;
     aipEntries: AipEntry[];
-    masterPpas: any[];
+    masterPpas: Ppa[];
     offices: Office[];
     chartOfAccounts: ChartOfAccount;
     ppmpPriceList: any[];
@@ -184,13 +248,17 @@ const findPpaInTree = (nodes: any[], targetId: number) => {
 };
 
 export default function AipSummaryTable({
-    fiscalYears,
+    fiscalYear,
     aipEntries,
     masterPpas,
     offices,
     chartOfAccounts,
     ppmpPriceList,
 }: AipSummaryTableProp) {
+    console.log(fiscalYear);
+    console.log(aipEntries);
+    // console.log(masterPpas);
+
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -280,7 +348,7 @@ export default function AipSummaryTable({
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'AIP Summary');
-        XLSX.writeFile(wb, `AIP_Summary_${fiscalYears.year}.xlsx`);
+        XLSX.writeFile(wb, `AIP_Summary_${fiscalYear.year}.xlsx`);
     };
 
     const exportToPDF = () => {
@@ -289,7 +357,7 @@ export default function AipSummaryTable({
 
         doc.setFontSize(10);
         doc.text(
-            `Annual Investment Program (AIP) Summary FY ${fiscalYears.year}`,
+            `Annual Investment Program (AIP) Summary FY ${fiscalYear.year}`,
             14,
             10,
         );
@@ -342,7 +410,7 @@ export default function AipSummaryTable({
             margin: { left: 5, right: 5 },
         });
 
-        doc.save(`AIP_Summary_${fiscalYears.year}.pdf`);
+        doc.save(`AIP_Summary_${fiscalYear.year}.pdf`);
     };
 
     const columnHelper = createColumnHelper<AipEntry>();
@@ -534,7 +602,7 @@ export default function AipSummaryTable({
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
-        { title: `AIP Summary FY ${fiscalYears.year}`, href: '#' },
+        { title: `AIP Summary FY ${fiscalYear.year}`, href: '#' },
     ];
 
     const selectedPpaMasterData = useMemo(() => {
@@ -720,14 +788,14 @@ export default function AipSummaryTable({
                 isOpen={isImportOpen}
                 onClose={() => setIsImportOpen(false)}
                 ppaTree={masterPpas}
-                fiscalYearsId={fiscalYears.id}
+                fiscalYearId={fiscalYear.id}
             />
 
             <AddEntryFormDialog
                 open={isAddEntryFormDialogOpen}
                 onOpenChange={setIsAddEntryFormDialogOpen}
                 ppaMasterData={selectedPpaMasterData}
-                fiscalYearsId={fiscalYears.id}
+                fiscalYearId={fiscalYear.id}
                 existingPpaIds={existingPpaIds}
             />
         </AppLayout>
