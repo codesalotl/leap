@@ -44,6 +44,7 @@ import {
     CheckCircle2,
     XCircle,
 } from 'lucide-react';
+import DataTable from "@/components/ui/data-table";
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -282,7 +283,7 @@ export default function Aip({ fiscalYears }: AipProp) {
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-md border">
+                {/* <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -338,7 +339,9 @@ export default function Aip({ fiscalYears }: AipProp) {
                             )}
                         </TableBody>
                     </Table>
-                </div>
+                </div> */}
+
+                <DataTable table={table} />
 
                 <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="flex-1 text-sm text-muted-foreground">

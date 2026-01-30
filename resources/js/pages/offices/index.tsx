@@ -36,6 +36,7 @@ import {
 } from '@/components/ui/table';
 import { router } from '@inertiajs/react'; // Ensure router is imported
 import OfficeFormDialog from '@/pages/offices/office-form-dialog';
+import DataTable from '@/components/ui/data-table';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Offices', href: '/office' }];
 
@@ -251,7 +252,7 @@ export default function Offices({
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-md border">
+                {/* <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -301,7 +302,9 @@ export default function Offices({
                             )}
                         </TableBody>
                     </Table>
-                </div>
+                </div> */}
+
+                <DataTable table={table} />
 
                 <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="flex-1 text-sm text-muted-foreground">

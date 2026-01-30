@@ -35,6 +35,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import DataTable from '@/components/ui/data-table';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -245,7 +246,7 @@ export default function Sectors({ sectors }: SectorsProp) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full px-4 pb-4">
                 <div className="flex items-center py-4">
-                    <Input
+                    {/* <Input
                         placeholder="Filter sectors..."
                         value={
                             (table
@@ -285,8 +286,9 @@ export default function Sectors({ sectors }: SectorsProp) {
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
-                </div>
-                <div className="overflow-hidden rounded-md border">
+                </div> */}
+
+                {/* <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader>
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -338,8 +340,11 @@ export default function Sectors({ sectors }: SectorsProp) {
                             )}
                         </TableBody>
                     </Table>
-                </div>
-                <div className="flex items-center justify-end space-x-2 py-4">
+                </div> */}
+
+                <DataTable table={table} />
+
+                {/* <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="flex-1 text-sm text-muted-foreground">
                         {table.getFilteredSelectedRowModel().rows.length} of{' '}
                         {table.getFilteredRowModel().rows.length} row(s)
@@ -362,8 +367,8 @@ export default function Sectors({ sectors }: SectorsProp) {
                         >
                             Next
                         </Button>
-                    </div>
-                </div>
+                    </div>*/}
+                </div> 
             </div>
         </AppLayout>
     );

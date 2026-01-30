@@ -66,6 +66,7 @@ import autoTable from 'jspdf-autotable';
 import AddEntryFormDialog from '@/pages/aip/table/dialog';
 import MooeDialog from '@/pages/aip/mooe-dialog';
 import PpmpDialog from '@/pages/aip/ppmp-dialog';
+import DataTable from "@/components/ui/data-table";
 
 export interface AipEntry {
     id: number;
@@ -682,7 +683,7 @@ export default function AipSummaryTable({
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-md border">
+                {/* <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((hg) => (
@@ -733,7 +734,9 @@ export default function AipSummaryTable({
                             )}
                         </TableBody>
                     </Table>
-                </div>
+                </div> */}
+
+                <DataTable table={table} />
             </div>
 
             <AipEntryFormDialog

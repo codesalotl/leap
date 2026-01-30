@@ -19,7 +19,7 @@ interface DataTableProps<TData> {
 }
 
 // export function DataTable<TData, TValue>({
-export function DataTable<TData>({
+export default function DataTable<TData>({
   table,
   emptyMessage = "No results."
 // }: DataTableProps<TData, TValue>) {
@@ -32,7 +32,7 @@ export function DataTable<TData>({
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="font-bold">
                     {header.isPlaceholder
                       ? null
                       : flexRender(

@@ -61,6 +61,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { router } from '@inertiajs/react';
+import DataTable from '@/components/ui/data-table';
 
 type DialogMode = 'add' | 'edit';
 
@@ -358,7 +359,7 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                     </Button>
                 </div>
 
-                <div className="overflow-hidden rounded-md border">
+                {/* <div className="overflow-hidden rounded-md border">
                     <Table>
                         <TableHeader className="bg-muted">
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -403,7 +404,9 @@ export default function PpaPage({ ppaTree, offices }: PpaProps) {
                             )}
                         </TableBody>
                     </Table>
-                </div>
+                </div> */}
+
+                <DataTable table={table} />
 
                 {/* Main Form Dialog */}
                 <PpaFormDialog

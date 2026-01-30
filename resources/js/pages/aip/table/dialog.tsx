@@ -31,6 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Download, CheckCircle2, XCircle } from 'lucide-react';
+import DataTable from '@/components/ui/data-table';
 
 interface MasterPpa {
     id: number;
@@ -238,7 +239,7 @@ export default function AddEntryFormDialog({
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-6 py-2">
-                    <div className="rounded-md border">
+                    {/* <div className="rounded-md border">
                         <Table>
                             <TableHeader className="sticky top-0 z-20 bg-muted">
                                 {table.getHeaderGroups().map((hg) => (
@@ -280,7 +281,9 @@ export default function AddEntryFormDialog({
                                 ))}
                             </TableBody>
                         </Table>
-                    </div>
+                    </div> */}
+
+                    <DataTable table={table} />
                 </div>
 
                 <DialogFooter className="flex items-center justify-between border-t bg-muted/30 p-4">

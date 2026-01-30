@@ -1,5 +1,12 @@
 import { columns, Ppmp } from './columns';
-import { DataTable } from './data-table';
+// import { DataTable } from './data-table';
+import DataTable from '@/components/ui/data-table';
+import {
+    // ColumnDef,
+    // flexRender,
+    getCoreRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
 
 interface PpmpTableProps {
     ppmpItems?: any[];
@@ -7,12 +14,17 @@ interface PpmpTableProps {
 }
 
 function getData(ppmpItems: any[] = []): Ppmp[] {
-    return ppmpItems.map(item => ({
+    return ppmpItems.map((item) => ({
         id: item.id.toString(),
         aip_entry_id: item.aip_entry_id,
-        expense_account_id: item.expense_account_id || item.ppmp_price_list?.chart_of_account_id,
+        expense_account_id:
+            item.expense_account_id ||
+            item.ppmp_price_list?.chart_of_account_id,
         ppmp_price_list_id: item.ppmp_price_list_id,
-        item_description: item.item_description || item.ppmp_price_list?.description || 'Custom Item',
+        item_description:
+            item.item_description ||
+            item.ppmp_price_list?.description ||
+            'Custom Item',
         quantity: parseFloat(item.quantity || 0),
         unit: item.unit || item.ppmp_price_list?.unit_of_measurement || 'unit',
         unit_price: parseFloat(item.unit_price || 0),
@@ -47,17 +59,26 @@ function getData(ppmpItems: any[] = []): Ppmp[] {
     }));
 }
 
-export default function PpmpTable({ ppmpItems = [], selectedEntry = null }: PpmpTableProps) {
+export default function PpmpTable({
+    ppmpItems = [],
+    selectedEntry = null,
+}: PpmpTableProps) {
     // Filter PPMP items based on selected AIP entry
-    const filteredItems = selectedEntry 
-        ? ppmpItems.filter(item => item.aip_entry_id === selectedEntry.id)
+    const filteredItems = selectedEntry
+        ? ppmpItems.filter((item) => item.aip_entry_id === selectedEntry.id)
         : ppmpItems;
-    
+
     const data = getData(filteredItems);
+
+    const table = useReactTable({
+        data,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    });
 
     return (
         <div>
-            <DataTable columns={columns} data={data} />
+            <DataTable table={table} />
         </div>
     );
 }
