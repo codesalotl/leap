@@ -66,7 +66,7 @@ import autoTable from 'jspdf-autotable';
 import AddEntryFormDialog from '@/pages/aip/table/dialog';
 import MooeDialog from '@/pages/aip/mooe-dialog';
 import PpmpDialog from '@/pages/aip/ppmp-dialog';
-import DataTable from "@/components/ui/data-table";
+import DataTable from '@/components/ui/data-table';
 
 export interface AipEntry {
     id: number;
@@ -433,6 +433,8 @@ export default function AipSummaryTable({
         () => [
             columnHelper.display({
                 id: 'select',
+                size: 30,
+                minSize: 30,
                 header: ({ table }) => (
                     <Checkbox
                         checked={
@@ -765,9 +767,9 @@ export default function AipSummaryTable({
                 ppmpPriceList={ppmpPriceList}
             /> */}
 
-            <PpmpDialog 
-                open={isMooeOpen} 
-                onOpenChange={setIsMooeOpen} 
+            <PpmpDialog
+                open={isMooeOpen}
+                onOpenChange={setIsMooeOpen}
                 ppmpPriceList={ppmpPriceList}
                 chartOfAccounts={chartOfAccounts}
                 selectedEntry={selectedEntry}

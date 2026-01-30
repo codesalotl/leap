@@ -68,6 +68,8 @@ interface AipProp {
 export const columns: ColumnDef<FiscalYear>[] = [
     {
         id: 'select',
+        size: 30,
+        minSize: 30,
         header: ({ table }) => (
             <Checkbox
                 checked={
@@ -138,8 +140,8 @@ export const columns: ColumnDef<FiscalYear>[] = [
     },
     {
         id: 'actions',
+        size: 30,
         enableHiding: false,
-        enablePinning: true,
         cell: ({ row }) => {
             const aip = row.original;
 
@@ -226,9 +228,9 @@ export default function Aip({ fiscalYears }: AipProp) {
             pagination: {
                 pageSize: 10,
             },
-            columnPinning: {
-                right: ['actions'],
-            },
+            // columnPinning: {
+            //     right: ['actions'],
+            // },
         },
         enableColumnPinning: true,
         columnResizeMode: 'onChange',

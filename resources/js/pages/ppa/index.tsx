@@ -127,6 +127,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 export const columns: ColumnDef<Ppa>[] = [
     {
         id: 'select',
+        size: 30,
+        minSize: 30,
         header: ({ table }) => (
             <Checkbox
                 checked={
@@ -224,6 +226,7 @@ export const columns: ColumnDef<Ppa>[] = [
     },
     {
         id: 'actions',
+        size: 30,
         cell: ({ row, table }) => {
             const ppa = row.original;
             const meta = table.options.meta as any;

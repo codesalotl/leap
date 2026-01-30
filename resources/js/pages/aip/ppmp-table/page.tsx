@@ -74,6 +74,13 @@ export default function PpmpTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
+        initialState: {
+            columnPinning: {
+                right: ['actions'],
+            },
+        },
+        enableColumnPinning: true,
+        columnResizeMode: 'onChange',
     });
 
     return (

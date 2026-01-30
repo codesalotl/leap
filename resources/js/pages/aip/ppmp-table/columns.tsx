@@ -198,7 +198,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     },
     {
         id: 'actions',
-        header: 'Actions',
+        // header: 'Actions',
         cell: ({ row }) => {
             const ppmp = row.original;
             const [editOpen, setEditOpen] = useState(false);
