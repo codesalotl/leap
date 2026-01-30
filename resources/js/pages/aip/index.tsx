@@ -44,7 +44,7 @@ import {
     CheckCircle2,
     XCircle,
 } from 'lucide-react';
-import DataTable from "@/components/ui/data-table";
+import DataTable from '@/components/ui/data-table';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -139,6 +139,7 @@ export const columns: ColumnDef<FiscalYear>[] = [
     {
         id: 'actions',
         enableHiding: false,
+        enablePinning: true,
         cell: ({ row }) => {
             const aip = row.original;
 
@@ -225,7 +226,12 @@ export default function Aip({ fiscalYears }: AipProp) {
             pagination: {
                 pageSize: 10,
             },
+            columnPinning: {
+                right: ['actions'],
+            },
         },
+        enableColumnPinning: true,
+        columnResizeMode: 'onChange',
     });
 
     return (

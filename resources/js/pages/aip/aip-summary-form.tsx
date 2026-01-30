@@ -544,6 +544,8 @@ export default function AipSummaryTable({
             }),
             columnHelper.display({
                 id: 'actions',
+                enableHiding: false,
+                enablePinning: true,
                 cell: ({ row }) => {
                     const entry = row.original;
                     return (
@@ -612,6 +614,13 @@ export default function AipSummaryTable({
             rowSelection,
             expanded: true,
         },
+        initialState: {
+            columnPinning: {
+                right: ['actions'],
+            },
+        },
+        enableColumnPinning: true,
+        columnResizeMode: 'onChange',
     });
 
     const breadcrumbs: BreadcrumbItem[] = [
