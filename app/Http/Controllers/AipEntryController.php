@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateAipEntryRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Office;
 use App\Models\PpmpPriceList;
+use App\Models\Ppmp;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
@@ -93,6 +94,7 @@ class AipEntryController extends Controller
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
             'ppmpPriceList' => PpmpPriceList::all(),
+            'ppmpItems' => Ppmp::with(['ppmpPriceList'])->get(),
         ]);
     }
 

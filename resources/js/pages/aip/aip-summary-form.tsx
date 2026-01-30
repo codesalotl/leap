@@ -202,13 +202,25 @@ type Ppa = {
     full_code: string; // full_code of the office combined + this ppa's code
 };
 
+type PpmpPriceList = {
+    id: number;
+    item_number: number;
+    description: string;
+    unit_of_measurement: string;
+    price: string;
+    chart_of_account_id: number;
+    created_at: string | null;
+    updated_at: string | null;
+};
+
 interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
     aipEntries: AipEntry[];
     masterPpas: Ppa[];
     offices: Office[];
     chartOfAccounts: ChartOfAccount;
-    ppmpPriceList: any[];
+    ppmpPriceList: PpmpPriceList[];
+    ppmpItems: any[];
 }
 
 const formatNumber = (val: string) => {
@@ -254,6 +266,7 @@ export default function AipSummaryTable({
     offices,
     chartOfAccounts,
     ppmpPriceList,
+    ppmpItems,
 }: AipSummaryTableProp) {
     console.log(fiscalYear);
     console.log(aipEntries);
@@ -740,7 +753,14 @@ export default function AipSummaryTable({
                 ppmpPriceList={ppmpPriceList}
             /> */}
 
-            <PpmpDialog open={isMooeOpen} onOpenChange={setIsMooeOpen} />
+            <PpmpDialog 
+                open={isMooeOpen} 
+                onOpenChange={setIsMooeOpen} 
+                ppmpPriceList={ppmpPriceList}
+                chartOfAccounts={chartOfAccounts}
+                selectedEntry={selectedEntry}
+                ppmpItems={ppmpItems}
+            />
 
             <AlertDialog
                 open={isDeleteAlertOpen}

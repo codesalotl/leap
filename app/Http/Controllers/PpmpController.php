@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Ppmp;
 use App\Http\Requests\StorePpmpRequest;
 use App\Http\Requests\UpdatePpmpRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PpmpController extends Controller
 {
@@ -29,15 +31,45 @@ class PpmpController extends Controller
      */
     public function store(StorePpmpRequest $request)
     {
-        //
+        $validated = $request->validated();
+        
+        // Debug logging
+        \Log::info('PPMP Store Request:', $validated);
+        
+        try {
+            $ppmp = Ppmp::create($validated);
+            \Log::info('PPMP Created:', $ppmp->toArray());
+            
+            return back()->with('success', 'PPMP item created successfully');
+        } catch (\Exception $e) {
+            \Log::error('PPMP Creation Error:', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Failed to create PPMP item: ' . $e->getMessage());
+        }
     }
 
     /**
-     * Display the specified resource.
+     * Update monthly quantity for a PPMP item.
      */
-    public function show(Ppmp $ppmp)
+    public function updateMonthlyQuantity(Request $request, Ppmp $ppmp)
     {
-        //
+        $validated = $request->validate([
+            'month' => 'required|in:jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec',
+            'quantity' => 'required|numeric|min:0',
+        ]);
+
+        $month = $validated['month'];
+        $quantity = $validated['quantity'];
+        
+        // Update quantity
+        $ppmp->{$month . '_qty'} = $quantity;
+        
+        // Calculate amount (quantity × unit_price)
+        $unitPrice = $ppmp->unit_price;
+        $ppmp->{$month . '_amount'} = $quantity * $unitPrice;
+        
+        $ppmp->save();
+        
+        return back()->with('success', 'PPMP item updated successfully');
     }
 
     /**

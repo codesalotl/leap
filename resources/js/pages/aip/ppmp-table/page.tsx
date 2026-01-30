@@ -1,130 +1,62 @@
 import { columns, Ppmp } from './columns';
 import { DataTable } from './data-table';
 
-function getData(): Ppmp[] {
-    return [
-        {
-            id: '1',
-            aip_entry_id: 1,
-            expense_account_id: 1,
-            ppmp_price_list_id: 1,
-            item_description: 'Office Paper A4',
-            quantity: 24,
-            unit: 'ream',
-            unit_price: 500,
-            total_amount: 12000,
-            specifications: null,
-            jan_qty: 2,
-            jan_amount: 1000,
-            feb_qty: 2,
-            feb_amount: 1000,
-            mar_qty: 2,
-            mar_amount: 1000,
-            apr_qty: 2,
-            apr_amount: 1000,
-            may_qty: 2,
-            may_amount: 1000,
-            jun_qty: 2,
-            jun_amount: 1000,
-            jul_qty: 2,
-            jul_amount: 1000,
-            aug_qty: 2,
-            aug_amount: 1000,
-            sep_qty: 2,
-            sep_amount: 1000,
-            oct_qty: 2,
-            oct_amount: 1000,
-            nov_qty: 2,
-            nov_amount: 1000,
-            dec_qty: 2,
-            dec_amount: 1000,
-            created_at: '2026-01-28T06:50:13.000000Z',
-            updated_at: '2026-01-28T06:50:13.000000Z',
-        },
-        {
-            id: '2',
-            aip_entry_id: 1,
-            expense_account_id: 2,
-            ppmp_price_list_id: 2,
-            item_description: 'Ballpoint Pen Blue',
-            quantity: 50,
-            unit: 'pcs',
-            unit_price: 25,
-            total_amount: 1250,
-            specifications: null,
-            jan_qty: 4,
-            jan_amount: 100,
-            feb_qty: 4,
-            feb_amount: 100,
-            mar_qty: 4,
-            mar_amount: 100,
-            apr_qty: 4,
-            apr_amount: 100,
-            may_qty: 4,
-            may_amount: 100,
-            jun_qty: 4,
-            jun_amount: 100,
-            jul_qty: 4,
-            jul_amount: 100,
-            aug_qty: 4,
-            aug_amount: 100,
-            sep_qty: 4,
-            sep_amount: 100,
-            oct_qty: 4,
-            oct_amount: 100,
-            nov_qty: 5,
-            nov_amount: 125,
-            dec_qty: 5,
-            dec_amount: 125,
-            created_at: '2026-01-28T06:50:13.000000Z',
-            updated_at: '2026-01-28T06:50:13.000000Z',
-        },
-        {
-            id: '3',
-            aip_entry_id: 1,
-            expense_account_id: null,
-            ppmp_price_list_id: 3,
-            item_description: 'Laptop Computer',
-            quantity: 2,
-            unit: 'unit',
-            unit_price: 25000,
-            total_amount: 50000,
-            specifications: 'Core i5, 8GB RAM, 256GB SSD',
-            jan_qty: 0,
-            jan_amount: 0,
-            feb_qty: 0,
-            feb_amount: 0,
-            mar_qty: 1,
-            mar_amount: 25000,
-            apr_qty: 0,
-            apr_amount: 0,
-            may_qty: 0,
-            may_amount: 0,
-            jun_qty: 0,
-            jun_amount: 0,
-            jul_qty: 1,
-            jul_amount: 25000,
-            aug_qty: 0,
-            aug_amount: 0,
-            sep_qty: 0,
-            sep_amount: 0,
-            oct_qty: 0,
-            oct_amount: 0,
-            nov_qty: 0,
-            nov_amount: 0,
-            dec_qty: 0,
-            dec_amount: 0,
-            created_at: '2026-01-28T06:50:13.000000Z',
-            updated_at: '2026-01-28T06:50:13.000000Z',
-        },
-    ];
+interface PpmpTableProps {
+    ppmpItems?: any[];
+    selectedEntry?: any;
 }
 
-export default function PpmpTable() {
-    const data = getData();
+function getData(ppmpItems: any[] = []): Ppmp[] {
+    return ppmpItems.map(item => ({
+        id: item.id.toString(),
+        aip_entry_id: item.aip_entry_id,
+        expense_account_id: item.expense_account_id || item.ppmp_price_list?.chart_of_account_id,
+        ppmp_price_list_id: item.ppmp_price_list_id,
+        item_description: item.item_description || item.ppmp_price_list?.description || 'Custom Item',
+        quantity: parseFloat(item.quantity || 0),
+        unit: item.unit || item.ppmp_price_list?.unit_of_measurement || 'unit',
+        unit_price: parseFloat(item.unit_price || 0),
+        total_amount: parseFloat(item.total_amount || 0),
+        specifications: item.specifications,
+        jan_qty: parseFloat(item.jan_qty || 0),
+        jan_amount: parseFloat(item.jan_amount || 0),
+        feb_qty: parseFloat(item.feb_qty || 0),
+        feb_amount: parseFloat(item.feb_amount || 0),
+        mar_qty: parseFloat(item.mar_qty || 0),
+        mar_amount: parseFloat(item.mar_amount || 0),
+        apr_qty: parseFloat(item.apr_qty || 0),
+        apr_amount: parseFloat(item.apr_amount || 0),
+        may_qty: parseFloat(item.may_qty || 0),
+        may_amount: parseFloat(item.may_amount || 0),
+        jun_qty: parseFloat(item.jun_qty || 0),
+        jun_amount: parseFloat(item.jun_amount || 0),
+        jul_qty: parseFloat(item.jul_qty || 0),
+        jul_amount: parseFloat(item.jul_amount || 0),
+        aug_qty: parseFloat(item.aug_qty || 0),
+        aug_amount: parseFloat(item.aug_amount || 0),
+        sep_qty: parseFloat(item.sep_qty || 0),
+        sep_amount: parseFloat(item.sep_amount || 0),
+        oct_qty: parseFloat(item.oct_qty || 0),
+        oct_amount: parseFloat(item.oct_amount || 0),
+        nov_qty: parseFloat(item.nov_qty || 0),
+        nov_amount: parseFloat(item.nov_amount || 0),
+        dec_qty: parseFloat(item.dec_qty || 0),
+        dec_amount: parseFloat(item.dec_amount || 0),
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+    }));
+}
+
+export default function PpmpTable({ ppmpItems = [], selectedEntry = null }: PpmpTableProps) {
+    // Filter PPMP items based on selected AIP entry
+    const filteredItems = selectedEntry 
+        ? ppmpItems.filter(item => item.aip_entry_id === selectedEntry.id)
+        : ppmpItems;
+    
+    const data = getData(filteredItems);
 
     return (
-        <div className="container mx-auto py-10">
+        <div>
             <DataTable columns={columns} data={data} />
         </div>
     );
