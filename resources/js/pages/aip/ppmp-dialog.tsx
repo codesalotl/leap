@@ -1,4 +1,4 @@
-import PpmpTable from '@/pages/aip/ppmp-table/page';
+import PpmpTable from '@/pages/aip/ppmp-table/data-table';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -170,7 +170,7 @@ export default function PpmpDialog({ open, onOpenChange, ppmpPriceList = [], cha
                 onSuccess: (page) => {
                     console.log('PPMP item created successfully', page);
                     form.reset();
-                    onOpenChange(false);
+                    // Don't close dialog, just reload to update the table
                     router.reload();
                 },
                 onError: (errors) => {
@@ -239,7 +239,7 @@ export default function PpmpDialog({ open, onOpenChange, ppmpPriceList = [], cha
                         onSuccess: () => {
                             console.log('Custom PPMP item created successfully');
                             form.reset();
-                            onOpenChange(false);
+                            // Don't close dialog, just reload to update the table
                             router.reload();
                         },
                         onError: (errors) => {

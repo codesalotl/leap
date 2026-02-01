@@ -282,19 +282,9 @@ export const columns: ColumnDef<Ppmp>[] = [
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                                onClick={() => navigator.clipboard.writeText(ppmp.id)}
-                            >
-                                Copy PPMP ID
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            
                             <DropdownMenuItem onClick={() => setEditOpen(true)}>
                                 Edit item
                             </DropdownMenuItem>
-
-                            <DropdownMenuItem>View details</DropdownMenuItem>
-                            <DropdownMenuItem>Update quantities</DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-red-600">
                                 Delete item
