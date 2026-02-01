@@ -45,6 +45,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import DataTable from '@/components/ui/data-table';
+import { useEffect } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -198,14 +199,19 @@ export const columns: ColumnDef<FiscalYear>[] = [
 ];
 
 export default function Aip({ fiscalYears }: AipProp) {
-    // console.log(fiscalYears);
-
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+
+    // Reset table when data changes
+    useEffect(() => {
+        setRowSelection({});
+        setColumnFilters([]);
+        setSorting([]);
+    }, [fiscalYears]);
 
     const table = useReactTable({
         data: fiscalYears,
@@ -291,65 +297,10 @@ export default function Aip({ fiscalYears }: AipProp) {
                     </div>
                 </div>
 
-                {/* <div className="overflow-hidden rounded-md border">
-                    <Table>
-                        <TableHeader className="bg-muted">
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead
-                                                key={header.id}
-                                                className="text-sm text-muted-foreground"
-                                            >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                          header.column
-                                                              .columnDef.header,
-                                                          header.getContext(),
-                                                      )}
-                                            </TableHead>
-                                        );
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={
-                                            row.getIsSelected() && 'selected'
-                                        }
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext(),
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center"
-                                    >
-                                        No results.
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </div> */}
-
-                <DataTable table={table} />
+                <DataTable 
+                    table={table} 
+                    key={fiscalYears.length}
+                 />
 
                 <div className="flex items-center justify-end space-x-2 py-4">
                     <div className="flex-1 text-sm text-muted-foreground">
