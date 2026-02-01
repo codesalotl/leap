@@ -8,7 +8,6 @@ import {
     Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -67,28 +66,6 @@ interface ColumnActions {
 }
 
 export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
-    columnHelper.display({
-        id: 'select',
-        size: 30,
-        minSize: 30,
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate')
-                }
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-            />
-        ),
-    }),
     columnHelper.accessor('aip_ref_code', {
         header: 'AIP Reference Code',
         cell: (info) => (
@@ -99,6 +76,14 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     }),
     columnHelper.accessor('ppa_desc', {
         header: 'Program/Project/Activity Description',
+        filterFn: (row, columnId, value) => {
+            const description = row.getValue('ppa_desc') as string;
+            const refCode = row.getValue('aip_ref_code') as string;
+            const searchValue = (value as string)?.toLowerCase() || '';
+            
+            return description.toLowerCase().includes(searchValue) || 
+                   refCode.toLowerCase().includes(searchValue);
+        },
         cell: ({ row, getValue }) => (
             <div
                 style={{ paddingLeft: `${row.depth * 20}px` }}

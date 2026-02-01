@@ -5,7 +5,6 @@ import {
     ColumnDef,
     ColumnFiltersState,
     SortingState,
-    VisibilityState,
     ExpandedState,
     flexRender,
     getCoreRowModel,
@@ -31,8 +30,8 @@ import {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    searchKey?: string;
-    children?: React.ReactNode; // For header actions like Export/Import
+    searchKey?: string; // e.g. "ppa_desc"
+    children?: React.ReactNode;
     getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
     emptyMessage?: string;
 }
@@ -63,7 +62,7 @@ const getCommonPinningStyles = (column: Column<any>): CSSProperties => {
 export default function DataTable<TData, TValue>({
     columns,
     data,
-    searchKey,
+    searchKey = 'ppa_desc', // Default to ppa_desc if not provided
     children,
     getSubRows,
     emptyMessage = 'No results.',
@@ -71,9 +70,6 @@ export default function DataTable<TData, TValue>({
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({});
-    const [rowSelection, setRowSelection] = React.useState({});
     const [expanded, setExpanded] = React.useState<ExpandedState>(true);
 
     const table = useReactTable({
@@ -82,20 +78,23 @@ export default function DataTable<TData, TValue>({
         state: {
             sorting,
             columnFilters,
-            columnVisibility,
-            rowSelection,
             expanded,
         },
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
         onExpandedChange: setExpanded,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
         getSubRows,
+
+        // --- KEY CHANGES HERE ---
+        // 1. filterFromLeafRows: Checks children first. If a child matches, the parent is kept.
+        filterFromLeafRows: true,
+        // 2. maxLeafRowFilterDepth: Optional, but helps performance on deep trees
+        maxLeafRowFilterDepth: 100,
+
         enableColumnPinning: true,
         initialState: {
             columnPinning: { right: ['actions'] },
@@ -110,16 +109,18 @@ export default function DataTable<TData, TValue>({
                     <div className="relative">
                         <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder={`Search...`}
+                            placeholder="Search projects or activities..."
                             value={
                                 (table
-                                    .getColumn(searchKey)
+                                    .getColumn(searchKey) // Use the dynamic searchKey
                                     ?.getFilterValue() as string) ?? ''
                             }
                             onChange={(event) =>
                                 table
-                                    .getColumn(searchKey)
-                                    ?.setFilterValue(event.target.value)
+                                    .getColumn(searchKey) // Use the dynamic searchKey
+                                    ?.setFilterValue(
+                                        event.target.value || undefined,
+                                    )
                             }
                             className="max-w-sm pl-8"
                         />
@@ -160,12 +161,7 @@ export default function DataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && 'selected'
-                                    }
-                                >
+                                <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
