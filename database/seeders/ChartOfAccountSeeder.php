@@ -17,7 +17,7 @@ class ChartOfAccountSeeder extends Seeder
 
         // Create a mapping of account numbers to IDs for parent relationships
         $idMap = [];
-        
+
         foreach ($expenseAccounts as $index => $account) {
             // Create the account without parent_id first
             $createdAccount = ChartOfAccount::create([
@@ -33,18 +33,20 @@ class ChartOfAccountSeeder extends Seeder
                 'normal_balance' => 'DEBIT',
                 'description' => $account['account_title'],
             ]);
-            
+
             // Store the ID mapping
             $idMap[$account['account_number']] = $createdAccount->id;
         }
-        
+
         // Now update parent relationships using the ID map
         foreach ($expenseAccounts as $account) {
             if (isset($account['parent_number']) && $account['parent_number']) {
                 $parentId = $idMap[$account['parent_number']] ?? null;
                 if ($parentId) {
-                    ChartOfAccount::where('account_number', $account['account_number'])
-                        ->update(['parent_id' => $parentId]);
+                    ChartOfAccount::where(
+                        'account_number',
+                        $account['account_number'],
+                    )->update(['parent_id' => $parentId]);
                 }
             }
         }
@@ -82,7 +84,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-01-020',
-                'account_title' => 'Salaries and Wages-Casual/Contractual',
+                'account_title' => 'Personal Economic Relief Allowance (PERA)',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-01-000',
@@ -91,7 +93,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-02-000',
-                'account_title' => 'Other Compensation',
+                'account_title' => 'Representation Allowance (RA)',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-00-000',
@@ -100,24 +102,6 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-02-010',
-                'account_title' => 'Personal Economic Relief Allowance (PERA)',
-                'expense_class' => 'PS',
-                'account_series' => '5-01',
-                'parent_number' => '5-01-02-000',
-                'level' => 3,
-                'is_postable' => true,
-            ],
-            [
-                'account_number' => '5-01-02-020',
-                'account_title' => 'Representation Allowance (RA)',
-                'expense_class' => 'PS',
-                'account_series' => '5-01',
-                'parent_number' => '5-01-02-000',
-                'level' => 3,
-                'is_postable' => true,
-            ],
-            [
-                'account_number' => '5-01-02-030',
                 'account_title' => 'Transportation Allowance (TA)',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
@@ -126,8 +110,26 @@ class ChartOfAccountSeeder extends Seeder
                 'is_postable' => true,
             ],
             [
-                'account_number' => '5-01-02-040',
+                'account_number' => '5-01-02-020',
                 'account_title' => 'Clothing/Uniform Allowance',
+                'expense_class' => 'PS',
+                'account_series' => '5-01',
+                'parent_number' => '5-01-02-000',
+                'level' => 3,
+                'is_postable' => true,
+            ],
+            [
+                'account_number' => '5-01-02-030',
+                'account_title' => 'Subsistence Allowance',
+                'expense_class' => 'PS',
+                'account_series' => '5-01',
+                'parent_number' => '5-01-02-000',
+                'level' => 3,
+                'is_postable' => true,
+            ],
+            [
+                'account_number' => '5-01-02-040',
+                'account_title' => 'Laundry Allowance',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-02-000',
@@ -136,7 +138,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-02-050',
-                'account_title' => 'Clothing/Uniform Allowance',
+                'account_title' => 'Quarters Allowance',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-02-000',
@@ -145,7 +147,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-03-000',
-                'account_title' => 'Personnel Benefit Contributions',
+                'account_title' => 'Productivity Incentive Allowance',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-00-000',
@@ -154,7 +156,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-03-010',
-                'account_title' => 'Personnel Benefit Contributions',
+                'account_title' => 'Overseas Allowance',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-03-000',
@@ -163,7 +165,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-04-000',
-                'account_title' => 'Terminal Leave Benefits',
+                'account_title' => 'Honoraria',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-00-000',
@@ -172,18 +174,16 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-01-04-010',
-                'account_title' => 'Terminal Leave Benefits',
+                'account_title' => 'Hazard Pay',
                 'expense_class' => 'PS',
                 'account_series' => '5-01',
                 'parent_number' => '5-01-04-000',
                 'level' => 3,
                 'is_postable' => true,
             ],
-
-            // MAINTENANCE AND OTHER OPERATING EXPENSES (MOOE) - 502 Series
             [
                 'account_number' => '5-02-00-000',
-                'account_title' => 'Maintenance and Other Operating Expenses',
+                'account_title' => 'Longevity Pay',
                 'expense_class' => null, // Header account
                 'account_series' => '5-02',
                 'level' => 1,
@@ -191,7 +191,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-01-000',
-                'account_title' => 'Traveling Expenses',
+                'account_title' => 'Overtime and Night Pay',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-00-000',
@@ -200,7 +200,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-01-010',
-                'account_title' => 'Traveling Expenses-Local',
+                'account_title' => 'Cash Gift',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-01-000',
@@ -209,7 +209,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-01-020',
-                'account_title' => 'Traveling Expenses-Foreign',
+                'account_title' => 'Other Bonuses and Allowance',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-01-000',
@@ -218,7 +218,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-02-000',
-                'account_title' => 'Training and Scholarship Expenses',
+                'account_title' => 'Retirement & Life Insurance Contributions',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-00-000',
@@ -227,7 +227,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-02-010',
-                'account_title' => 'Training Expenses',
+                'account_title' => 'Pag-IBIG Contributions',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-02-000',
@@ -236,7 +236,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-02-020',
-                'account_title' => 'Scholarship Grants/Expenses',
+                'account_title' => 'PhilHealth Contributions',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-02-000',
@@ -245,7 +245,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-03-000',
-                'account_title' => 'Supplies and Materials Expenses',
+                'account_title' => 'Employees Compensation Insurance Premiums',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-00-000',
@@ -254,7 +254,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-03-010',
-                'account_title' => 'Office Supplies Expenses',
+                'account_title' => 'Provident/Welfare Fund Contributions',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-03-000',
@@ -263,7 +263,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-03-020',
-                'account_title' => 'Accountable Forms Expenses',
+                'account_title' => 'Pension Benefits',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-03-000',
@@ -272,7 +272,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-03-030',
-                'account_title' => 'Non-Accountable Forms Expenses',
+                'account_title' => 'Retirement Gratuity',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-03-000',
@@ -281,7 +281,7 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-03-090',
-                'account_title' => 'Fuel, Oil and Lubricants Expenses',
+                'account_title' => 'Terminal Leave Benefits',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-03-000',
@@ -290,13 +290,15 @@ class ChartOfAccountSeeder extends Seeder
             ],
             [
                 'account_number' => '5-02-04-000',
-                'account_title' => 'Utility Expenses',
+                'account_title' => 'Other Personnel Benefits ',
                 'expense_class' => 'MOOE',
                 'account_series' => '5-02',
                 'parent_number' => '5-02-00-000',
                 'level' => 2,
                 'is_postable' => false,
             ],
+
+            // 
             [
                 'account_number' => '5-02-04-010',
                 'account_title' => 'Water Expenses',
