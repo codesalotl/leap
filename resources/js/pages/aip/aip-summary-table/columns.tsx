@@ -68,6 +68,7 @@ interface ColumnActions {
 export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     columnHelper.accessor('aip_ref_code', {
         header: 'AIP Reference Code',
+        size: 250,
         cell: (info) => (
             <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
                 {info.getValue()}
@@ -76,13 +77,16 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     }),
     columnHelper.accessor('ppa_desc', {
         header: 'Program/Project/Activity Description',
+        size: 350,
         filterFn: (row, columnId, value) => {
             const description = row.getValue('ppa_desc') as string;
             const refCode = row.getValue('aip_ref_code') as string;
             const searchValue = (value as string)?.toLowerCase() || '';
-            
-            return description.toLowerCase().includes(searchValue) || 
-                   refCode.toLowerCase().includes(searchValue);
+
+            return (
+                description.toLowerCase().includes(searchValue) ||
+                refCode.toLowerCase().includes(searchValue)
+            );
         },
         cell: ({ row, getValue }) => (
             <div
@@ -98,47 +102,73 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     }),
     columnHelper.accessor('implementing_office_department', {
         header: 'Implementing Office/Department',
+        size: 200,
     }),
     columnHelper.group({
         header: 'Schedule of Implementation',
         columns: [
             columnHelper.accessor('sched_implementation.start_date', {
                 header: 'Start Date',
+                size: 120,
             }),
             columnHelper.accessor('sched_implementation.completion_date', {
                 header: 'Completion Date',
+                size: 140,
             }),
         ],
     }),
     columnHelper.accessor('expected_outputs', {
         header: 'Expected Outputs',
+        size: 250,
     }),
     columnHelper.accessor('funding_source', {
         header: 'Funding Source',
+        size: 150,
     }),
     columnHelper.group({
         header: 'Amount (in thousand pesos)',
         columns: [
             columnHelper.accessor('amount.ps', {
                 header: 'PS',
-                cell: (i) => formatNumber(i.getValue()),
+                size: 100,
+                cell: (i) => (
+                    <span className="block text-right">
+                        {formatNumber(i.getValue())}
+                    </span>
+                ),
             }),
             columnHelper.accessor('amount.mooe', {
                 header: 'MOOE',
-                cell: (i) => formatNumber(i.getValue()),
+                size: 100,
+                cell: (i) => (
+                    <span className="block text-right">
+                        {formatNumber(i.getValue())}
+                    </span>
+                ),
             }),
             columnHelper.accessor('amount.fe', {
                 header: 'FE',
-                cell: (i) => formatNumber(i.getValue()),
+                size: 100,
+                cell: (i) => (
+                    <span className="block text-right">
+                        {formatNumber(i.getValue())}
+                    </span>
+                ),
             }),
             columnHelper.accessor('amount.co', {
                 header: 'CO',
-                cell: (i) => formatNumber(i.getValue()),
+                size: 100,
+                cell: (i) => (
+                    <span className="block text-right">
+                        {formatNumber(i.getValue())}
+                    </span>
+                ),
             }),
             columnHelper.accessor('amount.total', {
                 header: 'Total',
+                size: 200,
                 cell: (i) => (
-                    <span className="font-bold">
+                    <span className="block text-right font-bold">
                         {formatNumber(i.getValue())}
                     </span>
                 ),
@@ -150,10 +180,12 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
         columns: [
             columnHelper.accessor('cc_adaptation', {
                 header: 'Adaptation',
+                size: 120,
                 cell: (i) => formatNumber(i.getValue()),
             }),
             columnHelper.accessor('cc_mitigation', {
                 header: 'Mitigation',
+                size: 120,
                 cell: (i) => formatNumber(i.getValue()),
             }),
         ],
@@ -165,6 +197,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
         id: 'actions',
         enableHiding: false,
         enablePinning: true,
+        size: 52,
         cell: ({ row }) => {
             const entry = row.original;
             const isLeaf = !entry.children || entry.children.length === 0;

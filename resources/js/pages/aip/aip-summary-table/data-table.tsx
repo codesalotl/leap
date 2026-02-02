@@ -30,7 +30,7 @@ import {
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    searchKey?: string; // e.g. "ppa_desc"
+    searchKey?: string;
     children?: React.ReactNode;
     getSubRows?: (originalRow: TData, index: number) => TData[] | undefined;
     emptyMessage?: string;
@@ -53,7 +53,12 @@ const getCommonPinningStyles = (column: Column<any>): CSSProperties => {
         right:
             isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
         position: isPinned ? 'sticky' : 'relative',
+        // --- CRITICAL FIX ---
+        // Ensure we use the calculated size from TanStack
         width: column.getSize(),
+        minWidth: column.columnDef.minSize,
+        maxWidth: column.columnDef.maxSize,
+        // --------------------
         zIndex: isPinned ? 1 : 0,
         backgroundColor: isPinned ? 'var(--background)' : undefined,
     };
@@ -62,7 +67,7 @@ const getCommonPinningStyles = (column: Column<any>): CSSProperties => {
 export default function DataTable<TData, TValue>({
     columns,
     data,
-    searchKey = 'ppa_desc', // Default to ppa_desc if not provided
+    searchKey = 'ppa_desc',
     children,
     getSubRows,
     emptyMessage = 'No results.',
@@ -88,13 +93,8 @@ export default function DataTable<TData, TValue>({
         getFilteredRowModel: getFilteredRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
         getSubRows,
-
-        // --- KEY CHANGES HERE ---
-        // 1. filterFromLeafRows: Checks children first. If a child matches, the parent is kept.
         filterFromLeafRows: true,
-        // 2. maxLeafRowFilterDepth: Optional, but helps performance on deep trees
         maxLeafRowFilterDepth: 100,
-
         enableColumnPinning: true,
         initialState: {
             columnPinning: { right: ['actions'] },
@@ -112,12 +112,12 @@ export default function DataTable<TData, TValue>({
                             placeholder="Search projects or activities..."
                             value={
                                 (table
-                                    .getColumn(searchKey) // Use the dynamic searchKey
+                                    .getColumn(searchKey)
                                     ?.getFilterValue() as string) ?? ''
                             }
                             onChange={(event) =>
                                 table
-                                    .getColumn(searchKey) // Use the dynamic searchKey
+                                    .getColumn(searchKey)
                                     ?.setFilterValue(
                                         event.target.value || undefined,
                                     )
@@ -129,8 +129,16 @@ export default function DataTable<TData, TValue>({
                 <div className="ml-auto flex gap-2">{children}</div>
             </div>
 
-            <div className="overflow-hidden rounded-md border">
-                <UITable>
+            <div className="overflow-x-auto rounded-md border">
+                {/* ADD 'table-fixed' and explicitly set the width 
+                   based on the total table width to ensure sizing is respected.
+                */}
+                <UITable
+                    style={{
+                        width: table.getTotalSize(),
+                        tableLayout: 'fixed',
+                    }}
+                >
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
@@ -143,6 +151,8 @@ export default function DataTable<TData, TValue>({
                                                 ...getCommonPinningStyles(
                                                     header.column,
                                                 ),
+                                                // Handle width for grouped headers
+                                                width: header.getSize(),
                                             }}
                                         >
                                             {header.isPlaceholder
@@ -165,6 +175,7 @@ export default function DataTable<TData, TValue>({
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
+                                            className="truncate" // Prevents long text from breaking widths
                                             style={{
                                                 ...getCommonPinningStyles(
                                                     cell.column,
