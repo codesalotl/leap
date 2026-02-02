@@ -60,7 +60,7 @@ export const columns: ColumnDef<FiscalYear>[] = [
             const status = row.getValue('status') as string;
             return (
                 <Badge
-                    variant={`${status === 'Open' ? 'secondary' : 'destructive'}`}
+                    variant={`${status === 'Open' ? 'default' : 'destructive'}`}
                     className="secondary text-white"
                 >
                     {status === 'Open' ? (

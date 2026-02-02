@@ -93,8 +93,16 @@ export const columns: ColumnDef<Ppmp>[] = [
         header: 'PRICELIST',
     },
     {
-        accessorKey: 'quantity',
+        id: 'cy_2026_qty',
         header: 'CY 2026-QTY',
+        cell: ({ row }) => {
+            const ppmp = row.original;
+            const totalQty = 
+                ppmp.jan_qty + ppmp.feb_qty + ppmp.mar_qty + ppmp.apr_qty + 
+                ppmp.may_qty + ppmp.jun_qty + ppmp.jul_qty + ppmp.aug_qty + 
+                ppmp.sep_qty + ppmp.oct_qty + ppmp.nov_qty + ppmp.dec_qty;
+            return totalQty.toLocaleString();
+        },
     },
     {
         accessorKey: 'total_amount',
@@ -205,6 +213,7 @@ export const columns: ColumnDef<Ppmp>[] = [
             const [selectedMonth, setSelectedMonth] = useState('');
             const [quantity, setQuantity] = useState('');
             const [isUpdating, setIsUpdating] = useState(false);
+            const [isDeleting, setIsDeleting] = useState(false);
 
             const months = [
                 { value: 'jan', label: 'January' },
@@ -264,6 +273,32 @@ export const columns: ColumnDef<Ppmp>[] = [
                 }
             };
 
+            const handleDelete = async () => {
+                if (!confirm('Are you sure you want to delete this PPMP item? This action cannot be undone.')) {
+                    return;
+                }
+
+                setIsDeleting(true);
+                
+                try {
+                    await router.delete(`/ppmp/${ppmp.id}`, {
+                        onSuccess: () => {
+                            alert('PPMP item deleted successfully');
+                        },
+                        onError: (errors) => {
+                            console.error('Error deleting PPMP item:', errors);
+                            alert('Error deleting PPMP item: ' + JSON.stringify(errors));
+                        },
+                        onFinish: () => {
+                            setIsDeleting(false);
+                        },
+                    });
+                } catch (error) {
+                    console.error('Delete error:', error);
+                    setIsDeleting(false);
+                }
+            };
+
             // Pre-fill quantity when month changes
             const handleMonthChange = (month: string) => {
                 setSelectedMonth(month);
@@ -286,8 +321,12 @@ export const columns: ColumnDef<Ppmp>[] = [
                                 Edit item
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
-                                Delete item
+                            <DropdownMenuItem 
+                                className="text-red-600"
+                                onClick={handleDelete}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? 'Deleting...' : 'Delete item'}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

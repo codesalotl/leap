@@ -93,6 +93,23 @@ class PpmpController extends Controller
      */
     public function destroy(Ppmp $ppmp)
     {
-        //
+        try {
+            // Log the deletion attempt
+            \Log::info('Attempting to delete PPMP item:', ['id' => $ppmp->id, 'description' => $ppmp->item_description]);
+            
+            // Delete the PPMP item
+            $ppmp->delete();
+            
+            \Log::info('PPMP item deleted successfully:', ['id' => $ppmp->id]);
+            
+            return back()->with('success', 'PPMP item deleted successfully');
+        } catch (\Exception $e) {
+            \Log::error('PPMP Deletion Error:', [
+                'error' => $e->getMessage(),
+                'ppmp_id' => $ppmp->id
+            ]);
+            
+            return back()->with('error', 'Failed to delete PPMP item: ' . $e->getMessage());
+        }
     }
 }

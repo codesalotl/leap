@@ -129,5 +129,6 @@ Route::post('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 's
 // PPMP Routes
 Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
 Route::put('/ppmp/{ppmp}/update-monthly-quantity', [PpmpController::class, 'updateMonthlyQuantity'])->name('ppmp.update-monthly-quantity');
+Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name('ppmp.destroy');
 
 require __DIR__ . '/settings.php';
