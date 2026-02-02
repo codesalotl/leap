@@ -40,11 +40,11 @@ const mainNavItems: NavItem[] = [
         href: '/ppa',
         icon: FileText,
     },
-    {
-        title: 'PPMP Management',
-        href: '/ppmp-headers',
-        icon: ShoppingCart,
-    },
+    // {
+    //     title: 'PPMP Management',
+    //     href: '/ppmp-headers',
+    //     icon: ShoppingCart,
+    // },
     {
         title: 'PPMP Price List',
         href: '/ppmp-price-list',

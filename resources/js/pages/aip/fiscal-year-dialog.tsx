@@ -34,6 +34,7 @@ import {
     FormMessage,
 } from '@/components/ui/form';
 import { router } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 
 const formSchema = z.object({
     year: z.number().int(),
@@ -41,6 +42,8 @@ const formSchema = z.object({
 
 export default function FiscalYearDialog() {
     const years = generateYearRange(2026, 5, 5);
+    const [open, setOpen] = useState(false);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
 
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
@@ -55,7 +58,9 @@ export default function FiscalYearDialog() {
         // console.log(values);
 
         router.post('/aip', values, {
-            onSuccess: () => console.log('Saved!'),
+            onSuccess: () => {
+                setOpen(false);
+            },
             // onError: (errors) => console.log('Validation Errors:', errors),
             onError: (errors) => {
                 // Handle backend errors
@@ -70,7 +75,7 @@ export default function FiscalYearDialog() {
     }
 
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <Form {...form}>
                 <form
                     id="year-dialog"

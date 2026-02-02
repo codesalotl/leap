@@ -22,14 +22,14 @@ class UpdatePpmpPriceListRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'item_code' => 'required|string|max:50|unique:ppmp_price_lists,item_code,' . $this->ppmpPriceList->id,
-            'item_description' => 'required|string|max:255',
-            'unit' => 'required|string|max:20',
-            'unit_price' => 'required|numeric|min:0|max:99999999.99',
-            'expense_class' => 'required|in:PS,MOOE,FE,CO',
-            'account_code' => 'required|string|max:20|exists:chart_of_accounts,account_code',
-            'procurement_type' => 'required|in:Goods,Services,Civil Works,Consulting',
-            'standard_specifications' => 'nullable|string|max:1000',
+            // 'item_code' => 'required|string|max:50|unique:ppmp_price_lists,item_code,' . $this->ppmpPriceList->id,
+            'item_number' =>
+                'required|integer|unique:ppmp_price_lists,item_number,' .
+                $this->ppmpPriceList->id,
+            'description' => 'required|string|max:255',
+            'unit_of_measurement' => 'required|string|max:20',
+            'price' => 'required|numeric|min:0|max:99999999999999999.99',
+            'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
         ];
     }
 }

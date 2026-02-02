@@ -13,27 +13,29 @@ return new class extends Migration {
         Schema::create('chart_of_accounts', function (Blueprint $table) {
             $table->id();
 
-            // The RCA Code (e.g., 5-02-03-010)
-            $table->string('account_code')->unique();
+            // Account Identification
+            $table->string('account_number')->unique();        // e.g., "5-02-03-010"
+            $table->string('account_title');                  // e.g., "Office Supplies Expenses"
 
-            // The Account Title (e.g., Office Supplies Expenses)
-            $table->string('account_title');
+            // Classification
+            $table->enum('account_type', ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE']);
+            $table->enum('expense_class', ['PS', 'MOOE', 'FE', 'CO'])->nullable(); // NULL for non-expense accounts
+            $table->string('account_series');                 // e.g., "5-02" (first 4 characters)
 
-            // Categorization as per BOM 2023
-            // PS = Personal Services
-            // MOOE = Maintenance and Other Operating Expenses
-            // FE = Financial Expenses
-            // CO = Capital Outlay
-            $table->enum('expense_class', ['PS', 'MOOE', 'FE', 'CO'])->index();
+            // Hierarchy
+            $table->foreignId('parent_id')->nullable()->constrained('chart_of_accounts')->onDelete('set null')->onUpdate('cascade');
+            $table->tinyInteger('level')->default(1);         // 1=main, 2=sub, 3=detail
 
-            // Optional: Helps in grouping sub-items
-            $table->string('parent_code')->nullable();
-
-            // Boolean to determine if this account can be directly selected in a PPA
-            // Some accounts are "Header" accounts (not for entry)
-            $table->boolean('is_postable')->default(true);
-
+            // Usage Control
+            $table->boolean('is_postable')->default(true);    // Can be used in transactions
             $table->boolean('is_active')->default(true);
+
+            // Accounting Rules
+            $table->enum('normal_balance', ['DEBIT', 'CREDIT']); // From COA descriptions
+
+            // Metadata
+            $table->text('description')->nullable();
+
             $table->timestamps();
         });
     }

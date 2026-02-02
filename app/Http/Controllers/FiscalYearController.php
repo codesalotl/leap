@@ -36,6 +36,8 @@ class FiscalYearController extends Controller
     public function store(StoreFiscalYearRequest $request)
     {
         FiscalYear::create($request->validated());
+        
+        // return redirect('/aip');
     }
 
     // public function importPpas(Request $request, FiscalYear $fiscalYear)

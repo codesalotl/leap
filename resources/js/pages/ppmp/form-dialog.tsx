@@ -7,10 +7,10 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+    // DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+// import { Label } from '@/components/ui/label';
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
@@ -20,23 +20,16 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
+    // CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
 import {
     Field,
-    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
 } from '@/components/ui/field';
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupText,
-    InputGroupTextarea,
-} from '@/components/ui/input-group';
 import {
     Select,
     SelectContent,
@@ -45,46 +38,59 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { router } from '@inertiajs/react';
+import { PpmpPriceList } from "@/pages/ppmp/data-table/columns";
+
+type ChartOfAccount = {
+    id: number;
+    account_number: string;
+    account_title: string;
+    account_type: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
+    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
+    account_series: string;
+    parent_id: number;
+    level: number;
+    is_postable: boolean;
+    is_active: boolean;
+    normal_balance: 'DEBIT' | 'CREDIT';
+    description: string;
+    created_at: string;
+    updated_at: string;
+};
+
 
 type PpmpPriceListFormDialogProps = {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    chartOfAccounts?: any[];
-    editingItem?: PpmpPriceList | null;
-    mode?: 'create' | 'edit';
+    chartOfAccounts: ChartOfAccount[];
+    editingItem: PpmpPriceList | null;
+    mode: 'create' | 'edit';
 };
 
 const formSchema = z.object({
-    item_code: z.string().min(1, 'Item code is required').max(50),
-    item_description: z.string().min(1, 'Description is required').max(255),
-    unit: z.string().min(1, 'Unit is required').max(20),
-    unit_price: z.string().min(1, 'Price is required'),
-    expense_class: z.enum(['PS', 'MOOE', 'FE', 'CO']),
-    account_code: z.string().min(1, 'Account code is required'),
-    procurement_type: z.enum(['Goods', 'Services', 'Civil Works', 'Consulting']),
-    standard_specifications: z.string().optional(),
+    item_number: z.number().min(1, 'Item number is required'),
+    description: z.string().min(1, 'Description is required').max(255),
+    unit_of_measurement: z.string().min(1, 'Unit is required').max(20),
+    price: z.string().min(1, 'Price is required'),
+    chart_of_account_id: z.number().min(1, 'Chart of account is required'),
 });
 
 export default function PpmpPriceListFormDialog({
     open,
     onOpenChange,
-    chartOfAccounts = [],
-    editingItem = null,
-    mode = 'create',
+    chartOfAccounts,
+    editingItem,
+    mode,
 }: PpmpPriceListFormDialogProps) {
     const isEdit = mode === 'edit' && editingItem;
     
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            item_code: '',
-            item_description: '',
-            unit: '',
-            unit_price: '',
-            expense_class: 'MOOE',
-            account_code: '',
-            procurement_type: 'Goods',
-            standard_specifications: '',
+            item_number: 0,
+            description: '',
+            unit_of_measurement: '',
+            price: '',
+            chart_of_account_id: 0,
         },
     });
 
@@ -92,26 +98,20 @@ export default function PpmpPriceListFormDialog({
     React.useEffect(() => {
         if (isEdit && editingItem) {
             form.reset({
-                item_code: editingItem.item_code,
-                item_description: editingItem.item_description,
-                unit: editingItem.unit,
-                unit_price: editingItem.unit_price?.toString() || '',
-                expense_class: editingItem.expense_class,
-                account_code: editingItem.account_code,
-                procurement_type: editingItem.procurement_type,
-                standard_specifications: editingItem.standard_specifications || '',
+                item_number: editingItem.item_number,
+                description: editingItem.description,
+                unit_of_measurement: editingItem.unit_of_measurement,
+                price: editingItem.price,
+                chart_of_account_id: editingItem.chart_of_account_id,
             });
         } else if (!isEdit) {
             // Reset to empty defaults for create mode
             form.reset({
-                item_code: '',
-                item_description: '',
-                unit: '',
-                unit_price: '',
-                expense_class: 'MOOE',
-                account_code: '',
-                procurement_type: 'Goods',
-                standard_specifications: '',
+                item_number: 0,
+                description: '',
+                unit_of_measurement: '',
+                price: '',
+                chart_of_account_id: 0,
             });
         }
     }, [editingItem, isEdit, form]);
@@ -120,14 +120,11 @@ export default function PpmpPriceListFormDialog({
     React.useEffect(() => {
         if (open && !isEdit) {
             form.reset({
-                item_code: '',
-                item_description: '',
-                unit: '',
-                unit_price: '',
-                expense_class: 'MOOE',
-                account_code: '',
-                procurement_type: 'Goods',
-                standard_specifications: '',
+                item_number: 0,
+                description: '',
+                unit_of_measurement: '',
+                price: '',
+                chart_of_account_id: 0,
             });
         }
     }, [open, isEdit, form]);
@@ -185,19 +182,21 @@ export default function PpmpPriceListFormDialog({
                         <CardContent>
                             <form id="ppmp-form" onSubmit={form.handleSubmit(onSubmit)}>
                                 <FieldGroup>
-                                    {/* Row 1: Item Code + Item Description */}
+                                    {/* Row 1: Item Number + Description */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <Controller
-                                            name="item_code"
+                                            name="item_number"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="item_code">Item Code</FieldLabel>
+                                                    <FieldLabel htmlFor="item_number">Item Number</FieldLabel>
                                                     <Input
                                                         {...field}
-                                                        id="item_code"
-                                                        placeholder="OFF-001"
+                                                        id="item_number"
+                                                        type="number"
+                                                        placeholder="1"
                                                         aria-invalid={fieldState.invalid}
+                                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                                     />
                                                     {fieldState.invalid && (
                                                         <FieldError errors={[fieldState.error]} />
@@ -207,14 +206,14 @@ export default function PpmpPriceListFormDialog({
                                         />
 
                                         <Controller
-                                            name="item_description"
+                                            name="description"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="item_description">Item Description</FieldLabel>
+                                                    <FieldLabel htmlFor="description">Description</FieldLabel>
                                                     <Input
                                                         {...field}
-                                                        id="item_description"
+                                                        id="description"
                                                         placeholder="Ballpen (Blue)"
                                                         aria-invalid={fieldState.invalid}
                                                     />
@@ -226,17 +225,17 @@ export default function PpmpPriceListFormDialog({
                                         />
                                     </div>
 
-                                    {/* Row 2: Unit + Unit Price */}
+                                    {/* Row 2: Unit of Measurement + Price */}
                                     <div className="grid grid-cols-2 gap-4">
                                         <Controller
-                                            name="unit"
+                                            name="unit_of_measurement"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="unit">Unit</FieldLabel>
+                                                    <FieldLabel htmlFor="unit_of_measurement">Unit of Measurement</FieldLabel>
                                                     <Input
                                                         {...field}
-                                                        id="unit"
+                                                        id="unit_of_measurement"
                                                         placeholder="pcs"
                                                         aria-invalid={fieldState.invalid}
                                                     />
@@ -248,14 +247,14 @@ export default function PpmpPriceListFormDialog({
                                         />
 
                                         <Controller
-                                            name="unit_price"
+                                            name="price"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="unit_price">Unit Price</FieldLabel>
+                                                    <FieldLabel htmlFor="price">Price</FieldLabel>
                                                     <Input
                                                         {...field}
-                                                        id="unit_price"
+                                                        id="price"
                                                         type="number"
                                                         step="0.01"
                                                         placeholder="15.00"
@@ -269,46 +268,22 @@ export default function PpmpPriceListFormDialog({
                                         />
                                     </div>
 
-                                    {/* Row 3: Expense Class + Account Code */}
-                                    <div className="grid grid-cols-2 gap-4">
+                                    {/* Row 3: Chart of Account */}
+                                    <div className="grid grid-cols-1 gap-4">
                                         <Controller
-                                            name="expense_class"
+                                            name="chart_of_account_id"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="expense_class">Expense Class</FieldLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FieldLabel htmlFor="chart_of_account_id">Chart of Account</FieldLabel>
+                                                    <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ''}>
                                                         <SelectTrigger>
-                                                            <SelectValue placeholder="Select expense class" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="PS">PS</SelectItem>
-                                                            <SelectItem value="MOOE">MOOE</SelectItem>
-                                                            <SelectItem value="FE">FE</SelectItem>
-                                                            <SelectItem value="CO">CO</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    {fieldState.invalid && (
-                                                        <FieldError errors={[fieldState.error]} />
-                                                    )}
-                                                </Field>
-                                            )}
-                                        />
-
-                                        <Controller
-                                            name="account_code"
-                                            control={form.control}
-                                            render={({ field, fieldState }) => (
-                                                <Field data-invalid={fieldState.invalid}>
-                                                    <FieldLabel htmlFor="account_code">Account Code</FieldLabel>
-                                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select account code" />
+                                                            <SelectValue placeholder="Select chart of account" />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             {chartOfAccounts.map((account) => (
-                                                                <SelectItem key={account.account_code} value={account.account_code}>
-                                                                    {account.account_code} - {account.account_title}
+                                                                <SelectItem key={account.id} value={account.id.toString()}>
+                                                                    {account.account_number} - {account.account_title}
                                                                 </SelectItem>
                                                             ))}
                                                         </SelectContent>
@@ -319,63 +294,6 @@ export default function PpmpPriceListFormDialog({
                                                 </Field>
                                             )}
                                         />
-                                    </div>
-
-                                    {/* Row 4: Procurement Type + Specifications (2:1 ratio) */}
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="col-span-1">
-                                            <Controller
-                                                name="procurement_type"
-                                                control={form.control}
-                                                render={({ field, fieldState }) => (
-                                                    <Field data-invalid={fieldState.invalid}>
-                                                        <FieldLabel htmlFor="procurement_type">Procurement Type</FieldLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <SelectTrigger>
-                                                                <SelectValue placeholder="Select type" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                <SelectItem value="Goods">Goods</SelectItem>
-                                                                <SelectItem value="Services">Services</SelectItem>
-                                                                <SelectItem value="Civil Works">Civil Works</SelectItem>
-                                                                <SelectItem value="Consulting">Consulting</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                        {fieldState.invalid && (
-                                                            <FieldError errors={[fieldState.error]} />
-                                                        )}
-                                                    </Field>
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2">
-                                            <Controller
-                                                name="standard_specifications"
-                                                control={form.control}
-                                                render={({ field, fieldState }) => (
-                                                    <Field data-invalid={fieldState.invalid}>
-                                                        <FieldLabel htmlFor="standard_specifications">Specifications</FieldLabel>
-                                                        <InputGroup>
-                                                            <InputGroupTextarea
-                                                                {...field}
-                                                                id="standard_specifications"
-                                                                placeholder="Standard blue ballpoint pen"
-                                                                rows={2}
-                                                                className="min-h-16 resize-none"
-                                                                aria-invalid={fieldState.invalid}
-                                                            />
-                                                        </InputGroup>
-                                                        <FieldDescription>
-                                                            Optional: Detailed specifications for the item.
-                                                        </FieldDescription>
-                                                        {fieldState.invalid && (
-                                                            <FieldError errors={[fieldState.error]} />
-                                                        )}
-                                                    </Field>
-                                                )}
-                                            />
-                                        </div>
                                     </div>
                                 </FieldGroup>
                             </form>

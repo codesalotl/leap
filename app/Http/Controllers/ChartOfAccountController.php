@@ -14,11 +14,35 @@ class ChartOfAccountController extends Controller
      */
     public function index()
     {
-        $chartOfAccounts = ChartOfAccount::all();
+        $chartOfAccounts = ChartOfAccount::orderBy('level')->orderBy('account_number')->get();
+        
+        // Build hierarchical tree structure
+        $hierarchicalAccounts = $this->buildHierarchy($chartOfAccounts);
 
         return Inertia::render('chart-of-accounts/index', [
-            'chartOfAccounts' => $chartOfAccounts,
+            'chartOfAccounts' => $hierarchicalAccounts,
         ]);
+    }
+
+    /**
+     * Build hierarchical tree structure from flat collection
+     */
+    private function buildHierarchy($accounts, $parentId = null)
+    {
+        $tree = [];
+        
+        foreach ($accounts as $account) {
+            if ($account->parent_id == $parentId) {
+                $children = $this->buildHierarchy($accounts, $account->id);
+                
+                $accountArray = $account->toArray();
+                $accountArray['children'] = $children;
+                
+                $tree[] = $accountArray;
+            }
+        }
+        
+        return $tree;
     }
 
     /**

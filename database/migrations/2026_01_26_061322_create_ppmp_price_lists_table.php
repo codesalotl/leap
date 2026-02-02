@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,20 +12,12 @@ return new class extends Migration
     {
         Schema::create('ppmp_price_lists', function (Blueprint $table) {
             $table->id();
-            $table->string('item_code', 50)->unique();
-            $table->text('item_description');
-            $table->string('unit', 20);
-            $table->decimal('unit_price', 10, 2);
-            $table->enum('expense_class', ['PS', 'MOOE', 'FE', 'CO']);
-            $table->string('account_code', 20);
-            $table->enum('procurement_type', ['Goods', 'Services', 'Civil Works', 'Consulting']);
-            $table->text('standard_specifications')->nullable();
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
-            $table->timestamp('created_at')->useCurrent();
-            
-            $table->index('item_code');
-            $table->index('account_code');
-            $table->index('expense_class');
+            $table->integer('item_number')->unique();
+            $table->text('description');
+            $table->string('unit_of_measurement', 20);
+            $table->decimal('price', 19, 2);
+            $table->foreignId('chart_of_account_id')->constrained();
+            $table->timestamps();
         });
     }
 

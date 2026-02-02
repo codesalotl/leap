@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateAipEntryRequest;
 use App\Models\ChartOfAccount;
 use App\Models\Office;
 use App\Models\PpmpPriceList;
+use App\Models\Ppmp;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 
@@ -22,44 +23,44 @@ class AipEntryController extends Controller
     public function index(FiscalYear $fiscalYear)
     {
         $masterPpaTree = Ppa::whereNull('parent_id')
-            ->where('is_active', true)
             ->with([
+                // 'office',
                 'office.sector',
                 'office.lguLevel',
                 'office.officeType',
+                'children.office',
+                'children.children.office',
                 'children.children',
             ])
             ->get();
 
-        $aip_entries = AipEntry::with([
-            'ppa.office',
-            'ppa.parent',
-            'itemizedCosts.chartOfAccount',
-        ])
-            ->where('fiscal_year_id', $fiscalYear->id)
+        $aipEntries = $fiscalYear
+            ->aipEntries()
+            ->with([
+                'ppa.office.sector',
+                'ppa.office.lguLevel',
+                'ppa.office.officeType',
+                'ppa.children',             // Projects under Programs
+                'ppa.children.children',    // Activities under Projects
+                'ppa.parent',               // Parent PPA info
+            ])
             ->get();
 
-        $mappedEntries = $aip_entries->map(
+        // $aip_entries = AipEntry::with([
+        //     'ppa.office',
+        //     'ppa.parent',
+        //     'itemizedCosts.chartOfAccount',
+        // ])
+        //     ->where('fiscal_year_id', $fiscalYear->id)
+        //     ->get();
+
+        $mappedEntries = $aipEntries->map(
             fn($entry) => [
                 'id' => $entry->id,
                 'ppa_id' => $entry->ppa_id,
                 'parent_ppa_id' => $entry->ppa->parent_id,
                 'aip_ref_code' => $entry->ppa->full_code,
                 'ppa_desc' => $entry->ppa->title,
-                'itemized_costs' => $entry->itemizedCosts->map(
-                    fn($cost) => [
-                        'id' => $cost->id,
-                        'aip_entry_id' => $cost->aip_entry_id,
-                        'account_code' => $cost->account_code,
-                        'item_description' => $cost->item_description,
-                        'quantity' => $cost->quantity,
-                        'unit_cost' => $cost->unit_cost,
-                        'amount' => $cost->amount,
-                        'ppmp_price_list_id' => $cost->ppmp_price_list_id,
-                        'requires_procurement' => $cost->requires_procurement,
-                        'chart_of_account' => $cost->chartOfAccount, // This is crucial for the frontend filter
-                    ],
-                ),
                 'implementing_office_department' =>
                     $entry->ppa->office->name ?? 'N/A',
                 'sched_implementation' => [
@@ -69,24 +70,14 @@ class AipEntryController extends Controller
                 'expected_outputs' => $entry->expected_output,
                 'funding_source' => '',
                 'amount' => [
-                    'ps' => $entry->ps_amount,
-                    'mooe' => $entry->mooe_amount,
-                    'fe' => $entry->fe_amount,
-                    'co' => $entry->co_amount,
-                    'total' => $entry->total_amount,
+                    'ps' => (string) $entry->ps_amount,
+                    'mooe' => (string) $entry->mooe_amount,
+                    'fe' => (string) $entry->fe_amount,
+                    'co' => (string) $entry->co_amount,
+                    'total' => (string) $entry->total_amount,
                 ],
-                'cc_adaptation' => number_format(
-                    (float) $entry->ccet_adaptation,
-                    2,
-                    '.',
-                    '',
-                ),
-                'cc_mitigation' => number_format(
-                    (float) $entry->ccet_mitigation,
-                    2,
-                    '.',
-                    '',
-                ),
+                'cc_adaptation' => (string) $entry->ccet_adaptation,
+                'cc_mitigation' => (string) $entry->ccet_mitigation,
                 'cc_typology_code' => $entry->typology_code ?? '',
                 'children' => [],
             ],
@@ -97,12 +88,13 @@ class AipEntryController extends Controller
         $offices = Office::all();
 
         return Inertia::render('aip/aip-summary-form', [
-            'fiscalYears' => $fiscalYear,
+            'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipTree,
             'masterPpas' => $masterPpaTree,
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
             'ppmpPriceList' => PpmpPriceList::all(),
+            'ppmpItems' => Ppmp::with(['ppmpPriceList'])->get(),
         ]);
     }
 

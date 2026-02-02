@@ -16,4 +16,9 @@ class FiscalYear extends Model
     protected $attributes = [
         'status' => 'Open',
     ];
+
+    public function aipEntries()
+    {
+        return $this->hasMany(AipEntry::class);
+    }
 }

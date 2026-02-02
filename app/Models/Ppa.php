@@ -13,17 +13,16 @@ class Ppa extends Model
     use HasFactory;
 
     protected $fillable = [
+        'office_id',
+        'parent_id',
         'type',
         'title',
         'code_suffix',
-        'reference_code',
-        'parent_id',
-        'office_id',
         'is_active',
+        // 'reference_code',
     ];
 
     protected $appends = ['full_code'];
-
     protected function fullCode(): Attribute
     {
         return Attribute::make(
@@ -44,9 +43,9 @@ class Ppa extends Model
     }
 
     // Casting ensures boolean values are handled correctly
-    protected $casts = [
-        'is_active' => 'boolean',
-    ];
+    // protected $casts = [
+    //     'is_active' => 'boolean',
+    // ];
 
     public function office()
     {
@@ -63,8 +62,8 @@ class Ppa extends Model
         return $this->belongsTo(Ppa::class, 'parent_id');
     }
 
-    public function sector(): BelongsTo
-    {
-        return $this->belongsTo(Sector::class);
-    }
+    // public function sector(): BelongsTo
+    // {
+    //     return $this->belongsTo(Sector::class);
+    // }
 }

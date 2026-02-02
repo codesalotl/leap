@@ -39,10 +39,12 @@ class PpmpPriceListController extends Controller
     public function store(StorePpmpPriceListRequest $request)
     {
         $validated = $request->validated();
+
+        // dd($validated);
         
-        $priceList = PpmpPriceList::create($validated);
+        PpmpPriceList::create($validated);
         
-        return back()->with('success', 'Price list item created successfully!');
+        // return back()->with('success', 'Price list item created successfully!');
     }
 
     /**
@@ -72,7 +74,7 @@ class PpmpPriceListController extends Controller
         
         $ppmpPriceList->update($validated);
         
-        return back()->with('success', 'Price list item updated successfully!');
+        // return back()->with('success', 'Price list item updated successfully!');
     }
 
     /**
@@ -82,6 +84,6 @@ class PpmpPriceListController extends Controller
     {
         $ppmpPriceList->delete();
         
-        return back()->with('success', 'Price list item deleted successfully!');
+        // return back()->with('success', 'Price list item deleted successfully!');
     }
 }

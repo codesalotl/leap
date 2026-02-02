@@ -17,10 +17,10 @@ return new class extends Migration {
             $table->foreignId('aip_entry_id')->constrained('aip_entries')->onDelete('cascade');
 
             // Link to the Chart of Accounts
-            $table->string('account_code');
+            $table->string('account_number');
             $table
-                ->foreign('account_code')
-                ->references('account_code')
+                ->foreign('account_number')
+                ->references('account_number')
                 ->on('chart_of_accounts');
 
             // Specific description (e.g., "Fuel for Ambulance" or "Bond paper for Secretariat")

@@ -22,7 +22,6 @@ class Office extends Model
     ];
 
     protected $appends = ['full_code'];
-
     protected function fullCode(): Attribute
     {
         return Attribute::make(

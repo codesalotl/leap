@@ -1,9 +1,15 @@
+// resources/js/pages/aip/aip-entry-form-dialog.tsx
+
 import React, { useEffect } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import Decimal from 'decimal.js';
 import { router } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { ListPlus, CalendarIcon } from 'lucide-react';
+
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,32 +20,14 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Calendar } from '@/components/ui/calendar';
 import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from '@/components/ui/form';
-import {
-    Field,
-    FieldDescription,
-    FieldError,
-    FieldGroup,
-    FieldLabel,
-    FieldContent,
-} from '@/components/ui/field';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { ListPlus, Eye } from 'lucide-react';
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface LguLevel {
     code: string;
@@ -102,8 +90,9 @@ export interface AipEntry {
 interface AipFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    onSwitch: () => void; // Added missing prop type from your usage
     data: AipEntry;
-    mode: string;
+    mode: string | null; // Changed to match parent usage
     offices: Office[];
 }
 
@@ -163,12 +152,9 @@ export default function AipEntryFormDialog({
     mode,
     offices,
 }: AipFormProps) {
-    // console.log(data);
-    // console.log(offices);
-
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
     const getInitialValues = (d: any): z.infer<typeof formSchema> => ({
-        ppa_id: d?.ppa_id || '',
+        ppa_id: d?.ppa_id || 0,
         aipRefCode: d?.aip_ref_code || '',
         ppaDescription: d?.ppa_desc || '',
         implementingOfficeDepartmentLocation:
@@ -189,7 +175,6 @@ export default function AipEntryFormDialog({
             total: d?.amount?.total || '0.00',
         },
         amountOfCcExpenditure: {
-            // Note: In your JSON, these are top-level keys
             ccAdaptation: d?.cc_adaptation || d?.ccet_adaptation || '0.00',
             ccMitigation: d?.cc_mitigation || d?.ccet_mitigation || '0.00',
         },
@@ -207,6 +192,7 @@ export default function AipEntryFormDialog({
 
     const watchedAmounts = useWatch({ control: form.control, name: 'amount' });
 
+    // Calculate Total when individual components change
     useEffect(() => {
         const { ps, mooe, fe, co } = watchedAmounts || {};
 
@@ -217,27 +203,29 @@ export default function AipEntryFormDialog({
                 .plus(stripCommas(co || '0') || 0);
 
             const totalValue = sum.toFixed(2);
-
             const formattedTotal = formatCurrency(totalValue);
 
+            // Only update if value is different to avoid loops
             if (watchedAmounts?.total !== formattedTotal) {
                 form.setValue('amount.total', formattedTotal);
             }
         } catch (e) {
             console.error('Calculation error', e);
         }
-    }, [watchedAmounts, form]);
+    }, [
+        watchedAmounts?.ps,
+        watchedAmounts?.mooe,
+        watchedAmounts?.fe,
+        watchedAmounts?.co,
+        form,
+    ]);
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // console.log('values', values);
-
         if (!data?.id) return;
 
-        // Perform the Inertia PUT request to your defined route
         router.put(`/aip-entries/${data.id}`, values, {
             onSuccess: () => {
                 onOpenChange(false);
-                // Optional: Show a success toast here
             },
             preserveScroll: true,
         });
@@ -248,7 +236,6 @@ export default function AipEntryFormDialog({
             <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle>Edit AIP Entry</DialogTitle>
-
                     <DialogDescription>
                         Modify the details for this program/project allocation.
                     </DialogDescription>
@@ -258,7 +245,6 @@ export default function AipEntryFormDialog({
                     <form
                         id="aip-entry-form"
                         onSubmit={form.handleSubmit(onSubmit)}
-                        // className="space-y-4"
                     >
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -278,9 +264,8 @@ export default function AipEntryFormDialog({
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
-                                                autoComplete="off"
                                                 readOnly
+                                                className="cursor-not-allowed bg-muted text-muted-foreground"
                                             />
                                             {fieldState.invalid && (
                                                 <FieldError
@@ -307,7 +292,6 @@ export default function AipEntryFormDialog({
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
                                             {fieldState.invalid && (
@@ -338,7 +322,6 @@ export default function AipEntryFormDialog({
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
                                             {fieldState.invalid && (
@@ -366,7 +349,6 @@ export default function AipEntryFormDialog({
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
                                             {fieldState.invalid && (
@@ -385,62 +367,26 @@ export default function AipEntryFormDialog({
                                     control={form.control}
                                     render={({ field, fieldState }) => (
                                         <Field
-                                            orientation="responsive"
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <div className="flex flex-col space-y-3">
-                                                <FieldContent>
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        Implementing
-                                                        Office/Department
-                                                    </FieldLabel>
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
-                                                </FieldContent>
-                                                <Select
-                                                    name={field.name}
-                                                    value={field.value}
-                                                    onValueChange={
-                                                        field.onChange
-                                                    }
-                                                    disabled={mode !== 'add'}
-                                                >
-                                                    <SelectTrigger
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        className="w-full"
-                                                    >
-                                                        <SelectValue placeholder="Select" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {offices?.map(
-                                                            (office) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        office.id
-                                                                    }
-                                                                    value={
-                                                                        office.name
-                                                                    } // Or office.id, depending on what your schema expects
-                                                                >
-                                                                    {
-                                                                        office.name
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Implementing Office/Department
+                                            </FieldLabel>
+                                            {/* Changed from Select to ReadOnly Input */}
+                                            <Input
+                                                {...field}
+                                                id={field.name}
+                                                readOnly
+                                                className="cursor-not-allowed bg-muted text-muted-foreground"
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            />
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
                                         </Field>
                                     )}
                                 />
@@ -461,7 +407,6 @@ export default function AipEntryFormDialog({
                                                 aria-invalid={
                                                     fieldState.invalid
                                                 }
-                                                placeholder="Login button not working on mobile"
                                                 autoComplete="off"
                                             />
                                             {fieldState.invalid && (
@@ -475,6 +420,7 @@ export default function AipEntryFormDialog({
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
+                                {/* Date Pickers Section */}
                                 <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
                                     <Controller
                                         name="scheduleOfImplementation.startingDate"
@@ -484,25 +430,69 @@ export default function AipEntryFormDialog({
                                                 data-invalid={
                                                     fieldState.invalid
                                                 }
+                                                className="flex flex-col"
                                             >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
+                                                <FieldLabel>
                                                     Start Date
                                                 </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                />
-                                                {/*<FieldDescription>
-                                                            Provide a concise title for your
-                                                            bug report.
-                                                        </FieldDescription>*/}
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant={'outline'}
+                                                            className={cn(
+                                                                'w-full justify-start text-left font-normal',
+                                                                !field.value &&
+                                                                    'text-muted-foreground',
+                                                            )}
+                                                        >
+                                                            {field.value ? (
+                                                                format(
+                                                                    new Date(
+                                                                        field.value,
+                                                                    ),
+                                                                    'PPP',
+                                                                )
+                                                            ) : (
+                                                                <span>
+                                                                    Pick a date
+                                                                </span>
+                                                            )}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent
+                                                        className="w-auto overflow-hidden p-0"
+                                                        align="start"
+                                                    >
+                                                        <Calendar
+                                                            mode="single"
+                                                            selected={
+                                                                field.value
+                                                                    ? new Date(
+                                                                          field.value,
+                                                                      )
+                                                                    : undefined
+                                                            }
+                                                            defaultMonth={
+                                                                field.value
+                                                                    ? new Date(
+                                                                          field.value,
+                                                                      )
+                                                                    : undefined
+                                                            }
+                                                            captionLayout="dropdown"
+                                                            onSelect={(date) =>
+                                                                field.onChange(
+                                                                    date
+                                                                        ? format(
+                                                                              date,
+                                                                              'yyyy-MM-dd',
+                                                                          )
+                                                                        : '',
+                                                                )
+                                                            }
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -522,25 +512,69 @@ export default function AipEntryFormDialog({
                                                 data-invalid={
                                                     fieldState.invalid
                                                 }
+                                                className="flex flex-col"
                                             >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
+                                                <FieldLabel>
                                                     Completion Date
                                                 </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                />
-                                                {/*<FieldDescription>
-                                                            Provide a concise title for your
-                                                            bug report.
-                                                        </FieldDescription>*/}
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant={'outline'}
+                                                            className={cn(
+                                                                'w-full justify-start text-left font-normal',
+                                                                !field.value &&
+                                                                    'text-muted-foreground',
+                                                            )}
+                                                        >
+                                                            {field.value ? (
+                                                                format(
+                                                                    new Date(
+                                                                        field.value,
+                                                                    ),
+                                                                    'PPP',
+                                                                )
+                                                            ) : (
+                                                                <span>
+                                                                    Pick a date
+                                                                </span>
+                                                            )}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent
+                                                        className="w-auto overflow-hidden p-0"
+                                                        align="start"
+                                                    >
+                                                        <Calendar
+                                                            mode="single"
+                                                            selected={
+                                                                field.value
+                                                                    ? new Date(
+                                                                          field.value,
+                                                                      )
+                                                                    : undefined
+                                                            }
+                                                            defaultMonth={
+                                                                field.value
+                                                                    ? new Date(
+                                                                          field.value,
+                                                                      )
+                                                                    : undefined
+                                                            }
+                                                            captionLayout="dropdown"
+                                                            onSelect={(date) =>
+                                                                field.onChange(
+                                                                    date
+                                                                        ? format(
+                                                                              date,
+                                                                              'yyyy-MM-dd',
+                                                                          )
+                                                                        : '',
+                                                                )
+                                                            }
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -574,14 +608,8 @@ export default function AipEntryFormDialog({
                                                     aria-invalid={
                                                         fieldState.invalid
                                                     }
-                                                    placeholder="Login button not working on mobile"
                                                     autoComplete="off"
-                                                    // className="bg-background"
                                                 />
-                                                {/*<FieldDescription>
-                                                            Provide a concise title for your
-                                                            bug report.
-                                                        </FieldDescription>*/}
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -613,13 +641,8 @@ export default function AipEntryFormDialog({
                                                     aria-invalid={
                                                         fieldState.invalid
                                                     }
-                                                    placeholder="Login button not working on mobile"
                                                     autoComplete="off"
                                                 />
-                                                {/*<FieldDescription>
-                                                            Provide a concise title for your
-                                                            bug report.
-                                                        </FieldDescription>*/}
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -639,15 +662,11 @@ export default function AipEntryFormDialog({
                                         name="amount.ps"
                                         control={form.control}
                                         render={({ field, fieldState }) => {
-                                            // We create a "display value"
-                                            // If the input is focused, show the raw string (no commas) for easy editing
-                                            // If it's NOT focused, show the formatted string (commas + 2 decimals)
                                             const [isFocused, setIsFocused] =
                                                 React.useState(false);
-
                                             const displayValue = isFocused
-                                                ? field.value // Raw string: "1000.55"
-                                                : formatCurrency(field.value); // Formatted: "1,000.55"
+                                                ? field.value
+                                                : formatCurrency(field.value);
 
                                             return (
                                                 <Field
@@ -662,25 +681,34 @@ export default function AipEntryFormDialog({
                                                     </FieldLabel>
                                                     <Input
                                                         {...field}
+                                                        value={displayValue}
                                                         id={field.name}
                                                         aria-invalid={
                                                             fieldState.invalid
                                                         }
-                                                        placeholder="Login button not working on mobile"
                                                         autoComplete="off"
-                                                        type="number"
+                                                        onFocus={() =>
+                                                            setIsFocused(true)
+                                                        }
                                                         onBlur={(e) => {
+                                                            setIsFocused(false);
                                                             const val =
                                                                 e.target.value;
                                                             if (
                                                                 val &&
                                                                 !isNaN(
-                                                                    Number(val),
+                                                                    Number(
+                                                                        stripCommas(
+                                                                            val,
+                                                                        ),
+                                                                    ),
                                                                 )
                                                             ) {
                                                                 const roundedValue =
                                                                     parseFloat(
-                                                                        val,
+                                                                        stripCommas(
+                                                                            val,
+                                                                        ),
                                                                     ).toFixed(
                                                                         2,
                                                                     );
@@ -725,8 +753,8 @@ export default function AipEntryFormDialog({
                                                             fieldState.invalid
                                                         }
                                                         placeholder="0.00"
-                                                        readOnly // <--- CRITICAL: User cannot type here anymore
-                                                        className="cursor-not-allowed text-right font-mono"
+                                                        readOnly
+                                                        className="cursor-not-allowed bg-muted text-right font-mono text-muted-foreground"
                                                         value={formatCurrency(
                                                             field.value,
                                                         )}
@@ -756,113 +784,147 @@ export default function AipEntryFormDialog({
                                     <Controller
                                         name="amount.fe"
                                         control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    FE
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
+                                        render={({ field, fieldState }) => {
+                                            const [isFocused, setIsFocused] =
+                                                React.useState(false);
+                                            const displayValue = isFocused
+                                                ? field.value
+                                                : formatCurrency(field.value);
+
+                                            return (
+                                                <Field
+                                                    data-invalid={
                                                         fieldState.invalid
                                                     }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                    type="number"
-                                                    onBlur={(e) => {
-                                                        const val =
-                                                            e.target.value;
-                                                        if (
-                                                            val &&
-                                                            !isNaN(Number(val))
-                                                        ) {
-                                                            const roundedValue =
-                                                                parseFloat(
-                                                                    val,
-                                                                ).toFixed(2);
-                                                            field.onChange(
-                                                                roundedValue,
-                                                            );
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        FE
+                                                    </FieldLabel>
+                                                    <Input
+                                                        {...field}
+                                                        value={displayValue}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
                                                         }
-                                                        field.onBlur();
-                                                    }}
-                                                />
-                                                {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
+                                                        autoComplete="off"
+                                                        onFocus={() =>
+                                                            setIsFocused(true)
+                                                        }
+                                                        onBlur={(e) => {
+                                                            setIsFocused(false);
+                                                            const val =
+                                                                e.target.value;
+                                                            if (
+                                                                val &&
+                                                                !isNaN(
+                                                                    Number(
+                                                                        stripCommas(
+                                                                            val,
+                                                                        ),
+                                                                    ),
+                                                                )
+                                                            ) {
+                                                                const roundedValue =
+                                                                    parseFloat(
+                                                                        stripCommas(
+                                                                            val,
+                                                                        ),
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    );
+                                                                field.onChange(
+                                                                    roundedValue,
+                                                                );
+                                                            }
+                                                            field.onBlur();
+                                                        }}
                                                     />
-                                                )}
-                                            </Field>
-                                        )}
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            );
+                                        }}
                                     />
 
                                     <Controller
                                         name="amount.co"
                                         control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    CO
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
+                                        render={({ field, fieldState }) => {
+                                            const [isFocused, setIsFocused] =
+                                                React.useState(false);
+                                            const displayValue = isFocused
+                                                ? field.value
+                                                : formatCurrency(field.value);
+
+                                            return (
+                                                <Field
+                                                    data-invalid={
                                                         fieldState.invalid
                                                     }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
-                                                    type="number"
-                                                    onBlur={(e) => {
-                                                        const val =
-                                                            e.target.value;
-                                                        if (
-                                                            val &&
-                                                            !isNaN(Number(val))
-                                                        ) {
-                                                            const roundedValue =
-                                                                parseFloat(
-                                                                    val,
-                                                                ).toFixed(2);
-                                                            field.onChange(
-                                                                roundedValue,
-                                                            );
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        CO
+                                                    </FieldLabel>
+                                                    <Input
+                                                        {...field}
+                                                        value={displayValue}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
                                                         }
-                                                        field.onBlur();
-                                                    }}
-                                                />
-                                                {/*<FieldDescription>
-                                                    Provide a concise title for your
-                                                    bug report.
-                                                </FieldDescription>*/}
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
+                                                        autoComplete="off"
+                                                        onFocus={() =>
+                                                            setIsFocused(true)
+                                                        }
+                                                        onBlur={(e) => {
+                                                            setIsFocused(false);
+                                                            const val =
+                                                                e.target.value;
+                                                            if (
+                                                                val &&
+                                                                !isNaN(
+                                                                    Number(
+                                                                        stripCommas(
+                                                                            val,
+                                                                        ),
+                                                                    ),
+                                                                )
+                                                            ) {
+                                                                const roundedValue =
+                                                                    parseFloat(
+                                                                        stripCommas(
+                                                                            val,
+                                                                        ),
+                                                                    ).toFixed(
+                                                                        2,
+                                                                    );
+                                                                field.onChange(
+                                                                    roundedValue,
+                                                                );
+                                                            }
+                                                            field.onBlur();
+                                                        }}
                                                     />
-                                                )}
-                                            </Field>
-                                        )}
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            );
+                                        }}
                                     />
 
                                     <Controller
@@ -885,9 +947,8 @@ export default function AipEntryFormDialog({
                                                     aria-invalid={
                                                         fieldState.invalid
                                                     }
-                                                    placeholder="Login button not working on mobile"
-                                                    autoComplete="off"
                                                     readOnly
+                                                    className="cursor-not-allowed bg-muted font-bold text-muted-foreground"
                                                 />
                                                 {fieldState.invalid && (
                                                     <FieldError
@@ -922,8 +983,6 @@ export default function AipEntryFormDialog({
                             ? 'Saving...'
                             : 'Save changes'}
                     </Button>
-
-                    {/* <Button onClick={onSwitch}>Open MOOE</Button> */}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

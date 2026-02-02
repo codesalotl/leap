@@ -19,6 +19,7 @@ use App\Http\Controllers\AipCostingController;
 use App\Http\Controllers\PpmpPriceListController;
 use App\Http\Controllers\PpmpHeaderController;
 use App\Http\Controllers\PpmpItemController;
+use App\Http\Controllers\PpmpController;
 
 Route::get(
     '/',
@@ -124,5 +125,10 @@ Route::post('/ppmp-headers', [PpmpHeaderController::class, 'store'])->name('ppmp
 Route::get('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 'index'])->name('ppmp-items.index');
 Route::get('/ppmp-headers/{ppmpHeaderId}/items/create', [PpmpItemController::class, 'create'])->name('ppmp-items.create');
 Route::post('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 'store'])->name('ppmp-items.store');
+
+// PPMP Routes
+Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
+Route::put('/ppmp/{ppmp}/update-monthly-quantity', [PpmpController::class, 'updateMonthlyQuantity'])->name('ppmp.update-monthly-quantity');
+Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name('ppmp.destroy');
 
 require __DIR__ . '/settings.php';
