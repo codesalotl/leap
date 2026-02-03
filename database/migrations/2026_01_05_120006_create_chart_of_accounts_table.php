@@ -20,7 +20,7 @@ return new class extends Migration {
             // Classification
             $table->enum('account_type', ['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE']);
             $table->enum('expense_class', ['PS', 'MOOE', 'FE', 'CO'])->nullable(); // NULL for non-expense accounts
-            $table->string('account_series');                 // e.g., "5-02" (first 4 characters)
+            $table->string('account_series')->nullable();                 // e.g., "5-02" (first 4 characters)
 
             // Hierarchy
             $table->foreignId('parent_id')->nullable()->constrained('chart_of_accounts')->onDelete('set null')->onUpdate('cascade');
