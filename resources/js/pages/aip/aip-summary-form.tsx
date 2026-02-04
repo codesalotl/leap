@@ -1,7 +1,7 @@
 // resources\js\pages\aip\aip-summary-form.tsx
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Library, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
+import { Library, FileDown, FileSpreadsheet, FileText, Plus } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';

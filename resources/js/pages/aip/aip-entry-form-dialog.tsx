@@ -236,9 +236,9 @@ export default function AipEntryFormDialog({
             <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle>Edit AIP Entry</DialogTitle>
-                    <DialogDescription>
+                    {/* <DialogDescription>
                         Modify the details for this program/project allocation.
-                    </DialogDescription>
+                    </DialogDescription> */}
                 </DialogHeader>
 
                 <Form {...form}>

@@ -6,6 +6,9 @@ import {
     SquareArrowOutUpRight,
     Edit,
     Trash2,
+    Plus,
+    Pencil,
+    Trash,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +19,11 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 // --- Types ---
 export interface AipEntry {
@@ -197,39 +205,39 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
         id: 'actions',
         enableHiding: false,
         enablePinning: true,
-        size: 52,
+        size: 100,
         cell: ({ row }) => {
             const entry = row.original;
             const isLeaf = !entry.children || entry.children.length === 0;
 
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onSelect={() => onAddEntry(entry)}
-                            disabled={isLeaf}
-                        >
-                            <SquareArrowOutUpRight className="mr-2 h-4 w-4" />{' '}
-                            Add Entry
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEdit(entry)}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit Entry
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => onDelete(entry)}
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" /> Remove from AIP
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-between">
+                    <Button
+                        title="Add PPA"
+                        size="icon-xs"
+                        onClick={() => onAddEntry(entry)}
+                        disabled={isLeaf}
+                    >
+                        <Plus />
+                    </Button>
+
+                    <Button
+                        title="Edit"
+                        size="icon-xs"
+                        onClick={() => onEdit(entry)}
+                    >
+                        <Pencil />
+                    </Button>
+
+                    <Button
+                        title="Delete"
+                        variant="destructive"
+                        size="icon-xs"
+                        onClick={() => onDelete(entry)}
+                    >
+                        <Trash />
+                    </Button>
+                </div>
             );
         },
     }),

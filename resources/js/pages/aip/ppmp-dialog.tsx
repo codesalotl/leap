@@ -238,7 +238,7 @@ export default function PpmpDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="h-[90vh] overflow-y-auto lg:max-w-[90vw]">
+            <DialogContent className="flex h-[90vh] flex-col lg:max-w-[90vw]">
                 <DialogHeader>
                     <DialogTitle>PPMP Management</DialogTitle>
                     <DialogDescription>
@@ -246,7 +246,7 @@ export default function PpmpDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <ScrollArea className="h-full w-full rounded-md border p-4">
+                <ScrollArea className="h-100">
                     {/* Mode Toggle */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
@@ -461,20 +461,19 @@ export default function PpmpDialog({
 
                     <Separator />
 
-                    {/* <div className="w-[100rem]">Hello</div> */}
-
-                    <section className="space-y-4">
-                        <h3 className="text-lg font-semibold">
+                    <div className="w-full">
+                        <h3 className="mb-2 text-lg font-semibold">
                             Current PPMP Items
                         </h3>
-                        <div className="rounded-md border bg-card p-4">
+                        <ScrollArea className="w-100">
                             <PpmpTable
                                 ppmpItems={ppmpItems}
                                 selectedEntry={selectedEntry}
                             />
-                        </div>
-                    </section>
-                    <ScrollBar orientation="horizontal" />
+                            <ScrollBar orientation="horizontal" />
+                        </ScrollArea>
+                    </div>
+                    <ScrollBar orientation="vertical" />
                 </ScrollArea>
             </DialogContent>
         </Dialog>
