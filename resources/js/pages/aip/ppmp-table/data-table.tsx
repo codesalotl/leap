@@ -101,16 +101,16 @@ export default function PpmpTable({
     ppmpItems = [],
     selectedEntry = null,
 }: PpmpTableProps) {
-    // Filter PPMP items based on selected AIP entry
-    const filteredItems = selectedEntry
-        ? ppmpItems.filter((item) => item.aip_entry_id === selectedEntry.id)
-        : ppmpItems;
+    // // Filter PPMP items based on selected AIP entry
+    // const filteredItems = selectedEntry
+    //     ? ppmpItems.filter((item) => item.aip_entry_id === selectedEntry.id)
+    //     : ppmpItems;
 
-    const data = getData(filteredItems);
+    // const data = getData(filteredItems);
 
     return (
         <div>
-            <DataTable columns={columns} data={data} />
+            <DataTable columns={columns} data={ppmpItems} />
         </div>
     );
 }

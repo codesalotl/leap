@@ -115,6 +115,7 @@ export default function AipSummaryTable({
     ppmpPriceList,
     ppmpItems,
 }: AipSummaryTableProp) {
+    console.log(fiscalYear);
     console.log(chartOfAccounts);
 
     // --- State ---
