@@ -23,6 +23,7 @@ class PpmpController extends Controller
             ->get();
 
         return Inertia::render('aip/ppmp-page', [
+            'fiscalYear' => $fiscalYear,
             'ppmpItems' => $ppmpItems,
         ]);
     }
