@@ -377,6 +377,7 @@ export default function AipSummaryTable({
                 data={selectedEntry}
                 mode={mode}
                 offices={offices}
+                fiscalYear={fiscalYear}
             />
 
             <PpmpDialog
