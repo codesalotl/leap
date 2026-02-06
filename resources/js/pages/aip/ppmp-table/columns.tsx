@@ -1,8 +1,71 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Ppmp } from '@/pages/types/types';
 import { Decimal } from 'decimal.js';
-import { Pencil, Trash } from 'lucide-react';
+import { Trash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
+
+interface EditableCellProps {
+    getValue: () => any;
+    row: any;
+    column: any;
+}
+
+const EditableCell: React.FC<EditableCellProps> = ({ getValue, row, column }) => {
+    const initialValue = getValue();
+    const [value, setValue] = useState(initialValue);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Update local state if the server data changes
+    useEffect(() => {
+        setValue(initialValue);
+    }, [initialValue]);
+
+    const handleBlur = () => {
+        if (value === initialValue || isUpdating) return;
+
+        setIsUpdating(true);
+
+        router.put(`/ppmp/${row.original.id}/update-monthly-quantity`, 
+            {
+                month: column.id,
+                quantity: value,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: ['ppmpItems'],
+                onFinish: () => setIsUpdating(false),
+                onError: () => {
+                    setValue(initialValue); // Reset on error
+                    setIsUpdating(false);
+                },
+            }
+        );
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.currentTarget.blur();
+        }
+    };
+
+    return (
+        <Input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            disabled={isUpdating}
+            // className="w-20 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent disabled:opacity-50"
+            min="0"
+            step="0.01"
+        />
+    );
+};
 
 export const columns: ColumnDef<Ppmp>[] = [
     {
@@ -72,6 +135,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'jan_qty',
         header: 'JAN-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'jan_amount',
@@ -80,6 +144,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'feb_qty',
         header: 'FEB-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'feb_amount',
@@ -88,6 +153,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'mar_qty',
         header: 'MAR-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'mar_amount',
@@ -96,6 +162,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'apr_qty',
         header: 'APR-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'apr_amount',
@@ -104,6 +171,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'may_qty',
         header: 'MAY-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'may_amount',
@@ -112,6 +180,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'jun_qty',
         header: 'JUN-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'jun_amount',
@@ -120,6 +189,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'jul_qty',
         header: 'JUL-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'jul_amount',
@@ -128,6 +198,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'aug_qty',
         header: 'AUG-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'aug_amount',
@@ -136,6 +207,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'sep_qty',
         header: 'SEP-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'sep_amount',
@@ -144,6 +216,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'oct_qty',
         header: 'OCT-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'oct_amount',
@@ -152,6 +225,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'nov_qty',
         header: 'NOV-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'nov_amount',
@@ -160,6 +234,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'dec_qty',
         header: 'DEC-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'dec_amount',
@@ -167,136 +242,17 @@ export const columns: ColumnDef<Ppmp>[] = [
     },
     {
         id: 'actions',
-        // header: 'Actions',
         size: 72,
         cell: ({ row, table }) => {
             const ppmp = row.original;
 
-            // const [editOpen, setEditOpen] = useState(false);
-            // const [selectedMonth, setSelectedMonth] = useState('');
-            // const [quantity, setQuantity] = useState('');
-            // const [isUpdating, setIsUpdating] = useState(false);
-            // const [isDeleting, setIsDeleting] = useState(false);
-
-            // const months = [
-            //     { value: 'jan', label: 'January' },
-            //     { value: 'feb', label: 'February' },
-            //     { value: 'mar', label: 'March' },
-            //     { value: 'apr', label: 'April' },
-            //     { value: 'may', label: 'May' },
-            //     { value: 'jun', label: 'June' },
-            //     { value: 'jul', label: 'July' },
-            //     { value: 'aug', label: 'August' },
-            //     { value: 'sep', label: 'September' },
-            //     { value: 'oct', label: 'October' },
-            //     { value: 'nov', label: 'November' },
-            //     { value: 'dec', label: 'December' },
-            // ];
-
-            // const handleUpdate = async () => {
-            //     if (!selectedMonth) {
-            //         alert('Please select a month');
-            //         return;
-            //     }
-
-            //     const qty = parseFloat(quantity);
-            //     if (isNaN(qty) || qty < 0) {
-            //         alert('Please enter a valid quantity');
-            //         return;
-            //     }
-
-            //     setIsUpdating(true);
-
-            //     try {
-            //         await router.put(
-            //             `/ppmp/${ppmp.id}/update-monthly-quantity`,
-            //             {
-            //                 month: selectedMonth,
-            //                 quantity: qty,
-            //             },
-            //             {
-            //                 onSuccess: () => {
-            //                     setEditOpen(false);
-            //                     setSelectedMonth('');
-            //                     setQuantity('');
-            //                     alert('PPMP item updated successfully');
-            //                 },
-            //                 onError: (errors) => {
-            //                     console.error(
-            //                         'Error updating PPMP item:',
-            //                         errors,
-            //                     );
-            //                     alert(
-            //                         'Error updating PPMP item: ' +
-            //                             JSON.stringify(errors),
-            //                     );
-            //                 },
-            //                 onFinish: () => {
-            //                     setIsUpdating(false);
-            //                 },
-            //             },
-            //         );
-            //     } catch (error) {
-            //         console.error('Update error:', error);
-            //         setIsUpdating(false);
-            //     }
-            // };
-
-            // const handleDelete = async () => {
-            //     if (
-            //         !confirm(
-            //             'Are you sure you want to delete this PPMP item? This action cannot be undone.',
-            //         )
-            //     ) {
-            //         return;
-            //     }
-
-            //     setIsDeleting(true);
-
-            //     try {
-            //         await router.delete(`/ppmp/${ppmp.id}`, {
-            //             onSuccess: () => {
-            //                 alert('PPMP item deleted successfully');
-            //             },
-            //             onError: (errors) => {
-            //                 console.error('Error deleting PPMP item:', errors);
-            //                 alert(
-            //                     'Error deleting PPMP item: ' +
-            //                         JSON.stringify(errors),
-            //                 );
-            //             },
-            //             onFinish: () => {
-            //                 setIsDeleting(false);
-            //             },
-            //         });
-            //     } catch (error) {
-            //         console.error('Delete error:', error);
-            //         setIsDeleting(false);
-            //     }
-            // };
-
-            // // Pre-fill quantity when month changes
-            // const handleMonthChange = (month: string) => {
-            //     setSelectedMonth(month);
-            //     const currentQty = ppmp[month + '_qty'] || 0;
-            //     setQuantity(currentQty.toString());
-            // };
-
             return (
-                <div className="flex justify-between">
-                    <Button
-                        size="icon-xs"
-                        onClick={() =>
-                            (table.options.meta as { setOpen: (item: Ppmp) => void; onDelete: (item: Ppmp) => void })?.setOpen(ppmp)
-                        }
-                    >
-                        <Pencil />
-                    </Button>
+                <div className="flex justify-center">
                     <Button
                         size="icon-xs"
                         variant="destructive"
                         onClick={() =>
-                            (table.options.meta as { setOpen: (item: Ppmp) => void; onDelete: (item: Ppmp) => void })?.onDelete(ppmp)
+                            (table.options.meta as { onDelete: (item: Ppmp) => void })?.onDelete(ppmp)
                         }
                     >
                         <Trash />

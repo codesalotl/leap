@@ -10,19 +10,21 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import PpmpFormDialog from "@/pages/aip/ppmp-form-dialog";
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
     ppmpItems: Ppmp[];
+    chartOfAccounts: unknown[];
 }
 
-export default function PpmpPage({ fiscalYear, ppmpItems }: PpmpPageProps) {
-    // console.log(fiscalYear);
-    console.log(ppmpItems);
+export default function PpmpPage({ fiscalYear, ppmpItems, chartOfAccounts }: PpmpPageProps) {
+    // console.log(ppmpItems);
+    console.log(chartOfAccounts);
 
     const [open, setOpen] = useState(false);
-    const [selectedPpmp, setSelectedPpmp] = useState<Ppmp | null>(null);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
@@ -36,50 +38,30 @@ export default function PpmpPage({ fiscalYear, ppmpItems }: PpmpPageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full flex-1 px-4 py-4">
-                <DataTable ppmpItems={ppmpItems} setOpen={(ppmp) => {
-                    setSelectedPpmp(ppmp);
-                    setOpen(true);
-                }} onDelete={(ppmp) => {
+                <div className="flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold">PPMP Management</h1>
+                    <Button onClick={() => setOpen(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Item
+                    </Button>
+                </div>
+                
+                <DataTable ppmpItems={ppmpItems} onDelete={(ppmp) => {
                     if (confirm(`Are you sure you want to delete "${ppmp.ppmp_price_list?.description}"? This action cannot be undone.`)) {
                         alert('Delete functionality coming soon!');
                     }
                 }} />
             </div>
 
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Edit PPMP Item</DialogTitle>
-                        <DialogDescription>
-                            {selectedPpmp?.ppmp_price_list?.description}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="text-sm text-muted-foreground">
-                            Item: {selectedPpmp?.ppmp_price_list?.item_number}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            Unit: {selectedPpmp?.ppmp_price_list?.unit_of_measurement}
-                        </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setOpen(false);
-                                setSelectedPpmp(null);
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button onClick={() => {
-                            alert('Edit functionality coming soon!');
-                        }}>
-                            Update
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            {/* Add Item Dialog */}
+            <PpmpFormDialog 
+                open={open} 
+                onOpenChange={setOpen} 
+                ppmpPriceList={[]}
+                chartOfAccounts={[]}
+                selectedEntry={null}
+                ppmpItems={ppmpItems}
+            />
         </AppLayout>
     );
 }

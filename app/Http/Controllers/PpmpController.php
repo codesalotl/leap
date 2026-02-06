@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ppmp;
 use App\Models\FiscalYear;
 use App\Models\AipEntry;
+use App\Models\ChartOfAccount;
 use App\Http\Requests\StorePpmpRequest;
 use App\Http\Requests\UpdatePpmpRequest;
 use Illuminate\Http\Request;
@@ -22,9 +23,12 @@ class PpmpController extends Controller
             ->with(['ppmpPriceList'])
             ->get();
 
+        $chartOfAccounts = ChartOfAccount::all();
+
         return Inertia::render('aip/ppmp-page', [
             'fiscalYear' => $fiscalYear,
             'ppmpItems' => $ppmpItems,
+            'chartOfAccounts' => $chartOfAccounts,
         ]);
     }
 
@@ -67,21 +71,24 @@ class PpmpController extends Controller
     {
         $validated = $request->validate([
             'month' =>
-                'required|in:jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec',
+                'required|in:jan_qty,feb_qty,mar_qty,apr_qty,may_qty,jun_qty,jul_qty,aug_qty,sep_qty,oct_qty,nov_qty,dec_qty',
             'quantity' => 'required|numeric|min:0',
         ]);
 
-        $month = $validated['month'];
+        $monthColumn = $validated['month'];
         $quantity = $validated['quantity'];
 
-        // Update quantity
-        $ppmp->{$month . '_qty'} = $quantity;
+        // Get unit price from the price list relationship
+        $unitPrice = $ppmp->ppmpPriceList?->price ?? 0;
 
         // Calculate amount (quantity × unit_price)
-        $unitPrice = $ppmp->unit_price;
-        $ppmp->{$month . '_amount'} = $quantity * $unitPrice;
+        $amountColumn = str_replace('_qty', '_amount', $monthColumn);
 
-        $ppmp->save();
+        // Update both quantity and amount
+        $ppmp->update([
+            $monthColumn => $quantity,
+            $amountColumn => $quantity * $unitPrice,
+        ]);
 
         return back()->with('success', 'PPMP item updated successfully');
     }

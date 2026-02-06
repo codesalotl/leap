@@ -20,14 +20,12 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface PpmpTableProps {
     ppmpItems: Ppmp[];
-    setOpen: (item: Ppmp) => void;
     onDelete: (item: Ppmp) => void;
 }
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    setOpen: (item: TData) => void;
     onDelete: (item: TData) => void;
 }
 
@@ -76,10 +74,10 @@ const getCommonPinningStyles = (
     };
 };
 
-export default function PpmpTable({ ppmpItems, setOpen, onDelete }: PpmpTableProps) {
+export default function PpmpTable({ ppmpItems, onDelete }: PpmpTableProps) {
     return (
         <div>
-            <DataTable<Ppmp, unknown> columns={columns} data={ppmpItems} setOpen={setOpen} onDelete={onDelete} />
+            <DataTable<Ppmp, unknown> columns={columns} data={ppmpItems} onDelete={onDelete} />
         </div>
     );
 }
@@ -87,7 +85,6 @@ export default function PpmpTable({ ppmpItems, setOpen, onDelete }: PpmpTablePro
 export function DataTable<TData, TValue>({
     columns,
     data,
-    setOpen,
     onDelete,
 }: DataTableProps<TData, TValue>) {
     const table = useReactTable({
@@ -102,7 +99,6 @@ export function DataTable<TData, TValue>({
         enableColumnPinning: true,
         columnResizeMode: 'onChange',
         meta: {
-            setOpen: (item: TData) => setOpen(item),
             onDelete: (item: TData) => onDelete(item),
         },
     });
@@ -177,7 +173,7 @@ export function DataTable<TData, TValue>({
                                 colSpan={table.getVisibleLeafColumns().length}
                                 className="h-24 text-center"
                             >
-                                {emptyMessage}
+                                No PPMP items found.
                             </TableCell>
                         </TableRow>
                     )}

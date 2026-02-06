@@ -32,7 +32,7 @@ import DataTable from '@/pages/aip/aip-summary-table/data-table';
 import PpaSelectorDialog from '@/pages/aip/ppa-selector-dialog';
 import AipEntryFormDialog from '@/pages/aip/aip-entry-form-dialog';
 import MooeDialog from '@/pages/aip/mooe-dialog';
-import PpmpDialog from '@/pages/aip/ppmp-dialog';
+import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
 
 // Data & Logic
 import { type BreadcrumbItem } from '@/types';
@@ -380,7 +380,7 @@ export default function AipSummaryTable({
                 fiscalYear={fiscalYear}
             />
 
-            <PpmpDialog
+            <PpmpFormDialog
                 open={isMooeOpen}
                 onOpenChange={setIsMooeOpen}
                 ppmpPriceList={ppmpPriceList}
