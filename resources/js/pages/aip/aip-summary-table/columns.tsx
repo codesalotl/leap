@@ -214,7 +214,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
                 <div className="flex justify-between">
                     <Button
                         title="Add PPA"
-                        size="icon-xs"
+                        size="icon"
                         onClick={() => onAddEntry(entry)}
                         disabled={isLeaf}
                     >
@@ -223,7 +223,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
 
                     <Button
                         title="Edit"
-                        size="icon-xs"
+                        size="icon"
                         onClick={() => onEdit(entry)}
                     >
                         <Pencil />
@@ -232,7 +232,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
                     <Button
                         title="Delete"
                         variant="destructive"
-                        size="icon-xs"
+                        size="icon"
                         onClick={() => onDelete(entry)}
                     >
                         <Trash />
