@@ -20,46 +20,56 @@ class PpmpSeeder extends Seeder
         $priceListItems = PpmpPriceList::limit(3)->get();
 
         if (!$aipEntry || $priceListItems->isEmpty()) {
-            $this->command->warn('Missing required data for PPMP seeder. Please run AIP Entry and Price List seeders first.');
+            $this->command->warn(
+                'Missing required data for PPMP seeder. Please run AIP Entry and Price List seeders first.',
+            );
             return;
         }
 
         // Create 3 sample PPMP items
         foreach ($priceListItems as $index => $priceListItem) {
-            $quantity = ($index + 1) * 10; // 10, 20, 30
+            // We still need a target number to distribute, even if we don't save it
+            $targetTotalQuantity = ($index + 1) * 10;
             $unitPrice = $priceListItem->price;
-            $totalAmount = $quantity * $unitPrice;
 
             // Distribute quantity across months (evenly)
-            $monthlyQty = floor($quantity / 12);
-            $remainingQty = $quantity % 12;
-            $monthlyAmount = $monthlyQty * $unitPrice;
+            $monthlyQty = floor($targetTotalQuantity / 12);
+            $remainingQty = $targetTotalQuantity % 12;
 
             $ppmpData = [
                 'aip_entry_id' => $aipEntry->id,
                 'ppmp_price_list_id' => $priceListItem->id,
-                'quantity' => $quantity,
+                // 'quantity' removed from here
             ];
 
             // Add monthly distribution
-            $months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-            $totalMonthlyQty = 0;
+            $months = [
+                'jan',
+                'feb',
+                'mar',
+                'apr',
+                'may',
+                'jun',
+                'jul',
+                'aug',
+                'sep',
+                'oct',
+                'nov',
+                'dec',
+            ];
+
             foreach ($months as $monthIndex => $month) {
-                $qtyForMonth = $monthlyQty + ($monthIndex < $remainingQty ? 1 : 0);
+                $qtyForMonth =
+                    $monthlyQty + ($monthIndex < $remainingQty ? 1 : 0);
                 $ppmpData["{$month}_qty"] = $qtyForMonth;
                 $ppmpData["{$month}_amount"] = $qtyForMonth * $unitPrice;
-                $totalMonthlyQty += $qtyForMonth;
-            }
-            
-            // Validate that monthly quantities sum to annual quantity
-            if ($totalMonthlyQty != $quantity) {
-                $this->command->error("Monthly quantity mismatch: Expected {$quantity}, Got {$totalMonthlyQty}");
-                continue;
             }
 
             Ppmp::create($ppmpData);
         }
 
-        $this->command->info('PPMP items seeded successfully!');
+        $this->command->info(
+            'PPMP items seeded successfully without annual quantity column!',
+        );
     }
 }

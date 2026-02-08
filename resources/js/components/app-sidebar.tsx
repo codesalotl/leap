@@ -10,6 +10,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index } from '@/routes/aip';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
@@ -32,7 +33,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Annual Investment Programs',
-        href: '/aip',
+        href: index(),
         icon: FolderTree,
     },
     {

@@ -1,7 +1,7 @@
 // resources\js\pages\aip\aip-summary-form.tsx
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Library, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
+import { Library, FileDown, FileSpreadsheet, FileText, Plus } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -32,23 +32,17 @@ import DataTable from '@/pages/aip/aip-summary-table/data-table';
 import PpaSelectorDialog from '@/pages/aip/ppa-selector-dialog';
 import AipEntryFormDialog from '@/pages/aip/aip-entry-form-dialog';
 import MooeDialog from '@/pages/aip/mooe-dialog';
-import PpmpDialog from '@/pages/aip/ppmp-dialog';
+import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
 
 // Data & Logic
 import { type BreadcrumbItem } from '@/types';
-import { getColumns, AipEntry, formatNumber } from '@/pages/aip/aip-summary-table/columns';
+import {
+    getColumns,
+    AipEntry,
+    formatNumber,
+} from '@/pages/aip/aip-summary-table/columns';
 
-export interface ChartOfAccount {
-    id: number;
-    account_code: string;
-    account_title: string;
-    expense_class: 'PS' | 'MOOE' | 'FE' | 'CO';
-    parent_code: string | null;
-    is_postable: boolean;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-}
+import { ChartOfAccount } from "@/pages/types/types"
 
 type FiscalYear = {
     id: number;
@@ -82,7 +76,7 @@ interface AipSummaryTableProp {
     aipEntries: AipEntry[];
     masterPpas: Ppa[];
     offices: Office[];
-    chartOfAccounts: ChartOfAccount;
+    chartOfAccounts: ChartOfAccount[];
     ppmpPriceList: PpmpPriceList[];
     ppmpItems: any[];
 }
@@ -121,6 +115,9 @@ export default function AipSummaryTable({
     ppmpPriceList,
     ppmpItems,
 }: AipSummaryTableProp) {
+    console.log(fiscalYear);
+    console.log(chartOfAccounts);
+
     // --- State ---
     const [selectorState, setSelectorState] = useState({
         isOpen: false,
@@ -148,19 +145,26 @@ export default function AipSummaryTable({
             isOpen: true,
             data: masterPpas, // Show everything
             title: 'Import from Library',
-            description: 'Select Programs, Projects, and Activities to import. Items already in the AIP are disabled.',
+            description:
+                'Select Programs, Projects, and Activities to import. Items already in the AIP are disabled.',
         });
     };
 
     const handleAddEntry = (entry: AipEntry) => {
         // 1. Find the Master Node to get its children (the "Next Level")
         const masterNode = findPpaInTree(masterPpas, entry.ppa_id);
-        
+
         // 2. Safety check (though dropdown should be disabled)
-        if (!masterNode || !masterNode.children || masterNode.children.length === 0) {
+        if (
+            !masterNode ||
+            !masterNode.children ||
+            masterNode.children.length === 0
+        ) {
             // Show toast: "Cannot add entries to an Activity"
-            console.warn("Cannot add entries to an Activity or item without children");
-            return; 
+            console.warn(
+                'Cannot add entries to an Activity or item without children',
+            );
+            return;
         }
 
         setSelectorState({
@@ -373,9 +377,10 @@ export default function AipSummaryTable({
                 data={selectedEntry}
                 mode={mode}
                 offices={offices}
+                fiscalYear={fiscalYear}
             />
 
-            <PpmpDialog
+            <PpmpFormDialog
                 open={isMooeOpen}
                 onOpenChange={setIsMooeOpen}
                 ppmpPriceList={ppmpPriceList}
@@ -428,7 +433,9 @@ export default function AipSummaryTable({
 
             <PpaSelectorDialog
                 isOpen={selectorState.isOpen}
-                onClose={() => setSelectorState(prev => ({ ...prev, isOpen: false }))}
+                onClose={() =>
+                    setSelectorState((prev) => ({ ...prev, isOpen: false }))
+                }
                 data={selectorState.data}
                 title={selectorState.title}
                 description={selectorState.description}

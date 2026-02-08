@@ -75,13 +75,15 @@ Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
 );
 
 // aip
-Route::get('aip', [FiscalYearController::class, 'index']);
+Route::get('aip', [FiscalYearController::class, 'index'])->name('aip.index');
 Route::post('aip', [FiscalYearController::class, 'store']);
 Route::patch('/aip/{aip}', [FiscalYearController::class, 'update']);
 
 // aip summary
 Route::prefix('aip/{fiscalYear}')->group(function () {
-    Route::get('summary', [AipEntryController::class, 'index']);
+    Route::get('summary', [AipEntryController::class, 'index'])->name(
+        'aip.summary',
+    );
 });
 Route::post('aip/{aip_id}/import', [AipEntryController::class, 'store']);
 Route::put('/aip-entries/{aipEntry}', [AipEntryController::class, 'update']);
@@ -89,6 +91,12 @@ Route::delete('/aip-entries/{aipEntry}', [
     AipEntryController::class,
     'destroy',
 ]);
+
+// aip summary to ppmp
+Route::get('/aip/{fiscalYear}/summary/{aipEntry}/ppmp', [
+    PpmpController::class,
+    'index',
+])->name('aip.summary.ppmp.index');
 
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
 Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
@@ -112,23 +120,52 @@ Route::delete('/aip-costing/{id}', [
     'destroy',
 ])->name('aip-costing.destroy');
 
-Route::get('/ppmp-price-list', [PpmpPriceListController::class, 'index'])->name('ppmp-price-list.index');
-Route::post('/ppmp-price-list', [PpmpPriceListController::class, 'store'])->name('ppmp-price-list.store');
-Route::put('/ppmp-price-list/{ppmpPriceList}', [PpmpPriceListController::class, 'update'])->name('ppmp-price-list.update');
-Route::delete('/ppmp-price-list/{ppmpPriceList}', [PpmpPriceListController::class, 'destroy'])->name('ppmp-price-list.destroy');
+Route::get('/ppmp-price-list', [PpmpPriceListController::class, 'index'])->name(
+    'ppmp-price-list.index',
+);
+Route::post('/ppmp-price-list', [
+    PpmpPriceListController::class,
+    'store',
+])->name('ppmp-price-list.store');
+Route::put('/ppmp-price-list/{ppmpPriceList}', [
+    PpmpPriceListController::class,
+    'update',
+])->name('ppmp-price-list.update');
+Route::delete('/ppmp-price-list/{ppmpPriceList}', [
+    PpmpPriceListController::class,
+    'destroy',
+])->name('ppmp-price-list.destroy');
 
 // PPMP Headers Routes
-Route::get('/ppmp-headers', [PpmpHeaderController::class, 'index'])->name('ppmp-headers.index');
-Route::post('/ppmp-headers', [PpmpHeaderController::class, 'store'])->name('ppmp-headers.store');
+Route::get('/ppmp-headers', [PpmpHeaderController::class, 'index'])->name(
+    'ppmp-headers.index',
+);
+Route::post('/ppmp-headers', [PpmpHeaderController::class, 'store'])->name(
+    'ppmp-headers.store',
+);
 
 // PPMP Items Routes
-Route::get('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 'index'])->name('ppmp-items.index');
-Route::get('/ppmp-headers/{ppmpHeaderId}/items/create', [PpmpItemController::class, 'create'])->name('ppmp-items.create');
-Route::post('/ppmp-headers/{ppmpHeaderId}/items', [PpmpItemController::class, 'store'])->name('ppmp-items.store');
+Route::get('/ppmp-headers/{ppmpHeaderId}/items', [
+    PpmpItemController::class,
+    'index',
+])->name('ppmp-items.index');
+Route::get('/ppmp-headers/{ppmpHeaderId}/items/create', [
+    PpmpItemController::class,
+    'create',
+])->name('ppmp-items.create');
+Route::post('/ppmp-headers/{ppmpHeaderId}/items', [
+    PpmpItemController::class,
+    'store',
+])->name('ppmp-items.store');
 
 // PPMP Routes
 Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
-Route::put('/ppmp/{ppmp}/update-monthly-quantity', [PpmpController::class, 'updateMonthlyQuantity'])->name('ppmp.update-monthly-quantity');
-Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name('ppmp.destroy');
+Route::put('/ppmp/{ppmp}/update-monthly-quantity', [
+    PpmpController::class,
+    'updateMonthlyQuantity',
+])->name('ppmp.update-monthly-quantity');
+Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
+    'ppmp.destroy',
+);
 
 require __DIR__ . '/settings.php';

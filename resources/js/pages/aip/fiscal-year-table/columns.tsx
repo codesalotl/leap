@@ -12,6 +12,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, CheckCircle2, XCircle } from 'lucide-react';
+import { summary } from '@/routes/aip';
 
 // Define the shape of your data
 export interface FiscalYear {
@@ -119,7 +120,7 @@ export const columns: ColumnDef<FiscalYear>[] = [
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
                             onClick={() =>
-                                router.visit(`/aip/${aip.id}/summary`)
+                                router.visit(summary(aip.id).url)
                             }
                         >
                             Open AIP Summary

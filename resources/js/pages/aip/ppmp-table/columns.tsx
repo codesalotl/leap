@@ -1,95 +1,91 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Ppmp } from '@/pages/types/types';
+import { Decimal } from 'decimal.js';
+import { Trash } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+interface EditableCellProps {
+    getValue: () => any;
+    row: any;
+    column: any;
+}
 
-// This type is used to define the shape of our data.
-export type Ppmp = {
-    id: string;
-    aip_entry_id: number;
-    expense_account_id: number | null;
-    ppmp_price_list_id: number | null;
-    item_description: string;
-    quantity: number;
-    unit: string;
-    unit_price: number;
-    total_amount: number;
-    specifications: string | null;
-    jan_qty: number;
-    jan_amount: number;
-    feb_qty: number;
-    feb_amount: number;
-    mar_qty: number;
-    mar_amount: number;
-    apr_qty: number;
-    apr_amount: number;
-    may_qty: number;
-    may_amount: number;
-    jun_qty: number;
-    jun_amount: number;
-    jul_qty: number;
-    jul_amount: number;
-    aug_qty: number;
-    aug_amount: number;
-    sep_qty: number;
-    sep_amount: number;
-    oct_qty: number;
-    oct_amount: number;
-    nov_qty: number;
-    nov_amount: number;
-    dec_qty: number;
-    dec_amount: number;
-    created_at: string;
-    updated_at: string;
+const EditableCell: React.FC<EditableCellProps> = ({ getValue, row, column }) => {
+    const initialValue = getValue();
+    const [value, setValue] = useState(initialValue);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    // Update local state if the server data changes
+    useEffect(() => {
+        setValue(initialValue);
+    }, [initialValue]);
+
+    const handleBlur = () => {
+        if (value === initialValue || isUpdating) return;
+
+        setIsUpdating(true);
+
+        router.put(`/ppmp/${row.original.id}/update-monthly-quantity`, 
+            {
+                month: column.id,
+                quantity: value,
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: ['ppmpItems'],
+                onFinish: () => setIsUpdating(false),
+                onError: () => {
+                    setValue(initialValue); // Reset on error
+                    setIsUpdating(false);
+                },
+            }
+        );
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.currentTarget.blur();
+        }
+    };
+
+    return (
+        <Input
+            type="number"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            disabled={isUpdating}
+            // className="w-20 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent disabled:opacity-50"
+            min="0"
+            step="0.01"
+        />
+    );
 };
 
 export const columns: ColumnDef<Ppmp>[] = [
     {
-        accessorKey: 'expense_account_id',
+        accessorKey: 'ppmp_price_list.chart_of_account_id',
         header: 'Expense Account',
-        cell: ({ row }) => {
-            const expenseAccountId = row.getValue('expense_account_id');
-            return expenseAccountId ? `Account ${expenseAccountId}` : 'N/A';
-        },
     },
     {
-        accessorKey: 'ppmp_price_list_id',
+        accessorKey: 'ppmp_price_list.item_number',
         header: 'Item No.',
-        cell: ({ row }) => {
-            const priceListId = row.getValue('ppmp_price_list_id');
-            return priceListId ? `PL-${priceListId}` : 'Custom';
-        },
     },
     {
-        accessorKey: 'item_description',
+        accessorKey: 'ppmp_price_list.description',
         header: 'Description',
     },
     {
-        accessorKey: 'unit',
+        accessorKey: 'ppmp_price_list.unit_of_measurement',
         header: 'Unit of Measurement',
     },
     {
-        accessorKey: 'unit_price',
+        accessorKey: 'ppmp_price_list.price',
         header: 'PRICELIST',
     },
     {
@@ -97,20 +93,49 @@ export const columns: ColumnDef<Ppmp>[] = [
         header: 'CY 2026-QTY',
         cell: ({ row }) => {
             const ppmp = row.original;
-            const totalQty = 
-                ppmp.jan_qty + ppmp.feb_qty + ppmp.mar_qty + ppmp.apr_qty + 
-                ppmp.may_qty + ppmp.jun_qty + ppmp.jul_qty + ppmp.aug_qty + 
-                ppmp.sep_qty + ppmp.oct_qty + ppmp.nov_qty + ppmp.dec_qty;
-            return totalQty.toLocaleString();
+
+            const totalQty = new Decimal(ppmp.jan_qty)
+                .plus(ppmp.feb_qty)
+                .plus(ppmp.mar_qty)
+                .plus(ppmp.apr_qty)
+                .plus(ppmp.may_qty)
+                .plus(ppmp.jun_qty)
+                .plus(ppmp.jul_qty)
+                .plus(ppmp.aug_qty)
+                .plus(ppmp.sep_qty)
+                .plus(ppmp.oct_qty)
+                .plus(ppmp.nov_qty)
+                .plus(ppmp.dec_qty);
+
+            return totalQty.toFixed(2);
         },
     },
     {
         accessorKey: 'total_amount',
         header: 'TOTAL',
+        cell: ({ row }) => {
+            const ppmp = row.original;
+
+            const totalAmount = new Decimal(ppmp.jan_amount)
+                .plus(ppmp.feb_amount)
+                .plus(ppmp.mar_amount)
+                .plus(ppmp.apr_amount)
+                .plus(ppmp.may_amount)
+                .plus(ppmp.jun_amount)
+                .plus(ppmp.jul_amount)
+                .plus(ppmp.aug_amount)
+                .plus(ppmp.sep_amount)
+                .plus(ppmp.oct_amount)
+                .plus(ppmp.nov_amount)
+                .plus(ppmp.dec_amount);
+
+            return totalAmount.toFixed(2);
+        },
     },
     {
         accessorKey: 'jan_qty',
         header: 'JAN-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'jan_amount',
@@ -119,6 +144,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'feb_qty',
         header: 'FEB-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'feb_amount',
@@ -127,6 +153,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'mar_qty',
         header: 'MAR-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'mar_amount',
@@ -135,6 +162,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'apr_qty',
         header: 'APR-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'apr_amount',
@@ -143,6 +171,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'may_qty',
         header: 'MAY-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'may_amount',
@@ -151,6 +180,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'jun_qty',
         header: 'JUN-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'jun_amount',
@@ -159,6 +189,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'jul_qty',
         header: 'JUL-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'jul_amount',
@@ -167,6 +198,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'aug_qty',
         header: 'AUG-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'aug_amount',
@@ -175,6 +207,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'sep_qty',
         header: 'SEP-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'sep_amount',
@@ -183,6 +216,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'oct_qty',
         header: 'OCT-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'oct_amount',
@@ -191,6 +225,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'nov_qty',
         header: 'NOV-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'nov_amount',
@@ -199,6 +234,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'dec_qty',
         header: 'DEC-QTY',
+        cell: EditableCell,
     },
     {
         accessorKey: 'dec_amount',
@@ -206,191 +242,22 @@ export const columns: ColumnDef<Ppmp>[] = [
     },
     {
         id: 'actions',
-        // header: 'Actions',
-        cell: ({ row }) => {
+        size: 72,
+        cell: ({ row, table }) => {
             const ppmp = row.original;
-            const [editOpen, setEditOpen] = useState(false);
-            const [selectedMonth, setSelectedMonth] = useState('');
-            const [quantity, setQuantity] = useState('');
-            const [isUpdating, setIsUpdating] = useState(false);
-            const [isDeleting, setIsDeleting] = useState(false);
-
-            const months = [
-                { value: 'jan', label: 'January' },
-                { value: 'feb', label: 'February' },
-                { value: 'mar', label: 'March' },
-                { value: 'apr', label: 'April' },
-                { value: 'may', label: 'May' },
-                { value: 'jun', label: 'June' },
-                { value: 'jul', label: 'July' },
-                { value: 'aug', label: 'August' },
-                { value: 'sep', label: 'September' },
-                { value: 'oct', label: 'October' },
-                { value: 'nov', label: 'November' },
-                { value: 'dec', label: 'December' },
-            ];
-
-            const handleUpdate = async () => {
-                if (!selectedMonth) {
-                    alert('Please select a month');
-                    return;
-                }
-                
-                const qty = parseFloat(quantity);
-                if (isNaN(qty) || qty < 0) {
-                    alert('Please enter a valid quantity');
-                    return;
-                }
-
-                setIsUpdating(true);
-                
-                try {
-                    await router.put(
-                        `/ppmp/${ppmp.id}/update-monthly-quantity`,
-                        {
-                            month: selectedMonth,
-                            quantity: qty,
-                        },
-                        {
-                            onSuccess: () => {
-                                setEditOpen(false);
-                                setSelectedMonth('');
-                                setQuantity('');
-                                alert('PPMP item updated successfully');
-                            },
-                            onError: (errors) => {
-                                console.error('Error updating PPMP item:', errors);
-                                alert('Error updating PPMP item: ' + JSON.stringify(errors));
-                            },
-                            onFinish: () => {
-                                setIsUpdating(false);
-                            },
-                        }
-                    );
-                } catch (error) {
-                    console.error('Update error:', error);
-                    setIsUpdating(false);
-                }
-            };
-
-            const handleDelete = async () => {
-                if (!confirm('Are you sure you want to delete this PPMP item? This action cannot be undone.')) {
-                    return;
-                }
-
-                setIsDeleting(true);
-                
-                try {
-                    await router.delete(`/ppmp/${ppmp.id}`, {
-                        onSuccess: () => {
-                            alert('PPMP item deleted successfully');
-                        },
-                        onError: (errors) => {
-                            console.error('Error deleting PPMP item:', errors);
-                            alert('Error deleting PPMP item: ' + JSON.stringify(errors));
-                        },
-                        onFinish: () => {
-                            setIsDeleting(false);
-                        },
-                    });
-                } catch (error) {
-                    console.error('Delete error:', error);
-                    setIsDeleting(false);
-                }
-            };
-
-            // Pre-fill quantity when month changes
-            const handleMonthChange = (month: string) => {
-                setSelectedMonth(month);
-                const currentQty = ppmp[month + '_qty'] || 0;
-                setQuantity(currentQty.toString());
-            };
 
             return (
-                <>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                                Edit item
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={handleDelete}
-                                disabled={isDeleting}
-                            >
-                                {isDeleting ? 'Deleting...' : 'Delete item'}
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Edit Dialog */}
-                    <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                                <DialogTitle>Edit PPMP Item</DialogTitle>
-                                <DialogDescription>
-                                    {ppmp.item_description}
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="month">Month</Label>
-                                    <select
-                                        id="month"
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={selectedMonth}
-                                        onChange={(e) => handleMonthChange(e.target.value)}
-                                    >
-                                        <option value="">Select month</option>
-                                        {months.map((month) => (
-                                            <option key={month.value} value={month.value}>
-                                                {month.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="quantity">Quantity</Label>
-                                    <Input
-                                        id="quantity"
-                                        type="number"
-                                        placeholder="Enter quantity"
-                                        value={quantity}
-                                        onChange={(e) => setQuantity(e.target.value)}
-                                        disabled={!selectedMonth}
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                        setEditOpen(false);
-                                        setSelectedMonth('');
-                                        setQuantity('');
-                                    }}
-                                    disabled={isUpdating}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    onClick={handleUpdate}
-                                    disabled={isUpdating}
-                                >
-                                    {isUpdating ? 'Updating...' : 'Update'}
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </>
+                <div className="flex justify-center">
+                    <Button
+                        size="icon-xs"
+                        variant="destructive"
+                        onClick={() =>
+                            (table.options.meta as { onDelete: (item: Ppmp) => void })?.onDelete(ppmp)
+                        }
+                    >
+                        <Trash />
+                    </Button>
+                </div>
             );
         },
     },

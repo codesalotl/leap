@@ -26,6 +26,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
@@ -36,7 +37,21 @@ interface DataTableProps<TData, TValue> {
     emptyMessage?: string;
 }
 
-const getCommonPinningStyles = (column: Column<any>): CSSProperties => {
+const PINNED_COLUMN_COLORS = {
+    header: {
+        background: "var(--primary)"
+    },
+    cell: {
+        background: "var(--background)",
+        evenBackground: "var(--muted)",
+    }
+}
+
+const getCommonPinningStyles = (
+    column: Column<any>,
+    isHeaderCell = false,
+    isEvenRow = false,
+): CSSProperties => {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
         isPinned === 'left' && column.getIsLastColumn('left');
@@ -53,14 +68,17 @@ const getCommonPinningStyles = (column: Column<any>): CSSProperties => {
         right:
             isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
         position: isPinned ? 'sticky' : 'relative',
-        // --- CRITICAL FIX ---
-        // Ensure we use the calculated size from TanStack
         width: column.getSize(),
         minWidth: column.columnDef.minSize,
         maxWidth: column.columnDef.maxSize,
-        // --------------------
-        zIndex: isPinned ? 1 : 0,
-        backgroundColor: isPinned ? 'var(--background)' : undefined,
+        zIndex: isPinned ? 0 : 0,
+        backgroundColor: isPinned
+            ? isHeaderCell
+                ? PINNED_COLUMN_COLORS.header.background
+                : isEvenRow
+                    ? PINNED_COLUMN_COLORS.cell.evenBackground
+                    : PINNED_COLUMN_COLORS.cell.background
+            : undefined,
     };
 };
 
@@ -129,10 +147,7 @@ export default function DataTable<TData, TValue>({
                 <div className="ml-auto flex gap-2">{children}</div>
             </div>
 
-            <div className="overflow-x-auto rounded-md border">
-                {/* ADD 'table-fixed' and explicitly set the width 
-                   based on the total table width to ensure sizing is respected.
-                */}
+            <ScrollArea className="h-[calc(100vh-10rem)] rounded-md border">
                 <UITable
                     style={{
                         width: table.getTotalSize(),
@@ -147,9 +162,10 @@ export default function DataTable<TData, TValue>({
                                         <TableHead
                                             key={header.id}
                                             colSpan={header.colSpan}
+                                            className="bg-primary text-primary-foreground font-bold"
                                             style={{
                                                 ...getCommonPinningStyles(
-                                                    header.column,
+                                                    header.column, true
                                                 ),
                                                 // Handle width for grouped headers
                                                 width: header.getSize(),
@@ -168,9 +184,9 @@ export default function DataTable<TData, TValue>({
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="[&_tr:nth-child(even)]:bg-muted">
                         {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
+                            table.getRowModel().rows.map((row, index) => (
                                 <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell
@@ -179,6 +195,8 @@ export default function DataTable<TData, TValue>({
                                             style={{
                                                 ...getCommonPinningStyles(
                                                     cell.column,
+                                                    false,
+                                                    index % 2 === 1
                                                 ),
                                             }}
                                         >
@@ -204,7 +222,10 @@ export default function DataTable<TData, TValue>({
                         )}
                     </TableBody>
                 </UITable>
-            </div>
+                {/* </div> */}
+
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
         </div>
     );
 }

@@ -94,6 +94,7 @@ interface AipFormProps {
     data: AipEntry;
     mode: string | null; // Changed to match parent usage
     offices: Office[];
+    fiscalYear: { id: number; year: number; status: string | null };
 }
 
 const amountSchema = z
@@ -151,6 +152,7 @@ export default function AipEntryFormDialog({
     data,
     mode,
     offices,
+    fiscalYear,
 }: AipFormProps) {
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
     const getInitialValues = (d: any): z.infer<typeof formSchema> => ({
@@ -236,9 +238,9 @@ export default function AipEntryFormDialog({
             <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle>Edit AIP Entry</DialogTitle>
-                    <DialogDescription>
+                    {/* <DialogDescription>
                         Modify the details for this program/project allocation.
-                    </DialogDescription>
+                    </DialogDescription> */}
                 </DialogHeader>
 
                 <Form {...form}>
@@ -764,7 +766,7 @@ export default function AipEntryFormDialog({
                                                         variant="outline"
                                                         size="icon"
                                                         className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                        onClick={onSwitch}
+                                                        onClick={() => router.visit(`/aip/${fiscalYear.id}/summary/${data.id}/ppmp`)}
                                                         title="Manage Itemized MOOE"
                                                     >
                                                         <ListPlus className="h-4 w-4" />

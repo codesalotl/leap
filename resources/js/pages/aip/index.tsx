@@ -3,11 +3,12 @@ import { type BreadcrumbItem } from '@/types';
 import FiscalYearDialog from '@/pages/aip/fiscal-year-dialog';
 import { columns, FiscalYear } from '@/pages/aip/fiscal-year-table/columns';
 import { FiscalYearDataTable } from '@/pages/aip/fiscal-year-table/data-table';
+import { index } from '@/routes/aip';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Annual Investment Programs',
-        href: '/aip',
+        href: index().url,
     },
 ];
 
@@ -24,7 +25,6 @@ export default function Aip({ fiscalYears }: AipProp) {
                     data={fiscalYears}
                     searchKey="year"
                 >
-                    {/* We pass the Dialog as a child to appear next to columns dropdown */}
                     <FiscalYearDialog />
                 </FiscalYearDataTable>
             </div>
