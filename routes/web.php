@@ -97,6 +97,15 @@ Route::get('/aip/{fiscalYear}/summary/{aipEntry}/ppmp', [
     PpmpController::class,
     'index',
 ])->name('aip.summary.ppmp.index');
+Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
+Route::post('/ppmp/custom', [PpmpController::class, 'storeCustomItem'])->name('ppmp.store.custom');
+Route::put('/ppmp/{ppmp}/update-monthly-quantity', [
+    PpmpController::class,
+    'updateMonthlyQuantity',
+])->name('ppmp.update-monthly-quantity');
+Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
+    'ppmp.destroy',
+);
 
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
 Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
@@ -157,15 +166,5 @@ Route::post('/ppmp-headers/{ppmpHeaderId}/items', [
     PpmpItemController::class,
     'store',
 ])->name('ppmp-items.store');
-
-// PPMP Routes
-Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
-Route::put('/ppmp/{ppmp}/update-monthly-quantity', [
-    PpmpController::class,
-    'updateMonthlyQuantity',
-])->name('ppmp.update-monthly-quantity');
-Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
-    'ppmp.destroy',
-);
 
 require __DIR__ . '/settings.php';

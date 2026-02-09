@@ -97,7 +97,7 @@ export default function DataTable<TData, TValue>({
         state: {
             sorting,
             columnFilters,
-            // expanded,
+            expanded: true,
         },
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,

@@ -1,3 +1,10 @@
+export interface AipEntry {
+    id: number;
+    // Add other AipEntry properties as needed
+    created_at: string;
+    updated_at: string;
+}
+
 export interface ChartOfAccount {
     id: number;
     account_number: string;
@@ -13,6 +20,7 @@ export interface ChartOfAccount {
     description: string | null;
     created_at: string;
     updated_at: string;
+    ppmp_price_lists?: PriceList[];
 }
 
 export interface FiscalYear {

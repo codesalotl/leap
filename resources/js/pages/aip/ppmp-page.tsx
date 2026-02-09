@@ -1,21 +1,25 @@
+import React from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import DataTable from '@/pages/aip/ppmp-table/data-table';
-import { FiscalYear, Ppmp } from '@/pages/types/types';
+import { FiscalYear, Ppmp, ChartOfAccount, AipEntry } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { router } from '@inertiajs/react';
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
+    aipEntry: AipEntry;
     ppmpItems: Ppmp[];
-    chartOfAccounts: unknown[];
+    chartOfAccounts: ChartOfAccount[];
 }
 
 export default function PpmpPage({
     fiscalYear,
+    aipEntry,
     ppmpItems,
     chartOfAccounts,
 }: PpmpPageProps) {
@@ -53,7 +57,17 @@ export default function PpmpPage({
                                     `Are you sure you want to delete "${ppmp.ppmp_price_list?.description}"? This action cannot be undone.`,
                                 )
                             ) {
-                                alert('Delete functionality coming soon!');
+                                // Call the delete API
+                                router.delete(`/ppmp/${ppmp.id}`, {
+                                    onSuccess: () => {
+                                        console.log('PPMP item deleted successfully');
+                                    },
+                                    onError: (errors) => {
+                                        console.error('Error deleting PPMP item:', errors);
+                                        alert('Failed to delete PPMP item');
+                                    },
+                                    preserveState: false,
+                                });
                             }
                         }}
                     />
@@ -67,7 +81,7 @@ export default function PpmpPage({
                 onOpenChange={setOpen}
                 chartOfAccounts={chartOfAccounts}
                 ppmpPriceList={[]}
-                selectedEntry={null}
+                selectedEntry={aipEntry}
                 ppmpItems={ppmpItems}
             />
         </AppLayout>

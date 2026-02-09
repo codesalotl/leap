@@ -42,9 +42,16 @@ class PpmpPriceListController extends Controller
 
         // dd($validated);
         
-        PpmpPriceList::create($validated);
+        $newPriceList = PpmpPriceList::create($validated);
         
-        // return back()->with('success', 'Price list item created successfully!');
+        // Check if this is an Inertia request (from our custom form)
+        if ($request->header('X-Inertia')) {
+            // For Inertia requests, we need to redirect back and include the data
+            return back()->with('newPriceList', $newPriceList);
+        }
+        
+        // For regular web requests
+        return back()->with('success', 'Price list item created successfully!')->with('newPriceList', $newPriceList);
     }
 
     /**

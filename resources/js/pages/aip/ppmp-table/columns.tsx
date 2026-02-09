@@ -249,7 +249,7 @@ export const columns: ColumnDef<Ppmp>[] = [
             return (
                 <div className="flex justify-center">
                     <Button
-                        size="icon-xs"
+                        size="icon"
                         variant="destructive"
                         onClick={() =>
                             (table.options.meta as { onDelete: (item: Ppmp) => void })?.onDelete(ppmp)

@@ -22,6 +22,11 @@ class PpmpPriceList extends Model
         'price' => 'decimal:2',
     ];
 
+    public function chartOfAccount()
+    {
+        return $this->belongsTo(ChartOfAccount::class);
+    }
+
     public function itemizedCosts()
     {
         return $this->hasMany(PpaItemizedCost::class, 'ppmp_price_list_id');

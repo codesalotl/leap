@@ -1,3 +1,5 @@
+import React from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -6,26 +8,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import * as z from 'zod';
-import * as React from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
 import {
     Field,
-    // FieldDescription,
+    FieldContent,
     FieldError,
     FieldGroup,
     FieldLabel,
-    FieldContent,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-    InputGroup,
-    // InputGroupAddon,
-    // InputGroupText,
-    InputGroupTextarea,
-} from '@/components/ui/input-group';
+import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group';
 import {
     Select,
     SelectContent,
@@ -34,56 +25,37 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { ChartOfAccount } from '@/pages/types/types';
+import { router } from '@inertiajs/react';
+
+// Import toggle component
+import { Switch } from '@/components/ui/switch';
 
 interface PpmpFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     chartOfAccounts: ChartOfAccount[];
     ppmpPriceList: unknown[];
-    selectedEntry: unknown;
+    selectedEntry: { id: number } | null;
     ppmpItems: unknown[];
 }
 
-const frameworks = [
-    'Next.js',
-    'SvelteKit',
-    'Nuxt.js',
-    'Remix',
-    'Astro',
-] as const;
-
 const formSchema = z.object({
+    aip_entry_id: z.number(),
+    ppmp_price_list_id: z.number().optional(),
     expenseAccount: z
-        .array(
-            z.object({
-                id: z.number(),
-                account_number: z.string(),
-                account_title: z.string(),
-                account_type: z.enum([
-                    'ASSET',
-                    'LIABILITY',
-                    'EQUITY',
-                    'REVENUE',
-                    'EXPENSE',
-                ]),
-                expense_class: z.enum(['PS', 'MOOE', 'FE', 'CO']),
-                account_series: z.string().nullable(),
-                parent_id: z.number().nullable(),
-                level: z.number(),
-                is_postable: z.boolean(),
-                is_active: z.boolean(),
-                normal_balance: z.string(),
-                description: z.string().nullable(),
-                created_at: z.string(),
-                updated_at: z.string(),
-            }),
-        )
-        .min(1, 'At least one expense account is required.'),
+        .number()
+        .refine((val) => val !== undefined && val !== null, {
+            message: 'Expense account is required',
+        }),
     itemNo: z.string().min(1, 'Item number is required.'),
     description: z.string().min(1, 'Description is required.'),
     unitOfMeasurement: z.string().min(1, 'Unit of measurement is required.'),
     price: z.string().min(1, 'Price is required.'),
+    isCustomItem: z.boolean().default(false),
 });
 
 export default function PpmpFormDialog({
@@ -94,23 +66,129 @@ export default function PpmpFormDialog({
     selectedEntry = null,
     ppmpItems = [],
 }: PpmpFormDialogProps) {
-    // console.log(chartOfAccounts);
+    console.log(chartOfAccounts);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            expenseAccount: chartOfAccounts,
+            aip_entry_id: selectedEntry?.id || 0,
+            ppmp_price_list_id: 0,
+            expenseAccount: undefined,
             itemNo: '',
             description: '',
             unitOfMeasurement: '',
             price: '',
+            isCustomItem: false,
         },
     });
 
+    // Watch the custom item toggle
+    const isCustomItem = form.watch('isCustomItem');
+    const selectedExpenseAccount = form.watch('expenseAccount');
+
+    // Flatten all price lists from all chart of accounts
+    const allPriceLists = chartOfAccounts.flatMap(account => 
+        account.ppmp_price_lists?.map(priceList => ({
+            ...priceList,
+            account_title: account.account_title,
+            account_number: account.account_number,
+        })) || []
+    );
+
+    // Filter price lists based on selected expense account
+    const filteredPriceLists = selectedExpenseAccount 
+        ? allPriceLists.filter(priceList => priceList.chart_of_account_id === selectedExpenseAccount)
+        : allPriceLists;
+
+    // Track if expense account change was triggered by description selection
+    const isExpenseAccountChangingFromDescription = React.useRef(false);
+
+    // Clear description and related fields when expense account changes manually (only in price list mode)
+    React.useEffect(() => {
+        if (!isExpenseAccountChangingFromDescription.current && !isCustomItem) {
+            form.setValue('description', '');
+            form.setValue('itemNo', '');
+            form.setValue('unitOfMeasurement', '');
+            form.setValue('price', '');
+            form.setValue('ppmp_price_list_id', 0);
+        }
+        isExpenseAccountChangingFromDescription.current = false;
+    }, [selectedExpenseAccount, form, isCustomItem]);
+
+    // Clear fields when switching between modes
+    React.useEffect(() => {
+        form.setValue('description', '');
+        form.setValue('itemNo', '');
+        form.setValue('unitOfMeasurement', '');
+        form.setValue('price', '');
+        form.setValue('ppmp_price_list_id', 0);
+    }, [isCustomItem, form]);
+
     function onSubmit(data: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        console.log(data);
+        if (isCustomItem) {
+            // Custom item mode - use the dedicated custom route
+            const customItemData = {
+                aip_entry_id: data.aip_entry_id,
+                item_number: parseInt(data.itemNo),
+                description: data.description,
+                unit_of_measurement: data.unitOfMeasurement,
+                price: parseFloat(data.price),
+                chart_of_account_id: data.expenseAccount,
+            };
+            
+            console.log('Creating custom PPMP item:', customItemData);
+            
+            // Single API call that creates both price list and PPMP
+            router.post('/ppmp/custom', customItemData, {
+                onSuccess: () => {
+                    console.log('Custom PPMP item created successfully');
+                    onOpenChange(false); // Close dialog on success
+                },
+                onError: (errors) => {
+                    console.error('Error creating custom PPMP item:', errors);
+                },
+                preserveState: false,
+            });
+        } else {
+            // Price list mode - use existing price list
+            if (!data.ppmp_price_list_id) {
+                alert('Please select an item from the price list');
+                return;
+            }
+            
+            const submitData = {
+                aip_entry_id: data.aip_entry_id,
+                ppmp_price_list_id: data.ppmp_price_list_id,
+            };
+            
+            console.log('Submitting price list item:', submitData);
+            
+            // Make API call using Inertia router
+            router.post('/ppmp', submitData, {
+                onSuccess: () => {
+                    console.log('PPMP item created successfully');
+                    onOpenChange(false); // Close dialog on success
+                },
+                onError: (errors) => {
+                    console.error('Error creating PPMP item:', errors);
+                },
+                preserveState: false, // Refresh the page data
+            });
+        }
     }
+
+    const handleReset = () => {
+        form.reset({
+            aip_entry_id: selectedEntry?.id || 0,
+            ppmp_price_list_id: 0,
+            expenseAccount: undefined,
+            itemNo: '',
+            description: '',
+            unitOfMeasurement: '',
+            price: '',
+            isCustomItem: false,
+        });
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -122,62 +200,85 @@ export default function PpmpFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
+                {/* Toggle for Price List vs Custom Item */}
+                <div className="flex items-center space-x-2 pb-4">
+                    <Switch
+                        id="custom-item-toggle"
+                        checked={isCustomItem}
+                        onCheckedChange={(checked) => form.setValue('isCustomItem', checked)}
+                    />
+                    <label htmlFor="custom-item-toggle" className="text-sm font-medium">
+                        {isCustomItem ? 'Custom Item' : 'Price List Item'}
+                    </label>
+                </div>
+
                 <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
                     <FieldGroup>
                         <Controller
                             name="expenseAccount"
                             control={form.control}
                             render={({ field, fieldState }) => {
-                                const { value } = field;
-                                console.log(value);
-
                                 return (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="form-rhf-demo-expense-account">
-                                            Expense Account
-                                        </FieldLabel>
+                                        <FieldContent>
+                                            <FieldLabel htmlFor="expense-select">
+                                                Expense Account
+                                            </FieldLabel>
 
-                                        {/* <Input
-                                            {...field}
-                                            id="form-rhf-demo-expense-account"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder="Select expense account"
-                                            autoComplete="off"
-                                        /> */}
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </FieldContent>
 
-                                        <Select>
-                                            <SelectTrigger className="w-[180px]">
+                                        <Select
+                                            onValueChange={(val) =>
+                                                field.onChange(Number(val))
+                                            }
+                                            value={
+                                                field.value
+                                                    ? field.value.toString()
+                                                    : ''
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                id="expense-select"
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                                className="w-full"
+                                            >
                                                 <SelectValue placeholder="Select expense account" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    {value.map((i) => {
-                                                        return (
+                                                    {chartOfAccounts.map(
+                                                        (account) => (
                                                             <SelectItem
-                                                                key={i.id}
-                                                                value={
-                                                                    i.account_number
-                                                                }
+                                                                key={account.id}
+                                                                value={account.id.toString()}
                                                             >
+                                                                <code className="mr-2 bg-muted p-1 text-xs">
+                                                                    {
+                                                                        account.account_number
+                                                                    }
+                                                                </code>
                                                                 {
-                                                                    i.account_number
-                                                                }{' '}
-                                                                |{' '}
-                                                                {
-                                                                    i.account_title
+                                                                    account.account_title
                                                                 }
                                                             </SelectItem>
-                                                        );
-                                                    })}
+                                                        ),
+                                                    )}
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>
 
-                                        {fieldState.invalid && (
+                                        {/* {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
                                             />
-                                        )}
+                                        )} */}
                                     </Field>
                                 );
                             }}
@@ -197,6 +298,7 @@ export default function PpmpFormDialog({
                                         aria-invalid={fieldState.invalid}
                                         placeholder="Enter item number"
                                         autoComplete="off"
+                                        readOnly={!isCustomItem}
                                     />
                                     {fieldState.invalid && (
                                         <FieldError
@@ -215,16 +317,66 @@ export default function PpmpFormDialog({
                                     <FieldLabel htmlFor="form-rhf-demo-description">
                                         Description
                                     </FieldLabel>
-                                    <InputGroup>
-                                        <InputGroupTextarea
-                                            {...field}
-                                            id="form-rhf-demo-description"
-                                            placeholder="Enter item description"
-                                            rows={3}
-                                            className="min-h-24 resize-none"
-                                            aria-invalid={fieldState.invalid}
-                                        />
-                                    </InputGroup>
+                                    {isCustomItem ? (
+                                        // Custom mode - text input
+                                        <InputGroup>
+                                            <InputGroupTextarea
+                                                {...field}
+                                                id="form-rhf-demo-description"
+                                                placeholder="Enter item description"
+                                                rows={3}
+                                                className="min-h-24 resize-none"
+                                                aria-invalid={fieldState.invalid}
+                                            />
+                                        </InputGroup>
+                                    ) : (
+                                        // Price list mode - select dropdown
+                                        <Select
+                                            onValueChange={(val) => {
+                                                const selectedPriceList = filteredPriceLists.find(pl => pl.id.toString() === val);
+                                                if (selectedPriceList) {
+                                                    field.onChange(selectedPriceList.description);
+                                                    // Set flag to prevent clearing fields when expense account changes
+                                                    isExpenseAccountChangingFromDescription.current = true;
+                                                    // Auto-fill other fields
+                                                    form.setValue('itemNo', selectedPriceList.item_number.toString());
+                                                    form.setValue('unitOfMeasurement', selectedPriceList.unit_of_measurement);
+                                                    form.setValue('price', selectedPriceList.price);
+                                                    form.setValue('expenseAccount', selectedPriceList.chart_of_account_id);
+                                                    form.setValue('ppmp_price_list_id', selectedPriceList.id);
+                                                }
+                                            }}
+                                            value={filteredPriceLists.find(pl => pl.description === field.value)?.id.toString() || ''}
+                                        >
+                                            <SelectTrigger
+                                                id="form-rhf-demo-description"
+                                                aria-invalid={fieldState.invalid}
+                                                className="w-full"
+                                            >
+                                                <SelectValue placeholder="Select item description" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {filteredPriceLists.map((priceList) => (
+                                                        <SelectItem
+                                                            key={priceList.id}
+                                                            value={priceList.id.toString()}
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium">{priceList.description}</span>
+                                                                <span className="text-sm text-muted-foreground">
+                                                                    <code className="mr-1 bg-muted p-1 text-xs">
+                                                                        {priceList.account_number}
+                                                                    </code>
+                                                                    {priceList.account_title} - {priceList.unit_of_measurement} @ {priceList.price}
+                                                                </span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
                                     {fieldState.invalid && (
                                         <FieldError
                                             errors={[fieldState.error]}
@@ -248,6 +400,7 @@ export default function PpmpFormDialog({
                                         aria-invalid={fieldState.invalid}
                                         placeholder="Enter unit of measurement"
                                         autoComplete="off"
+                                        readOnly={!isCustomItem}
                                     />
                                     {fieldState.invalid && (
                                         <FieldError
@@ -274,6 +427,7 @@ export default function PpmpFormDialog({
                                         aria-invalid={fieldState.invalid}
                                         placeholder="0.00"
                                         autoComplete="off"
+                                        readOnly={!isCustomItem}
                                     />
                                     {fieldState.invalid && (
                                         <FieldError
@@ -287,6 +441,13 @@ export default function PpmpFormDialog({
                 </form>
 
                 <DialogFooter>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handleReset}
+                    >
+                        Reset
+                    </Button>
                     <Button
                         type="button"
                         variant="outline"
