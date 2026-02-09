@@ -20,7 +20,7 @@ export default function PpmpPage({
     chartOfAccounts,
 }: PpmpPageProps) {
     // console.log(ppmpItems);
-    console.log(chartOfAccounts);
+    // console.log(chartOfAccounts);
 
     const [open, setOpen] = useState(false);
 
@@ -65,8 +65,8 @@ export default function PpmpPage({
             <PpmpFormDialog
                 open={open}
                 onOpenChange={setOpen}
+                chartOfAccounts={chartOfAccounts}
                 ppmpPriceList={[]}
-                chartOfAccounts={[]}
                 selectedEntry={null}
                 ppmpItems={ppmpItems}
             />

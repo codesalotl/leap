@@ -23,7 +23,10 @@ class PpmpController extends Controller
             ->with(['ppmpPriceList'])
             ->get();
 
-        $chartOfAccounts = ChartOfAccount::all();
+        $chartOfAccounts = ChartOfAccount::where(
+            'expense_class',
+            'MOOE',
+        )->get();
 
         return Inertia::render('aip/ppmp-page', [
             'fiscalYear' => $fiscalYear,

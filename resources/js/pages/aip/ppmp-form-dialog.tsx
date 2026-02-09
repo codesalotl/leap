@@ -11,18 +11,9 @@ import * as z from 'zod';
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     Field,
-    FieldDescription,
+    // FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
@@ -31,36 +22,25 @@ import {
 import { Input } from '@/components/ui/input';
 import {
     InputGroup,
-    InputGroupAddon,
-    InputGroupText,
+    // InputGroupAddon,
+    // InputGroupText,
     InputGroupTextarea,
 } from '@/components/ui/input-group';
 import {
-    Command,
-    CommandDialog,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    CommandSeparator,
-    CommandShortcut,
-} from '@/components/ui/command';
-import { Label } from '@/components/ui/label';
-import {
-    Combobox,
-    ComboboxContent,
-    ComboboxEmpty,
-    ComboboxInput,
-    ComboboxItem,
-    ComboboxList,
-} from '@/components/ui/combobox';
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { ChartOfAccount } from '@/pages/types/types';
 
 interface PpmpFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    chartOfAccounts: ChartOfAccount[];
     ppmpPriceList: unknown[];
-    chartOfAccounts: unknown[];
     selectedEntry: unknown;
     ppmpItems: unknown[];
 }
@@ -74,7 +54,32 @@ const frameworks = [
 ] as const;
 
 const formSchema = z.object({
-    expenseAccount: z.string().min(1, 'Expense account is required.'),
+    expenseAccount: z
+        .array(
+            z.object({
+                id: z.number(),
+                account_number: z.string(),
+                account_title: z.string(),
+                account_type: z.enum([
+                    'ASSET',
+                    'LIABILITY',
+                    'EQUITY',
+                    'REVENUE',
+                    'EXPENSE',
+                ]),
+                expense_class: z.enum(['PS', 'MOOE', 'FE', 'CO']),
+                account_series: z.string().nullable(),
+                parent_id: z.number().nullable(),
+                level: z.number(),
+                is_postable: z.boolean(),
+                is_active: z.boolean(),
+                normal_balance: z.string(),
+                description: z.string().nullable(),
+                created_at: z.string(),
+                updated_at: z.string(),
+            }),
+        )
+        .min(1, 'At least one expense account is required.'),
     itemNo: z.string().min(1, 'Item number is required.'),
     description: z.string().min(1, 'Description is required.'),
     unitOfMeasurement: z.string().min(1, 'Unit of measurement is required.'),
@@ -84,17 +89,17 @@ const formSchema = z.object({
 export default function PpmpFormDialog({
     open,
     onOpenChange,
-    ppmpPriceList = [],
     chartOfAccounts,
+    ppmpPriceList = [],
     selectedEntry = null,
     ppmpItems = [],
 }: PpmpFormDialogProps) {
-    const [commandOpen, setCommandOpen] = React.useState(false);
+    // console.log(chartOfAccounts);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            expenseAccount: ['Hello', 'World'],
+            expenseAccount: chartOfAccounts,
             itemNo: '',
             description: '',
             unitOfMeasurement: '',
@@ -123,44 +128,50 @@ export default function PpmpFormDialog({
                             name="expenseAccount"
                             control={form.control}
                             render={({ field, fieldState }) => {
-                                console.log(field);
+                                const { value } = field;
+                                console.log(value);
 
                                 return (
-                                    <Field
-                                        orientation="responsive"
-                                        data-invalid={fieldState.invalid}
-                                    >
-                                        <FieldContent>
-                                            <FieldLabel htmlFor="form-rhf-demo-title">
-                                                Expense Account
-                                            </FieldLabel>
-                                        </FieldContent>
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <FieldLabel htmlFor="form-rhf-demo-expense-account">
+                                            Expense Account
+                                        </FieldLabel>
+
                                         {/* <Input
                                             {...field}
-                                            id="form-rhf-demo-title"
+                                            id="form-rhf-demo-expense-account"
                                             aria-invalid={fieldState.invalid}
-                                            placeholder="Login button not working on mobile"
+                                            placeholder="Select expense account"
                                             autoComplete="off"
                                         /> */}
 
-                                        <Combobox items={frameworks}>
-                                            <ComboboxInput placeholder="Select a framework" />
-                                            <ComboboxContent>
-                                                <ComboboxEmpty>
-                                                    No items found.
-                                                </ComboboxEmpty>
-                                                <ComboboxList>
-                                                    {(item) => (
-                                                        <ComboboxItem
-                                                            key={item}
-                                                            value={item}
-                                                        >
-                                                            {item}
-                                                        </ComboboxItem>
-                                                    )}
-                                                </ComboboxList>
-                                            </ComboboxContent>
-                                        </Combobox>
+                                        <Select>
+                                            <SelectTrigger className="w-[180px]">
+                                                <SelectValue placeholder="Select expense account" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {value.map((i) => {
+                                                        return (
+                                                            <SelectItem
+                                                                key={i.id}
+                                                                value={
+                                                                    i.account_number
+                                                                }
+                                                            >
+                                                                {
+                                                                    i.account_number
+                                                                }{' '}
+                                                                |{' '}
+                                                                {
+                                                                    i.account_title
+                                                                }
+                                                            </SelectItem>
+                                                        );
+                                                    })}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
 
                                         {fieldState.invalid && (
                                             <FieldError
@@ -170,30 +181,6 @@ export default function PpmpFormDialog({
                                     </Field>
                                 );
                             }}
-                        />
-
-                        <Controller
-                            name="expenseAccount"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-expense-account">
-                                        Expense Account
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="form-rhf-demo-expense-account"
-                                        aria-invalid={fieldState.invalid}
-                                        placeholder="Select expense account"
-                                        autoComplete="off"
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    )}
-                                </Field>
-                            )}
                         />
 
                         <Controller
