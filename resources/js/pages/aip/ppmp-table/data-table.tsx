@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/table';
 import { columns } from './columns';
 import { Ppmp } from '@/pages/types/types';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface PpmpTableProps {
     ppmpItems: Ppmp[];
@@ -39,8 +38,8 @@ const PINNED_COLUMN_COLORS = {
     },
 };
 
-const getCommonPinningStyles = (
-    column: Column<any>,
+const getCommonPinningStyles = <TData,>(
+    column: Column<TData>,
     isHeaderCell = false,
     isEvenRow = false,
 ): CSSProperties => {
@@ -63,7 +62,7 @@ const getCommonPinningStyles = (
         width: column.getSize(),
         minWidth: column.columnDef.minSize,
         maxWidth: column.columnDef.maxSize,
-        zIndex: isPinned ? 0 : 0,
+        // zIndex: isPinned ? 0 : 0,
         backgroundColor: isPinned
             ? isHeaderCell
                 ? PINNED_COLUMN_COLORS.header.background
@@ -77,7 +76,11 @@ const getCommonPinningStyles = (
 export default function PpmpTable({ ppmpItems, onDelete }: PpmpTableProps) {
     return (
         <div>
-            <DataTable<Ppmp, unknown> columns={columns} data={ppmpItems} onDelete={onDelete} />
+            <DataTable<Ppmp, unknown>
+                columns={columns}
+                data={ppmpItems}
+                onDelete={onDelete}
+            />
         </div>
     );
 }
@@ -105,17 +108,19 @@ export function DataTable<TData, TValue>({
 
     return (
         // <div className="overflow-hidden rounded-md border">
-        <ScrollArea className="h-[calc(100vh-10rem)] rounded-md border">
+        <div className="border">
             <Table
-                style={{
-                    width: table.getTotalSize(),
-                    tableLayout: 'fixed',
-                }}
+            // style={{
+            //     width: table.getTotalSize(),
+            //     tableLayout: 'fixed',
+            // }}
             >
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>
                             {headerGroup.headers.map((header) => {
+                                const { column } = header;
+
                                 return (
                                     <TableHead
                                         key={header.id}
@@ -123,10 +128,9 @@ export function DataTable<TData, TValue>({
                                         className="bg-primary font-bold text-primary-foreground"
                                         style={{
                                             ...getCommonPinningStyles(
-                                                header.column,
+                                                column,
                                                 true,
                                             ),
-                                            // Handle width for grouped headers
                                             width: header.getSize(),
                                         }}
                                     >
@@ -147,30 +151,34 @@ export function DataTable<TData, TValue>({
                     {table.getRowModel().rows?.length ? (
                         table.getRowModel().rows.map((row, index) => (
                             <TableRow key={row.id}>
-                                {row.getVisibleCells().map((cell) => (
-                                    <TableCell
-                                        key={cell.id}
-                                        className="truncate" // Prevents long text from breaking widths
-                                        style={{
-                                            ...getCommonPinningStyles(
-                                                cell.column,
-                                                false,
-                                                index % 2 === 1,
-                                            ),
-                                        }}
-                                    >
-                                        {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext(),
-                                        )}
-                                    </TableCell>
-                                ))}
+                                {row.getVisibleCells().map((cell) => {
+                                    const { column } = cell;
+
+                                    return (
+                                        <TableCell
+                                            key={cell.id}
+                                            style={{
+                                                ...getCommonPinningStyles(
+                                                    column,
+                                                    false,
+                                                    index % 2 === 1,
+                                                ),
+                                            }}
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
+                                        </TableCell>
+                                    );
+                                })}
                             </TableRow>
                         ))
                     ) : (
                         <TableRow>
                             <TableCell
                                 colSpan={table.getVisibleLeafColumns().length}
+                                // colSpan={columns.length}
                                 className="h-24 text-center"
                             >
                                 No PPMP items found.
@@ -179,9 +187,6 @@ export function DataTable<TData, TValue>({
                     )}
                 </TableBody>
             </Table>
-
-            <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-        // </div>
+        </div>
     );
 }

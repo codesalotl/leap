@@ -1,31 +1,7 @@
-// resources\js\pages\aip\aip-summary-table\columns.tsx
-
 import { createColumnHelper } from '@tanstack/react-table';
-import {
-    MoreHorizontal,
-    SquareArrowOutUpRight,
-    Edit,
-    Trash2,
-    Plus,
-    Pencil,
-    Trash,
-} from 'lucide-react';
+import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 
-// --- Types ---
 export interface AipEntry {
     id: number;
     ppa_id: number;
@@ -39,7 +15,7 @@ export interface AipEntry {
     };
     expected_outputs: string;
     funding_source: string;
-    itemized_costs?: any[];
+    itemized_costs?: unknown[];
     amount: {
         ps: string;
         mooe: string;
@@ -53,7 +29,6 @@ export interface AipEntry {
     children?: AipEntry[];
 }
 
-// --- Helpers ---
 export const formatNumber = (val: string) => {
     const num = parseFloat(val);
     return isNaN(num)
@@ -64,19 +39,17 @@ export const formatNumber = (val: string) => {
           });
 };
 
-// --- Column Definitions ---
-const columnHelper = createColumnHelper<AipEntry>();
-
 interface ColumnActions {
     onAddEntry: (entry: AipEntry) => void;
     onEdit: (entry: AipEntry) => void;
     onDelete: (entry: AipEntry) => void;
 }
 
+const columnHelper = createColumnHelper<AipEntry>();
+
 export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     columnHelper.accessor('aip_ref_code', {
         header: 'AIP Reference Code',
-        size: 250,
         cell: (info) => (
             <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
                 {info.getValue()}
@@ -85,7 +58,6 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     }),
     columnHelper.accessor('ppa_desc', {
         header: 'Program/Project/Activity Description',
-        size: 350,
         filterFn: (row, columnId, value) => {
             const description = row.getValue('ppa_desc') as string;
             const refCode = row.getValue('aip_ref_code') as string;
@@ -110,35 +82,29 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     }),
     columnHelper.accessor('implementing_office_department', {
         header: 'Implementing Office/Department',
-        size: 200,
     }),
     columnHelper.group({
         header: 'Schedule of Implementation',
         columns: [
             columnHelper.accessor('sched_implementation.start_date', {
                 header: 'Start Date',
-                size: 120,
             }),
             columnHelper.accessor('sched_implementation.completion_date', {
                 header: 'Completion Date',
-                size: 140,
             }),
         ],
     }),
     columnHelper.accessor('expected_outputs', {
         header: 'Expected Outputs',
-        size: 250,
     }),
     columnHelper.accessor('funding_source', {
         header: 'Funding Source',
-        size: 150,
     }),
     columnHelper.group({
         header: 'Amount (in thousand pesos)',
         columns: [
             columnHelper.accessor('amount.ps', {
                 header: 'PS',
-                size: 100,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -147,7 +113,6 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
             }),
             columnHelper.accessor('amount.mooe', {
                 header: 'MOOE',
-                size: 100,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -156,7 +121,6 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
             }),
             columnHelper.accessor('amount.fe', {
                 header: 'FE',
-                size: 100,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -165,7 +129,6 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
             }),
             columnHelper.accessor('amount.co', {
                 header: 'CO',
-                size: 100,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -174,7 +137,6 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
             }),
             columnHelper.accessor('amount.total', {
                 header: 'Total',
-                size: 200,
                 cell: (i) => (
                     <span className="block text-right font-bold">
                         {formatNumber(i.getValue())}
@@ -188,13 +150,19 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
         columns: [
             columnHelper.accessor('cc_adaptation', {
                 header: 'Adaptation',
-                size: 120,
-                cell: (i) => formatNumber(i.getValue()),
+                cell: (i) => (
+                    <span className="block text-right">
+                        {formatNumber(i.getValue())}
+                    </span>
+                ),
             }),
             columnHelper.accessor('cc_mitigation', {
                 header: 'Mitigation',
-                size: 120,
-                cell: (i) => formatNumber(i.getValue()),
+                cell: (i) => (
+                    <span className="block text-right">
+                        {formatNumber(i.getValue())}
+                    </span>
+                ),
             }),
         ],
     }),
@@ -203,9 +171,9 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
     }),
     columnHelper.display({
         id: 'actions',
-        enableHiding: false,
-        enablePinning: true,
-        size: 100,
+        // enableHiding: false,
+        // enablePinning: true,
+        size: 116,
         cell: ({ row }) => {
             const entry = row.original;
             const isLeaf = !entry.children || entry.children.length === 0;

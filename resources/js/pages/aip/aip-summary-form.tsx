@@ -1,7 +1,13 @@
 // resources\js\pages\aip\aip-summary-form.tsx
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Library, FileDown, FileSpreadsheet, FileText, Plus } from 'lucide-react';
+import {
+    Library,
+    FileDown,
+    FileSpreadsheet,
+    FileText,
+    Plus,
+} from 'lucide-react';
 import { router } from '@inertiajs/react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -34,6 +40,10 @@ import AipEntryFormDialog from '@/pages/aip/aip-entry-form-dialog';
 import MooeDialog from '@/pages/aip/mooe-dialog';
 import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
 
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+
 // Data & Logic
 import { type BreadcrumbItem } from '@/types';
 import {
@@ -42,7 +52,7 @@ import {
     formatNumber,
 } from '@/pages/aip/aip-summary-table/columns';
 
-import { ChartOfAccount } from "@/pages/types/types"
+import { ChartOfAccount } from '@/pages/types/types';
 
 type FiscalYear = {
     id: number;
@@ -119,6 +129,7 @@ export default function AipSummaryTable({
     console.log(chartOfAccounts);
 
     // --- State ---
+    const [searchValue, setSearchValue] = useState('');
     const [selectorState, setSelectorState] = useState({
         isOpen: false,
         data: [] as Ppa[],
@@ -339,13 +350,12 @@ export default function AipSummaryTable({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full px-4 pb-4">
-                <DataTable
+                {/* <DataTable
                     data={aipEntries}
                     columns={columns}
                     searchKey="ppa_desc"
                     getSubRows={(row) => row.children}
                 >
-                    {/* Header Children (Buttons) */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline">
@@ -366,7 +376,57 @@ export default function AipSummaryTable({
                     <Button onClick={handleImportLibrary}>
                         <Library className="mr-2 h-4 w-4" /> Import from Library
                     </Button>
-                </DataTable>
+                </DataTable> */}
+
+                <div className="w-full">
+                    <div className="flex items-center justify-between py-4">
+                        <div className="relative">
+                            <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search projects or activities..."
+                                value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)}
+                                className="max-w-sm pl-8"
+                            />
+                        </div>
+                        <div className="ml-auto flex gap-2">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline">
+                                        <FileDown className="mr-2 h-4 w-4" />{' '}
+                                        Export
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={exportToExcel}>
+                                        <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />{' '}
+                                        Excel (.xlsx)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={exportToPDF}>
+                                        <FileText className="mr-2 h-4 w-4 text-red-600" />{' '}
+                                        PDF (.pdf)
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button onClick={handleImportLibrary}>
+                                <Library className="mr-2 h-4 w-4" /> Import from
+                                Library
+                            </Button>
+                        </div>
+                    </div>
+
+                    <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+                        <DataTable
+                            data={aipEntries}
+                            columns={columns}
+                            searchKey="ppa_desc"
+                            searchValue={searchValue}
+                            onSearchChange={setSearchValue}
+                            getSubRows={(row) => row.children}
+                        />
+                        <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                </div>
             </div>
 
             {/* Dialogs */}
