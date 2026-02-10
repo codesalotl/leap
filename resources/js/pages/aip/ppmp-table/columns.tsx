@@ -145,7 +145,7 @@ export const columns: ColumnDef<Ppmp>[] = [
 
             const sum = rows.reduce((acc, row) => {
                 const val = row.getValue('total_amount');
-                console.log('Value found:', val.toString());
+                // console.log('Value found:', val.toString());
                 return acc.plus(val);
             }, new Decimal(0));
 

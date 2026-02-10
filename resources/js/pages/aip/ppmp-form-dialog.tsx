@@ -66,7 +66,7 @@ export default function PpmpFormDialog({
     selectedEntry = null,
     ppmpItems = [],
 }: PpmpFormDialogProps) {
-    console.log(chartOfAccounts);
+    // console.log(chartOfAccounts);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
