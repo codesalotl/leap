@@ -16,8 +16,8 @@ class PpmpSeeder extends Seeder
     public function run(): void
     {
         // Get required data
-        $aipEntry = AipEntry::first();
-        $priceListItems = PpmpPriceList::limit(3)->get();
+        $aipEntry = AipEntry::find(1);
+        $priceListItems = PpmpPriceList::limit(10)->get();
 
         if (!$aipEntry || $priceListItems->isEmpty()) {
             $this->command->warn(
@@ -26,7 +26,7 @@ class PpmpSeeder extends Seeder
             return;
         }
 
-        // Create 3 sample PPMP items
+        // Create 10 sample PPMP items
         foreach ($priceListItems as $index => $priceListItem) {
             // We still need a target number to distribute, even if we don't save it
             $targetTotalQuantity = ($index + 1) * 10;
@@ -69,7 +69,7 @@ class PpmpSeeder extends Seeder
         }
 
         $this->command->info(
-            'PPMP items seeded successfully without annual quantity column!',
+            'PPMP items seeded successfully for AIP entry 1 with 10 price list items!',
         );
     }
 }
