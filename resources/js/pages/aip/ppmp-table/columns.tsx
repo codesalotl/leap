@@ -13,7 +13,11 @@ interface EditableCellProps {
     column: any;
 }
 
-const EditableCell: React.FC<EditableCellProps> = ({ getValue, row, column }) => {
+const EditableCell: React.FC<EditableCellProps> = ({
+    getValue,
+    row,
+    column,
+}) => {
     const initialValue = getValue();
     const [value, setValue] = useState(initialValue);
     const [isUpdating, setIsUpdating] = useState(false);
@@ -28,7 +32,8 @@ const EditableCell: React.FC<EditableCellProps> = ({ getValue, row, column }) =>
 
         setIsUpdating(true);
 
-        router.put(`/ppmp/${row.original.id}/update-monthly-quantity`, 
+        router.put(
+            `/ppmp/${row.original.id}/update-monthly-quantity`,
             {
                 month: column.id,
                 quantity: value,
@@ -42,7 +47,7 @@ const EditableCell: React.FC<EditableCellProps> = ({ getValue, row, column }) =>
                     setValue(initialValue); // Reset on error
                     setIsUpdating(false);
                 },
-            }
+            },
         );
     };
 
@@ -54,13 +59,13 @@ const EditableCell: React.FC<EditableCellProps> = ({ getValue, row, column }) =>
 
     return (
         <Input
-            type="number"
+            type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
             disabled={isUpdating}
-            // className="w-20 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-transparent disabled:opacity-50"
+            className="w-full rounded border bg-transparent px-2 py-1 text-right focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
             min="0"
             step="0.01"
         />
@@ -79,6 +84,7 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'ppmp_price_list.description',
         header: 'Description',
+        size: 350,
     },
     {
         accessorKey: 'ppmp_price_list.unit_of_measurement',
@@ -86,11 +92,14 @@ export const columns: ColumnDef<Ppmp>[] = [
     },
     {
         accessorKey: 'ppmp_price_list.price',
-        header: 'PRICELIST',
+        header: () => <div className="w-full text-right">PRICELIST</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         id: 'cy_2026_qty',
-        header: 'CY 2026-QTY',
+        header: () => <div className="w-full text-right">CY 2026-QTY</div>,
         cell: ({ row }) => {
             const ppmp = row.original;
 
@@ -107,142 +116,189 @@ export const columns: ColumnDef<Ppmp>[] = [
                 .plus(ppmp.nov_qty)
                 .plus(ppmp.dec_qty);
 
-            return totalQty.toFixed(2);
+            return <span className="block text-right">{totalQty.toFixed(2)}</span>;
         },
     },
     {
+        id: 'total_amount',
         accessorKey: 'total_amount',
-        header: 'TOTAL',
-        cell: ({ row }) => {
-            const ppmp = row.original;
+        header: () => <div className="w-full text-right">TOTAL</div>,
+        accessorFn: (row) => {
+            return new Decimal(row.jan_amount)
+                .plus(row.feb_amount)
+                .plus(row.mar_amount)
+                .plus(row.apr_amount)
+                .plus(row.may_amount)
+                .plus(row.jun_amount)
+                .plus(row.jul_amount)
+                .plus(row.aug_amount)
+                .plus(row.sep_amount)
+                .plus(row.oct_amount)
+                .plus(row.nov_amount)
+                .plus(row.dec_amount);
+        },
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue().toFixed(2)}</span>
+        ),
+        footer: (props) => {
+            const rows = props.table.getFilteredRowModel().rows;
 
-            const totalAmount = new Decimal(ppmp.jan_amount)
-                .plus(ppmp.feb_amount)
-                .plus(ppmp.mar_amount)
-                .plus(ppmp.apr_amount)
-                .plus(ppmp.may_amount)
-                .plus(ppmp.jun_amount)
-                .plus(ppmp.jul_amount)
-                .plus(ppmp.aug_amount)
-                .plus(ppmp.sep_amount)
-                .plus(ppmp.oct_amount)
-                .plus(ppmp.nov_amount)
-                .plus(ppmp.dec_amount);
+            const sum = rows.reduce((acc, row) => {
+                const val = row.getValue('total_amount');
+                console.log('Value found:', val.toString());
+                return acc.plus(val);
+            }, new Decimal(0));
 
-            return totalAmount.toFixed(2);
+            return <span className="block text-right">{sum.toFixed(2)}</span>;
         },
     },
     {
         accessorKey: 'jan_qty',
-        header: 'JAN-QTY',
+        header: () => <div className="w-full text-right">JAN-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'jan_amount',
-        header: 'JAN',
+        header: () => <div className="w-full text-right">JAN</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'feb_qty',
-        header: 'FEB-QTY',
+        header: () => <div className="w-full text-right">FEB-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'feb_amount',
-        header: 'FEB',
+        header: () => <div className="w-full text-right">FEB</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'mar_qty',
-        header: 'MAR-QTY',
+        header: () => <div className="w-full text-right">MAR-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'mar_amount',
-        header: 'MAR',
+        header: () => <div className="w-full text-right">MAR</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'apr_qty',
-        header: 'APR-QTY',
+        header: () => <div className="w-full text-right">APR-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'apr_amount',
-        header: 'APR',
+        header: () => <div className="w-full text-right">APR</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'may_qty',
-        header: 'MAY-QTY',
+        header: () => <div className="w-full text-right">MAY-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'may_amount',
-        header: 'MAY',
+        header: () => <div className="w-full text-right">MAY</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'jun_qty',
-        header: 'JUN-QTY',
+        header: () => <div className="w-full text-right">JUN-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'jun_amount',
-        header: 'JUN',
+        header: () => <div className="w-full text-right">JUN</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'jul_qty',
-        header: 'JUL-QTY',
+        header: () => <div className="w-full text-right">JUL-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'jul_amount',
-        header: 'JUL',
+        header: () => <div className="w-full text-right">JUL</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'aug_qty',
-        header: 'AUG-QTY',
+        header: () => <div className="w-full text-right">AUG-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'aug_amount',
-        header: 'AUG',
+        header: () => <div className="w-full text-right">AUG</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'sep_qty',
-        header: 'SEP-QTY',
+        header: () => <div className="w-full text-right">SEP-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'sep_amount',
-        header: 'SEP',
+        header: () => <div className="w-full text-right">SEP</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'oct_qty',
-        header: 'OCT-QTY',
+        header: () => <div className="w-full text-right">OCT-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'oct_amount',
-        header: 'OCT',
+        header: () => <div className="w-full text-right">OCT</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'nov_qty',
-        header: 'NOV-QTY',
+        header: () => <div className="w-full text-right">NOV-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'nov_amount',
-        header: 'NOV',
+        header: () => <div className="w-full text-right">NOV</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         accessorKey: 'dec_qty',
-        header: 'DEC-QTY',
+        header: () => <div className="w-full text-right">DEC-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'dec_amount',
-        header: 'DEC',
+        header: () => <div className="w-full text-right">DEC</div>,
+        cell: ({ getValue }) => (
+            <span className="block text-right">{getValue()}</span>
+        ),
     },
     {
         id: 'actions',
-        size: 72,
+        size: 50,
         cell: ({ row, table }) => {
             const ppmp = row.original;
 
@@ -252,7 +308,11 @@ export const columns: ColumnDef<Ppmp>[] = [
                         size="icon"
                         variant="destructive"
                         onClick={() =>
-                            (table.options.meta as { onDelete: (item: Ppmp) => void })?.onDelete(ppmp)
+                            (
+                                table.options.meta as {
+                                    onDelete: (item: Ppmp) => void;
+                                }
+                            )?.onDelete(ppmp)
                         }
                     >
                         <Trash />

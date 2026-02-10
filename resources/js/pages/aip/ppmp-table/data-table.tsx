@@ -13,6 +13,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
+    TableFooter,
 } from '@/components/ui/table';
 import { columns } from './columns';
 import { Ppmp } from '@/pages/types/types';
@@ -109,12 +110,7 @@ export function DataTable<TData, TValue>({
     return (
         // <div className="overflow-hidden rounded-md border">
         <div className="border">
-            <Table
-            // style={{
-            //     width: table.getTotalSize(),
-            //     tableLayout: 'fixed',
-            // }}
-            >
+            <Table className="table-fixed">
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>
@@ -186,6 +182,22 @@ export function DataTable<TData, TValue>({
                         </TableRow>
                     )}
                 </TableBody>
+                <TableFooter>
+                    {table.getFooterGroups().map((footerGroup) => (
+                        <TableRow key={footerGroup.id}>
+                            {footerGroup.headers.map((header) => (
+                                <TableCell key={header.id}>
+                                    {header.isPlaceholder
+                                        ? null
+                                        : flexRender(
+                                              header.column.columnDef.footer,
+                                              header.getContext(),
+                                          )}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    ))}
+                </TableFooter>
             </Table>
         </div>
     );

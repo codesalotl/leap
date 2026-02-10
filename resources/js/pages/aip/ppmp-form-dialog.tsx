@@ -87,17 +87,21 @@ export default function PpmpFormDialog({
     const selectedExpenseAccount = form.watch('expenseAccount');
 
     // Flatten all price lists from all chart of accounts
-    const allPriceLists = chartOfAccounts.flatMap(account => 
-        account.ppmp_price_lists?.map(priceList => ({
-            ...priceList,
-            account_title: account.account_title,
-            account_number: account.account_number,
-        })) || []
+    const allPriceLists = chartOfAccounts.flatMap(
+        (account) =>
+            account.ppmp_price_lists?.map((priceList) => ({
+                ...priceList,
+                account_title: account.account_title,
+                account_number: account.account_number,
+            })) || [],
     );
 
     // Filter price lists based on selected expense account
-    const filteredPriceLists = selectedExpenseAccount 
-        ? allPriceLists.filter(priceList => priceList.chart_of_account_id === selectedExpenseAccount)
+    const filteredPriceLists = selectedExpenseAccount
+        ? allPriceLists.filter(
+              (priceList) =>
+                  priceList.chart_of_account_id === selectedExpenseAccount,
+          )
         : allPriceLists;
 
     // Track if expense account change was triggered by description selection
@@ -135,9 +139,9 @@ export default function PpmpFormDialog({
                 price: parseFloat(data.price),
                 chart_of_account_id: data.expenseAccount,
             };
-            
+
             console.log('Creating custom PPMP item:', customItemData);
-            
+
             // Single API call that creates both price list and PPMP
             router.post('/ppmp/custom', customItemData, {
                 onSuccess: () => {
@@ -155,14 +159,14 @@ export default function PpmpFormDialog({
                 alert('Please select an item from the price list');
                 return;
             }
-            
+
             const submitData = {
                 aip_entry_id: data.aip_entry_id,
                 ppmp_price_list_id: data.ppmp_price_list_id,
             };
-            
+
             console.log('Submitting price list item:', submitData);
-            
+
             // Make API call using Inertia router
             router.post('/ppmp', submitData, {
                 onSuccess: () => {
@@ -205,9 +209,14 @@ export default function PpmpFormDialog({
                     <Switch
                         id="custom-item-toggle"
                         checked={isCustomItem}
-                        onCheckedChange={(checked) => form.setValue('isCustomItem', checked)}
+                        onCheckedChange={(checked) =>
+                            form.setValue('isCustomItem', checked)
+                        }
                     />
-                    <label htmlFor="custom-item-toggle" className="text-sm font-medium">
+                    <label
+                        htmlFor="custom-item-toggle"
+                        className="text-sm font-medium"
+                    >
                         {isCustomItem ? 'Custom Item' : 'Price List Item'}
                     </label>
                 </div>
@@ -326,53 +335,107 @@ export default function PpmpFormDialog({
                                                 placeholder="Enter item description"
                                                 rows={3}
                                                 className="min-h-24 resize-none"
-                                                aria-invalid={fieldState.invalid}
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
                                             />
                                         </InputGroup>
                                     ) : (
                                         // Price list mode - select dropdown
                                         <Select
                                             onValueChange={(val) => {
-                                                const selectedPriceList = filteredPriceLists.find(pl => pl.id.toString() === val);
+                                                const selectedPriceList =
+                                                    filteredPriceLists.find(
+                                                        (pl) =>
+                                                            pl.id.toString() ===
+                                                            val,
+                                                    );
                                                 if (selectedPriceList) {
-                                                    field.onChange(selectedPriceList.description);
+                                                    field.onChange(
+                                                        selectedPriceList.description,
+                                                    );
                                                     // Set flag to prevent clearing fields when expense account changes
                                                     isExpenseAccountChangingFromDescription.current = true;
                                                     // Auto-fill other fields
-                                                    form.setValue('itemNo', selectedPriceList.item_number.toString());
-                                                    form.setValue('unitOfMeasurement', selectedPriceList.unit_of_measurement);
-                                                    form.setValue('price', selectedPriceList.price);
-                                                    form.setValue('expenseAccount', selectedPriceList.chart_of_account_id);
-                                                    form.setValue('ppmp_price_list_id', selectedPriceList.id);
+                                                    form.setValue(
+                                                        'itemNo',
+                                                        selectedPriceList.item_number.toString(),
+                                                    );
+                                                    form.setValue(
+                                                        'unitOfMeasurement',
+                                                        selectedPriceList.unit_of_measurement,
+                                                    );
+                                                    form.setValue(
+                                                        'price',
+                                                        selectedPriceList.price,
+                                                    );
+                                                    form.setValue(
+                                                        'expenseAccount',
+                                                        selectedPriceList.chart_of_account_id,
+                                                    );
+                                                    form.setValue(
+                                                        'ppmp_price_list_id',
+                                                        selectedPriceList.id,
+                                                    );
                                                 }
                                             }}
-                                            value={filteredPriceLists.find(pl => pl.description === field.value)?.id.toString() || ''}
+                                            value={
+                                                filteredPriceLists
+                                                    .find(
+                                                        (pl) =>
+                                                            pl.description ===
+                                                            field.value,
+                                                    )
+                                                    ?.id.toString() || ''
+                                            }
                                         >
                                             <SelectTrigger
                                                 id="form-rhf-demo-description"
-                                                aria-invalid={fieldState.invalid}
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
                                                 className="w-full"
                                             >
                                                 <SelectValue placeholder="Select item description" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
-                                                    {filteredPriceLists.map((priceList) => (
-                                                        <SelectItem
-                                                            key={priceList.id}
-                                                            value={priceList.id.toString()}
-                                                        >
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium">{priceList.description}</span>
-                                                                <span className="text-sm text-muted-foreground">
-                                                                    <code className="mr-1 bg-muted p-1 text-xs">
-                                                                        {priceList.account_number}
-                                                                    </code>
-                                                                    {priceList.account_title} - {priceList.unit_of_measurement} @ {priceList.price}
-                                                                </span>
-                                                            </div>
-                                                        </SelectItem>
-                                                    ))}
+                                                    {filteredPriceLists.map(
+                                                        (priceList) => (
+                                                            <SelectItem
+                                                                key={
+                                                                    priceList.id
+                                                                }
+                                                                value={priceList.id.toString()}
+                                                            >
+                                                                <div className="flex flex-col py-1">
+                                                                    <span className="font-medium">
+                                                                        {
+                                                                            priceList.description
+                                                                        }
+                                                                    </span>
+                                                                    <span className="text-sm text-muted-foreground">
+                                                                        <code className="mr-1 bg-muted p-1 text-xs">
+                                                                            {
+                                                                                priceList.account_number
+                                                                            }
+                                                                        </code>
+                                                                        {
+                                                                            priceList.account_title
+                                                                        }{' '}
+                                                                        -{' '}
+                                                                        {
+                                                                            priceList.unit_of_measurement
+                                                                        }{' '}
+                                                                        @{' '}
+                                                                        {
+                                                                            priceList.price
+                                                                        }
+                                                                    </span>
+                                                                </div>
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
                                                 </SelectGroup>
                                             </SelectContent>
                                         </Select>

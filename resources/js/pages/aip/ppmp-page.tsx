@@ -1,14 +1,27 @@
-import React from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import DataTable from '@/pages/aip/ppmp-table/data-table';
-import { FiscalYear, Ppmp, ChartOfAccount, AipEntry } from '@/pages/types/types';
+import {
+    FiscalYear,
+    Ppmp,
+    ChartOfAccount,
+    AipEntry,
+} from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, FileDown } from 'lucide-react';
 import { useState } from 'react';
 import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { router } from '@inertiajs/react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
@@ -40,12 +53,31 @@ export default function PpmpPage({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full flex-1 px-4 py-4">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-2 flex items-center justify-between">
                     <h1 className="text-2xl font-bold">PPMP Management</h1>
-                    <Button onClick={() => setOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Item
-                    </Button>
+
+                    <div className="flex gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    <FileDown /> Export
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuGroup>
+                                    {/* <DropdownMenuLabel>
+                                        My Account
+                                    </DropdownMenuLabel> */}
+                                    <DropdownMenuItem>Excel</DropdownMenuItem>
+                                    <DropdownMenuItem>PDF</DropdownMenuItem>
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button onClick={() => setOpen(true)}>
+                            <Plus /> Add Item
+                        </Button>
+                    </div>
                 </div>
 
                 <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
@@ -60,10 +92,15 @@ export default function PpmpPage({
                                 // Call the delete API
                                 router.delete(`/ppmp/${ppmp.id}`, {
                                     onSuccess: () => {
-                                        console.log('PPMP item deleted successfully');
+                                        console.log(
+                                            'PPMP item deleted successfully',
+                                        );
                                     },
                                     onError: (errors) => {
-                                        console.error('Error deleting PPMP item:', errors);
+                                        console.error(
+                                            'Error deleting PPMP item:',
+                                            errors,
+                                        );
                                         alert('Failed to delete PPMP item');
                                     },
                                     preserveState: false,

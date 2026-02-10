@@ -37,6 +37,36 @@ class PpmpController extends Controller
     }
 
     /**
+     * Update AIP MOOE amount based on total PPMP amounts
+     */
+    private function updateAipMooeAmount($aipEntryId)
+    {
+        try {
+            // Calculate total from all PPMP items for this AIP entry
+            $totalAmount = Ppmp::where('aip_entry_id', $aipEntryId)
+                ->selectRaw('SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total')
+                ->value('total') ?? 0;
+
+            // Update the corresponding AIP entry
+            $aipEntry = AipEntry::find($aipEntryId);
+            if ($aipEntry) {
+                $aipEntry->mooe_amount = $totalAmount;
+                $aipEntry->save();
+                
+                \Log::info('AIP MOOE amount updated:', [
+                    'aip_entry_id' => $aipEntryId,
+                    'mooe_amount' => $totalAmount
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to update AIP MOOE amount:', [
+                'aip_entry_id' => $aipEntryId,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
@@ -105,6 +135,9 @@ class PpmpController extends Controller
             
             \Log::info('PPMP created:', $ppmp->toArray());
 
+            // Update AIP MOOE amount after new PPMP creation
+            $this->updateAipMooeAmount($ppmp->aip_entry_id);
+
             return back()->with('success', 'Custom PPMP item created successfully');
         } catch (\Exception $e) {
             \Log::error('Custom PPMP Creation Error:', [
@@ -162,6 +195,9 @@ class PpmpController extends Controller
             
             \Log::info('PPMP Created:', $ppmp->toArray());
 
+            // Update AIP MOOE amount after new PPMP creation
+            $this->updateAipMooeAmount($ppmp->aip_entry_id);
+
             return back()->with('success', 'PPMP item created successfully');
         } catch (\Exception $e) {
             \Log::error('PPMP Creation Error:', ['error' => $e->getMessage()]);
@@ -198,6 +234,9 @@ class PpmpController extends Controller
             $amountColumn => $quantity * $unitPrice,
         ]);
 
+        // Update AIP MOOE amount after PPMP update
+        $this->updateAipMooeAmount($ppmp->aip_entry_id);
+
         return back()->with('success', 'PPMP item updated successfully');
     }
 
@@ -229,10 +268,15 @@ class PpmpController extends Controller
                 'description' => $ppmp->item_description,
             ]);
 
+            $aipEntryId = $ppmp->aip_entry_id; // Store before deletion
+
             // Delete the PPMP item
             $ppmp->delete();
 
             \Log::info('PPMP item deleted successfully:', ['id' => $ppmp->id]);
+
+            // Update AIP MOOE amount after PPMP deletion
+            $this->updateAipMooeAmount($aipEntryId);
 
             return back()->with('success', 'PPMP item deleted successfully');
         } catch (\Exception $e) {
