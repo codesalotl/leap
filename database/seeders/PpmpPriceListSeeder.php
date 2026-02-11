@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\PpmpPriceList;
 use App\Models\ChartOfAccount;
+use App\Models\PpmpCategory;
 
 class PpmpPriceListSeeder extends Seeder
 {
@@ -19,7 +20,12 @@ class PpmpPriceListSeeder extends Seeder
             ->where('is_postable', true)
             ->get();
 
+        // Get all categories
+        $categories = PpmpCategory::all();
+        $categoryMap = $this->createCategoryMap($categories);
+
         $this->command->info('Found MOOE accounts: ' . $mooeAccounts->count());
+        $this->command->info('Found categories: ' . $categories->count());
 
         $items = [];
         $itemNumber = 1;
@@ -131,16 +137,19 @@ class PpmpPriceListSeeder extends Seeder
                         ->first() ?? $mooeAccounts->first();
 
                 // Generate 2 items for each account
+                $categoryId = $this->getCategoryIdForAccount($accountTitle, $categoryMap, $categories);
                 $items[] = $this->createItem(
                     $itemNumber++,
                     $accountTitle,
                     $account->id,
+                    $categoryId,
                     1,
                 );
                 $items[] = $this->createItem(
                     $itemNumber++,
                     $accountTitle,
                     $account->id,
+                    $categoryId,
                     2,
                 );
             }
@@ -161,6 +170,7 @@ class PpmpPriceListSeeder extends Seeder
         $itemNumber,
         $accountTitle,
         $chartOfAccountId,
+        $ppmpCategoryId,
         $variant,
     ) {
         $descriptions = $this->getItemDescriptions($accountTitle);
@@ -175,6 +185,7 @@ class PpmpPriceListSeeder extends Seeder
             'description' => $description,
             'unit_of_measurement' => $unitAndPrice['unit'],
             'price' => $unitAndPrice['price'],
+            'ppmp_category_id' => $ppmpCategoryId,
             'chart_of_account_id' => $chartOfAccountId,
         ];
     }
@@ -765,5 +776,156 @@ class PpmpPriceListSeeder extends Seeder
             'unit' => 'piece',
             'price' => 100.0,
         ];
+    }
+
+    /**
+     * Create a mapping of category names to IDs
+     */
+    private function createCategoryMap($categories)
+    {
+        $map = [];
+        foreach ($categories as $category) {
+            $map[strtolower($category->name)] = $category->id;
+        }
+        return $map;
+    }
+
+    /**
+     * Get the appropriate category ID for an account title
+     */
+    private function getCategoryIdForAccount($accountTitle, $categoryMap, $categories)
+    {
+        // Map account titles to categories based on keywords
+        $accountTitleLower = strtolower($accountTitle);
+
+        // Advertising
+        if (str_contains($accountTitleLower, 'advertising')) {
+            return $categoryMap['advertising'] ?? $categories->first()->id;
+        }
+
+        // Office Supplies
+        if (str_contains($accountTitleLower, 'office supplies')) {
+            return $categoryMap['office supplies'] ?? $categories->first()->id;
+        }
+
+        // Accountable Forms
+        if (str_contains($accountTitleLower, 'accountable forms')) {
+            return $categoryMap['accountable forms'] ?? $categories->first()->id;
+        }
+
+        // Computer Supplies
+        if (str_contains($accountTitleLower, 'computer') || 
+            str_contains($accountTitleLower, 'internet') ||
+            str_contains($accountTitleLower, 'software')) {
+            return $categoryMap['computer supplies'] ?? $categories->first()->id;
+        }
+
+        // Electrical Supplies/Tools/Equipment
+        if (str_contains($accountTitleLower, 'electrical')) {
+            if (str_contains($accountTitleLower, 'supplies')) {
+                return $categoryMap['electrical supplies'] ?? $categories->first()->id;
+            } elseif (str_contains($accountTitleLower, 'tools')) {
+                return $categoryMap['electrical tools'] ?? $categories->first()->id;
+            } elseif (str_contains($accountTitleLower, 'equipment')) {
+                return $categoryMap['electrical equipment'] ?? $categories->first()->id;
+            }
+        }
+
+        // Fuel, Oil, and Lubricants
+        if (str_contains($accountTitleLower, 'fuel') || 
+            str_contains($accountTitleLower, 'oil') ||
+            str_contains($accountTitleLower, 'lubricant')) {
+            return $categoryMap['fuel, oil, and lubricants'] ?? $categories->first()->id;
+        }
+
+        // Janitorial Supplies
+        if (str_contains($accountTitleLower, 'janitorial') ||
+            str_contains($accountTitleLower, 'cleaning')) {
+            return $categoryMap['janitorial supplies'] ?? $categories->first()->id;
+        }
+
+        // Gardening Supplies & Tools
+        if (str_contains($accountTitleLower, 'gardening') ||
+            str_contains($accountTitleLower, 'landscaping')) {
+            return $categoryMap['gardening supplies & tools'] ?? $categories->first()->id;
+        }
+
+        // Plumbing Supplies/Tools
+        if (str_contains($accountTitleLower, 'plumbing')) {
+            if (str_contains($accountTitleLower, 'supplies')) {
+                return $categoryMap['plumbing supplies'] ?? $categories->first()->id;
+            } elseif (str_contains($accountTitleLower, 'tools')) {
+                return $categoryMap['plumbing tools'] ?? $categories->first()->id;
+            }
+        }
+
+        // Printing & Publication
+        if (str_contains($accountTitleLower, 'printing') ||
+            str_contains($accountTitleLower, 'publication')) {
+            return $categoryMap['printing & publication'] ?? $categories->first()->id;
+        }
+
+        // Postage & Courier Service
+        if (str_contains($accountTitleLower, 'postage') ||
+            str_contains($accountTitleLower, 'courier')) {
+            return $categoryMap['postage & courier service'] ?? $categories->first()->id;
+        }
+
+        // Meals and Snacks
+        if (str_contains($accountTitleLower, 'meals') ||
+            str_contains($accountTitleLower, 'snacks') ||
+            str_contains($accountTitleLower, 'food') ||
+            str_contains($accountTitleLower, 'representation')) {
+            return $categoryMap['meals and snacks (other offices)'] ?? $categories->first()->id;
+        }
+
+        // Trophies, Plaques & Medals
+        if (str_contains($accountTitleLower, 'trophy') ||
+            str_contains($accountTitleLower, 'plaque') ||
+            str_contains($accountTitleLower, 'medal') ||
+            str_contains($accountTitleLower, 'award') ||
+            str_contains($accountTitleLower, 'prize')) {
+            return $categoryMap['trophies, plaques & medals'] ?? $categories->first()->id;
+        }
+
+        // Sports Supplies
+        if (str_contains($accountTitleLower, 'sports')) {
+            return $categoryMap['sports supplies'] ?? $categories->first()->id;
+        }
+
+        // Tokens/Souvenirs
+        if (str_contains($accountTitleLower, 'token') ||
+            str_contains($accountTitleLower, 'souvenir')) {
+            return $categoryMap['tokens/souvenirs'] ?? $categories->first()->id;
+        }
+
+        // General Welfare Goods
+        if (str_contains($accountTitleLower, 'welfare') ||
+            str_contains($accountTitleLower, 'relief')) {
+            return $categoryMap['general welfare goods'] ?? $categories->first()->id;
+        }
+
+        // ICT Equipment
+        if (str_contains($accountTitleLower, 'ict') ||
+            str_contains($accountTitleLower, 'technology') ||
+            str_contains($accountTitleLower, 'communication')) {
+            return $categoryMap['ict equipment'] ?? $categories->first()->id;
+        }
+
+        // Carpentry related
+        if (str_contains($accountTitleLower, 'carpentry')) {
+            if (str_contains($accountTitleLower, 'tools') || str_contains($accountTitleLower, 'equipment')) {
+                return $categoryMap['carpentry tools and equipment'] ?? $categories->first()->id;
+            } elseif (str_contains($accountTitleLower, 'supplies')) {
+                return $categoryMap['carpentry supplies'] ?? $categories->first()->id;
+            }
+        }
+
+        // Beverages
+        if (str_contains($accountTitleLower, 'beverage')) {
+            return $categoryMap['beverages'] ?? $categories->first()->id;
+        }
+
+        return $categoryMap['office supplies'] ?? $categories->first()->id; // Default to first category or office supplies
     }
 }

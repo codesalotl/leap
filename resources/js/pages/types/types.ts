@@ -72,6 +72,15 @@ export interface PriceList {
     unit_of_measurement: string;
     price: string;
     chart_of_account_id: number;
-    created_at: string;
-    updated_at: string;
+    ppmp_category_id: number;
+    created_at: string | null;
+    updated_at: string | null;
+    category?: PpmpCategory;
+}
+
+export interface PpmpCategory {
+    id: number;
+    name: string;
+    created_at: string | null;
+    updated_at: string | null;
 }

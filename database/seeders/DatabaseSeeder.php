@@ -63,7 +63,8 @@ class DatabaseSeeder extends Seeder
             AipEntrySeeder::class,
 
             PpaItemizedCostSeeder::class,
-            
+
+            PpmpCategorySeeder::class,
             PpmpPriceListSeeder::class,
             PpmpSeeder::class,
         ]);

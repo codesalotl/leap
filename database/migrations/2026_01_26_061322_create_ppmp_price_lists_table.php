@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->text('description');
             $table->string('unit_of_measurement', 20);
             $table->decimal('price', 19, 2);
+            $table->foreignId('ppmp_category_id')->constrained();
             $table->foreignId('chart_of_account_id')->constrained();
             $table->timestamps();
         });

@@ -28,7 +28,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChartOfAccount } from '@/pages/types/types';
+import { ChartOfAccount, PpmpCategory } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 
 // Import toggle component
@@ -38,6 +38,7 @@ interface PpmpFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     chartOfAccounts: ChartOfAccount[];
+    ppmpCategories: PpmpCategory[];
     ppmpPriceList: unknown[];
     selectedEntry: { id: number } | null;
     ppmpItems: unknown[];
@@ -51,6 +52,7 @@ const formSchema = z.object({
         .refine((val) => val !== undefined && val !== null, {
             message: 'Expense account is required',
         }),
+    category: z.number(),
     itemNo: z.string().min(1, 'Item number is required.'),
     description: z.string().min(1, 'Description is required.'),
     unitOfMeasurement: z.string().min(1, 'Unit of measurement is required.'),
@@ -62,6 +64,7 @@ export default function PpmpFormDialog({
     open,
     onOpenChange,
     chartOfAccounts,
+    ppmpCategories,
     ppmpPriceList = [],
     selectedEntry = null,
     ppmpItems = [],
@@ -74,6 +77,7 @@ export default function PpmpFormDialog({
             aip_entry_id: selectedEntry?.id || 0,
             ppmp_price_list_id: 0,
             expenseAccount: undefined,
+            category: undefined,
             itemNo: '',
             description: '',
             unitOfMeasurement: '',
@@ -104,6 +108,8 @@ export default function PpmpFormDialog({
           )
         : allPriceLists;
 
+    console.log(filteredPriceLists);
+
     // Track if expense account change was triggered by description selection
     const isExpenseAccountChangingFromDescription = React.useRef(false);
 
@@ -129,6 +135,8 @@ export default function PpmpFormDialog({
     }, [isCustomItem, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
+        console.log(data);
+
         if (isCustomItem) {
             // Custom item mode - use the dedicated custom route
             const customItemData = {
@@ -138,6 +146,7 @@ export default function PpmpFormDialog({
                 unit_of_measurement: data.unitOfMeasurement,
                 price: parseFloat(data.price),
                 chart_of_account_id: data.expenseAccount,
+                ppmp_category_id: data.category,
             };
 
             console.log('Creating custom PPMP item:', customItemData);
@@ -205,7 +214,7 @@ export default function PpmpFormDialog({
                 </DialogHeader>
 
                 {/* Toggle for Price List vs Custom Item */}
-                <div className="flex items-center space-x-2 pb-4">
+                <div className="flex items-center space-x-2">
                     <Switch
                         id="custom-item-toggle"
                         checked={isCustomItem}
@@ -294,6 +303,71 @@ export default function PpmpFormDialog({
                         />
 
                         <Controller
+                            name="category"
+                            control={form.control}
+                            render={({ field, fieldState }) => {
+                                return (
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <FieldContent>
+                                            <FieldLabel htmlFor="category-select">
+                                                Expense Account
+                                            </FieldLabel>
+
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </FieldContent>
+
+                                        <Select
+                                            onValueChange={(val) =>
+                                                field.onChange(Number(val))
+                                            }
+                                            value={
+                                                field.value
+                                                    ? field.value.toString()
+                                                    : ''
+                                            }
+                                        >
+                                            <SelectTrigger
+                                                id="category-select"
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                                className="w-full"
+                                            >
+                                                <SelectValue placeholder="Select category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {ppmpCategories.map(
+                                                        (category) => (
+                                                            <SelectItem
+                                                                key={
+                                                                    category.id
+                                                                }
+                                                                value={category.id.toString()}
+                                                            >
+                                                                {category.name}
+                                                            </SelectItem>
+                                                        ),
+                                                    )}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+
+                                        {/* {fieldState.invalid && (
+                                            <FieldError
+                                                errors={[fieldState.error]}
+                                            />
+                                        )} */}
+                                    </Field>
+                                );
+                            }}
+                        />
+
+                        <Controller
                             name="itemNo"
                             control={form.control}
                             render={({ field, fieldState }) => (
@@ -350,6 +424,9 @@ export default function PpmpFormDialog({
                                                             pl.id.toString() ===
                                                             val,
                                                     );
+
+                                                console.log(selectedPriceList);
+
                                                 if (selectedPriceList) {
                                                     field.onChange(
                                                         selectedPriceList.description,
@@ -376,6 +453,11 @@ export default function PpmpFormDialog({
                                                     form.setValue(
                                                         'ppmp_price_list_id',
                                                         selectedPriceList.id,
+                                                    );
+                                                    form.setValue(
+                                                        'category',
+                                                        selectedPriceList
+                                                            .category.id,
                                                     );
                                                 }
                                             }}
