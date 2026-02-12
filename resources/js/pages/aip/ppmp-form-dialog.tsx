@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -72,6 +72,8 @@ export default function PpmpFormDialog({
     console.log(chartOfAccounts);
     // console.log(ppmpCategories);
 
+    // const [isCustomCategoryActive, setIsCustomCategoryActive] = useState(false);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -113,12 +115,16 @@ export default function PpmpFormDialog({
     //     : allPriceLists;
 
     const filteredPriceLists = allPriceLists.filter((priceList) => {
-        const matchesAccount = selectedExpenseAccount ? priceList.chart_of_account_id === selectedExpenseAccount : true;
-        
-        const matchesCategory = selectedCategory ? priceList.category?.id === selectedCategory : true;
+        const matchesAccount = selectedExpenseAccount
+            ? priceList.chart_of_account_id === selectedExpenseAccount
+            : true;
+
+        const matchesCategory = selectedCategory
+            ? priceList.category?.id === selectedCategory
+            : true;
 
         return matchesAccount && matchesCategory;
-    })
+    });
 
     // console.log(filteredPriceLists);
 
@@ -334,42 +340,66 @@ export default function PpmpFormDialog({
                                             )}
                                         </FieldContent>
 
-                                        <Select
-                                            onValueChange={(val) =>
-                                                field.onChange(Number(val))
-                                            }
-                                            value={
-                                                field.value
-                                                    ? field.value.toString()
-                                                    : ''
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id="category-select"
-                                                aria-invalid={
-                                                    fieldState.invalid
+                                        {/* {!isCustomCategoryActive ? ( */}
+                                            <Select
+                                                onValueChange={(val) =>
+                                                    field.onChange(Number(val))
                                                 }
-                                                className="w-full"
+                                                value={
+                                                    field.value
+                                                        ? field.value.toString()
+                                                        : ''
+                                                }
                                             >
-                                                <SelectValue placeholder="Select category" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {ppmpCategories.map(
-                                                        (category) => (
-                                                            <SelectItem
-                                                                key={
-                                                                    category.id
-                                                                }
-                                                                value={category.id.toString()}
-                                                            >
-                                                                {category.name}
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
+                                                <SelectTrigger
+                                                    id="category-select"
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    className="w-full"
+                                                >
+                                                    <SelectValue placeholder="Select category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        {ppmpCategories.map(
+                                                            (category) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        category.id
+                                                                    }
+                                                                    value={category.id.toString()}
+                                                                >
+                                                                    {
+                                                                        category.name
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                        {/* // ) : (
+                                        //     <Input placeholder="Enter new category" />
+                                        // )} */}
+
+                                        {/* {isCustomItem && (
+                                            <Field orientation="horizontal">
+                                                <Switch
+                                                    size="sm"
+                                                    id="add-new-category"
+                                                    onCheckedChange={
+                                                        setIsCustomCategoryActive
+                                                    }
+                                                />
+                                                <FieldLabel
+                                                    htmlFor="add-new-category"
+                                                    className={`${isCustomCategoryActive ? 'text-primary' : ''}`}
+                                                >
+                                                    Add new category
+                                                </FieldLabel>
+                                            </Field>
+                                        )} */}
 
                                         {/* {fieldState.invalid && (
                                             <FieldError
@@ -485,7 +515,9 @@ export default function PpmpFormDialog({
                                                     )
                                                     ?.id.toString() || ''
                                             }
-                                            disabled={!filteredPriceLists.length}
+                                            disabled={
+                                                !filteredPriceLists.length
+                                            }
                                         >
                                             <SelectTrigger
                                                 id="form-rhf-demo-description"
@@ -494,7 +526,13 @@ export default function PpmpFormDialog({
                                                 }
                                                 className="w-full"
                                             >
-                                                <SelectValue placeholder={!filteredPriceLists.length ? "No items found" : "Select item description"} />
+                                                <SelectValue
+                                                    placeholder={
+                                                        !filteredPriceLists.length
+                                                            ? 'No items found'
+                                                            : 'Select item description'
+                                                    }
+                                                />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
