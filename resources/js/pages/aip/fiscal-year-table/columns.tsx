@@ -2,7 +2,6 @@ import { ColumnDef } from '@tanstack/react-table';
 import { router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,43 +12,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, CheckCircle2, XCircle } from 'lucide-react';
 import { summary } from '@/routes/aip';
-
-// Define the shape of your data
-export interface FiscalYear {
-    id: number;
-    year: number;
-    status: string;
-    created_at: string;
-    updated_at: string;
-}
+import { FiscalYear } from '@/pages/types/types';
 
 export const columns: ColumnDef<FiscalYear>[] = [
-    {
-        id: 'select',
-        size: 30,
-        minSize: 30,
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate')
-                }
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
     {
         accessorKey: 'year',
         header: 'Year',
@@ -98,8 +63,6 @@ export const columns: ColumnDef<FiscalYear>[] = [
     },
     {
         id: 'actions',
-        size: 30,
-        enableHiding: false,
         cell: ({ row }) => {
             const aip = row.original;
 
@@ -119,9 +82,7 @@ export const columns: ColumnDef<FiscalYear>[] = [
                     <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() =>
-                                router.visit(summary(aip.id).url)
-                            }
+                            onClick={() => router.visit(summary(aip.id).url)}
                         >
                             Open AIP Summary
                         </DropdownMenuItem>

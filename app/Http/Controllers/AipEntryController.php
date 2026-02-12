@@ -87,7 +87,7 @@ class AipEntryController extends Controller
 
         $offices = Office::all();
 
-        return Inertia::render('aip/aip-summary-form', [
+        return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipTree,
             'masterPpas' => $masterPpaTree,
