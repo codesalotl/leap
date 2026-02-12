@@ -108,7 +108,7 @@ export default function PpmpFormDialog({
           )
         : allPriceLists;
 
-    console.log(filteredPriceLists);
+    // console.log(filteredPriceLists);
 
     // Track if expense account change was triggered by description selection
     const isExpenseAccountChangingFromDescription = React.useRef(false);
@@ -135,7 +135,7 @@ export default function PpmpFormDialog({
     }, [isCustomItem, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+        // console.log(data);
 
         if (isCustomItem) {
             // Custom item mode - use the dedicated custom route
@@ -149,12 +149,12 @@ export default function PpmpFormDialog({
                 ppmp_category_id: data.category,
             };
 
-            console.log('Creating custom PPMP item:', customItemData);
+            // console.log('Creating custom PPMP item:', customItemData);
 
             // Single API call that creates both price list and PPMP
             router.post('/ppmp/custom', customItemData, {
                 onSuccess: () => {
-                    console.log('Custom PPMP item created successfully');
+                    // console.log('Custom PPMP item created successfully');
                     onOpenChange(false); // Close dialog on success
                 },
                 onError: (errors) => {
@@ -174,12 +174,12 @@ export default function PpmpFormDialog({
                 ppmp_price_list_id: data.ppmp_price_list_id,
             };
 
-            console.log('Submitting price list item:', submitData);
+            // console.log('Submitting price list item:', submitData);
 
             // Make API call using Inertia router
             router.post('/ppmp', submitData, {
                 onSuccess: () => {
-                    console.log('PPMP item created successfully');
+                    // console.log('PPMP item created successfully');
                     onOpenChange(false); // Close dialog on success
                 },
                 onError: (errors) => {
@@ -310,7 +310,7 @@ export default function PpmpFormDialog({
                                     <Field data-invalid={fieldState.invalid}>
                                         <FieldContent>
                                             <FieldLabel htmlFor="category-select">
-                                                Expense Account
+                                                Category
                                             </FieldLabel>
 
                                             {fieldState.invalid && (
@@ -425,7 +425,7 @@ export default function PpmpFormDialog({
                                                             val,
                                                     );
 
-                                                console.log(selectedPriceList);
+                                                // console.log(selectedPriceList);
 
                                                 if (selectedPriceList) {
                                                     field.onChange(

@@ -40,10 +40,10 @@ export default function PpmpPage({
     aipEntry,
     ppmpItems,
     chartOfAccounts,
-    ppmpCategories,
+    ppmpCategories, // for form
 }: PpmpPageProps) {
-    // console.log(ppmpItems);
-    console.log(chartOfAccounts);
+    console.log(ppmpItems);
+    // console.log(chartOfAccounts);
 
     const [open, setOpen] = useState(false);
 
@@ -57,15 +57,12 @@ export default function PpmpPage({
     ];
 
     async function exportToExcel() {
-        // console.log('export to excel');
-        console.log(ppmpItems);
-
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('PPMP');
         const initailRowCount = worksheet.rowCount; // returns the number of the very first row
         const headerRowCount = initailRowCount + 1; // returns the number where the header row is
         const firstRowCount = headerRowCount + 1; // returns the number where the header row is
-        const headerRow = worksheet.getRow(headerRowCount); // returns the header row data
+        // const headerRow = worksheet.getRow(headerRowCount); // returns the header row data
 
         worksheet.columns = [
             { header: 'EXPENSE ACCOUNT', key: 'expenseAccount', width: 15 },
@@ -114,142 +111,157 @@ export default function PpmpPage({
 
         let currentRow = firstRowCount;
 
-        // Group PPMP items by expense account
-        const groupedItems = ppmpItems.reduce(
-            (groups, item) => {
-                const accountId = item.ppmp_price_list?.chart_of_account_id;
-                if (!groups[accountId]) {
-                    groups[accountId] = [];
-                }
-                groups[accountId].push(item);
-                return groups;
-            },
-            {} as Record<number, typeof ppmpItems>,
+        // processing data
+        const groupedByCategory = Object.groupBy(
+            ppmpItems,
+            ({ ppmp_price_list }) => ppmp_price_list?.category?.id,
         );
+        const groupedByExpenseAccount = Object.fromEntries(
+            Object.entries(groupedByCategory).map(([key, value]) => {
+                const subGrouped = Object.groupBy(
+                    value,
+                    ({ ppmp_price_list }) =>
+                        ppmp_price_list?.chart_of_account_id,
+                );
+
+                return [key, subGrouped];
+            }),
+        );
+        // console.log(groupedByExpenseAccount);
+        // console.log(ppmpCategories);
 
         // Process each group
-        Object.entries(groupedItems).forEach(
-            ([accountId, items], groupIndex) => {
-                // Add 2 empty rows before each group
-                worksheet.addRow({ description: '-' }).fill = {
+        Object.entries(groupedByExpenseAccount).forEach(
+            ([categoryId, accounts]) => {
+                // console.log(categoryId, accounts);
+
+                worksheet.addRow({
+                    description: ppmpCategories.find(
+                        (category) => category.id === Number(categoryId),
+                    )?.name,
+                }).fill = {
                     type: 'pattern',
                     pattern: 'solid',
                     fgColor: { argb: 'd0cece' },
                 };
-                worksheet.addRow({
-                    description: chartOfAccounts.find((account) => {
-                        return account.id === Number(accountId);
-                    })?.account_title,
-                }).fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'fbe4d5' },
-                };
 
-                currentRow += 2;
+                currentRow++;
 
-                const groupStartRow = currentRow;
+                Object.entries(accounts).forEach(([accountId, items]) => {
+                    // console.log(accountId, items);
 
-                // Add items in this group
-                items.forEach((item) => {
                     worksheet.addRow({
-                        expenseAccount: chartOfAccounts.find((account) => {
-                            return (
-                                account.id ===
-                                item.ppmp_price_list?.chart_of_account_id
-                            );
-                        })?.account_title,
-                        itemNo: item.ppmp_price_list?.item_number,
-                        description: item.ppmp_price_list?.description,
-                        unitOfMeasurement:
-                            item.ppmp_price_list?.unit_of_measurement,
-                        price: Number(item.ppmp_price_list?.price),
-                        totalQuantity: {
-                            formula: `SUM(H${currentRow}, J${currentRow}, L${currentRow}, N${currentRow}, P${currentRow}, R${currentRow}, T${currentRow}, V${currentRow}, X${currentRow}, Z${currentRow}, AB${currentRow}, AD${currentRow})`,
-                        },
-                        totalAmount: {
-                            formula: `PRODUCT(E${currentRow}, F${currentRow})`,
-                        },
-                        janQuantity: Number(item.jan_qty),
-                        janAmount: Number(item.jan_amount),
-                        febQuantity: Number(item.feb_qty),
-                        febAmount: Number(item.feb_amount),
-                        marQuantity: Number(item.mar_qty),
-                        marAmount: Number(item.mar_amount),
-                        aprQuantity: Number(item.apr_qty),
-                        aprAmount: Number(item.apr_amount),
-                        mayQuantity: Number(item.may_qty),
-                        mayAmount: Number(item.may_amount),
-                        junQuantity: Number(item.jun_qty),
-                        junAmount: Number(item.jun_amount),
-                        julQuantity: Number(item.jul_qty),
-                        julAmount: Number(item.jul_amount),
-                        augQuantity: Number(item.aug_qty),
-                        augAmount: Number(item.aug_amount),
-                        sepQuantity: Number(item.sep_qty),
-                        sepAmount: Number(item.sep_amount),
-                        octQuantity: Number(item.oct_qty),
-                        octAmount: Number(item.oct_amount),
-                        novQuantity: Number(item.nov_qty),
-                        novAmount: Number(item.nov_amount),
-                        decQuantity: Number(item.dec_qty),
-                        decAmount: Number(item.dec_amount),
+                        description: chartOfAccounts.find(
+                            (account) => account.id === Number(accountId),
+                        )?.account_title,
+                    }).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'd0cece' },
+                    };
+
+                    currentRow++;
+                    const groupStartRow = currentRow;
+
+                    items.forEach((item) => {
+                        worksheet.addRow({
+                            expenseAccount: chartOfAccounts.find((account) => {
+                                return (
+                                    account.id ===
+                                    item.ppmp_price_list?.chart_of_account_id
+                                );
+                            })?.account_title,
+                            itemNo: item.ppmp_price_list?.item_number,
+                            description: item.ppmp_price_list?.description,
+                            unitOfMeasurement:
+                                item.ppmp_price_list?.unit_of_measurement,
+                            price: Number(item.ppmp_price_list?.price),
+                            totalQuantity: {
+                                formula: `SUM(H${currentRow}, J${currentRow}, L${currentRow}, N${currentRow}, P${currentRow}, R${currentRow}, T${currentRow}, V${currentRow}, X${currentRow}, Z${currentRow}, AB${currentRow}, AD${currentRow})`,
+                            },
+                            totalAmount: {
+                                formula: `PRODUCT(E${currentRow}, F${currentRow})`,
+                            },
+                            janQuantity: Number(item.jan_qty),
+                            janAmount: Number(item.jan_amount),
+                            febQuantity: Number(item.feb_qty),
+                            febAmount: Number(item.feb_amount),
+                            marQuantity: Number(item.mar_qty),
+                            marAmount: Number(item.mar_amount),
+                            aprQuantity: Number(item.apr_qty),
+                            aprAmount: Number(item.apr_amount),
+                            mayQuantity: Number(item.may_qty),
+                            mayAmount: Number(item.may_amount),
+                            junQuantity: Number(item.jun_qty),
+                            junAmount: Number(item.jun_amount),
+                            julQuantity: Number(item.jul_qty),
+                            julAmount: Number(item.jul_amount),
+                            augQuantity: Number(item.aug_qty),
+                            augAmount: Number(item.aug_amount),
+                            sepQuantity: Number(item.sep_qty),
+                            sepAmount: Number(item.sep_amount),
+                            octQuantity: Number(item.oct_qty),
+                            octAmount: Number(item.oct_amount),
+                            novQuantity: Number(item.nov_qty),
+                            novAmount: Number(item.nov_amount),
+                            decQuantity: Number(item.dec_qty),
+                            decAmount: Number(item.dec_amount),
+                        });
+
+                        currentRow++;
                     });
+
+                    const groupEndRow = currentRow - 1;
+
+                    worksheet.addRow({
+                        description: 'TOTAL',
+                        totalAmount: {
+                            formula: `SUM(G${groupStartRow}:G${groupEndRow})`,
+                        },
+                        janAmount: {
+                            formula: `SUM(I${groupStartRow}:I${groupEndRow})`,
+                        },
+                        febAmount: {
+                            formula: `SUM(K${groupStartRow}:K${groupEndRow})`,
+                        },
+                        marAmount: {
+                            formula: `SUM(M${groupStartRow}:M${groupEndRow})`,
+                        },
+                        aprAmount: {
+                            formula: `SUM(O${groupStartRow}:O${groupEndRow})`,
+                        },
+                        mayAmount: {
+                            formula: `SUM(Q${groupStartRow}:Q${groupEndRow})`,
+                        },
+                        junAmount: {
+                            formula: `SUM(S${groupStartRow}:S${groupEndRow})`,
+                        },
+                        julAmount: {
+                            formula: `SUM(U${groupStartRow}:U${groupEndRow})`,
+                        },
+                        augAmount: {
+                            formula: `SUM(W${groupStartRow}:W${groupEndRow})`,
+                        },
+                        sepAmount: {
+                            formula: `SUM(Y${groupStartRow}:Y${groupEndRow})`,
+                        },
+                        octAmount: {
+                            formula: `SUM(AA${groupStartRow}:AA${groupEndRow})`,
+                        },
+                        novAmount: {
+                            formula: `SUM(AC${groupStartRow}:AC${groupEndRow})`,
+                        },
+                        decAmount: {
+                            formula: `SUM(AE${groupStartRow}:AE${groupEndRow})`,
+                        },
+                    }).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'fef2cb' },
+                    };
 
                     currentRow++;
                 });
-
-                const groupEndRow = currentRow - 1;
-
-                // Add 1 empty row after each group
-                worksheet.addRow({
-                    description: 'TOTAL',
-                    totalAmount: {
-                        formula: `SUM(G${groupStartRow}:G${groupEndRow})`,
-                    },
-                    janAmount: {
-                        formula: `SUM(I${groupStartRow}:I${groupEndRow})`,
-                    },
-                    febAmount: {
-                        formula: `SUM(K${groupStartRow}:K${groupEndRow})`,
-                    },
-                    marAmount: {
-                        formula: `SUM(M${groupStartRow}:M${groupEndRow})`,
-                    },
-                    aprAmount: {
-                        formula: `SUM(O${groupStartRow}:O${groupEndRow})`,
-                    },
-                    mayAmount: {
-                        formula: `SUM(Q${groupStartRow}:Q${groupEndRow})`,
-                    },
-                    junAmount: {
-                        formula: `SUM(S${groupStartRow}:S${groupEndRow})`,
-                    },
-                    julAmount: {
-                        formula: `SUM(U${groupStartRow}:U${groupEndRow})`,
-                    },
-                    augAmount: {
-                        formula: `SUM(W${groupStartRow}:W${groupEndRow})`,
-                    },
-                    sepAmount: {
-                        formula: `SUM(Y${groupStartRow}:Y${groupEndRow})`,
-                    },
-                    octAmount: {
-                        formula: `SUM(AA${groupStartRow}:AA${groupEndRow})`,
-                    },
-                    novAmount: {
-                        formula: `SUM(AC${groupStartRow}:AC${groupEndRow})`,
-                    },
-                    decAmount: {
-                        formula: `SUM(AE${groupStartRow}:AE${groupEndRow})`,
-                    },
-                }).fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'fef2cb' },
-                };
-
-                currentRow++;
             },
         );
 
@@ -297,6 +309,20 @@ export default function PpmpPage({
                 column.numFmt = '#,##0.00';
             },
         );
+
+        const headerRow = worksheet.getRow(headerRowCount);
+
+        headerRow.font = {
+            bold: true,
+            name: 'Century Gothic',
+            size: 8,
+        };
+        headerRow.alignment = {
+            horizontal: 'center',
+            vertical: 'middle',
+            wrapText: true,
+        };
+        headerRow.height = 30;
 
         // green color for qty fields
 

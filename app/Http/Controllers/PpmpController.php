@@ -22,7 +22,7 @@ class PpmpController extends Controller
     public function index(FiscalYear $fiscalYear, AipEntry $aipEntry)
     {
         $ppmpItems = Ppmp::where('aip_entry_id', $aipEntry->id)
-            ->with(['ppmpPriceList'])
+            ->with(['ppmpPriceList.category'])
             ->get();
 
         $chartOfAccounts = ChartOfAccount::where('expense_class', 'MOOE')
@@ -111,7 +111,8 @@ class PpmpController extends Controller
                 'ppmp_category_id' => $validated['ppmp_category_id'],
             ]);
 
-            // \Log::info('Price list created:', $newPriceList->toArray());
+            // dd($validated);
+            // dd($newPriceList);
 
             // Then create the PPMP with the new price list ID
             $ppmp = Ppmp::create([
@@ -143,6 +144,8 @@ class PpmpController extends Controller
                 'dec_qty' => 0,
                 'dec_amount' => 0,
             ]);
+
+            // dd($ppmp);
 
             // \Log::info('PPMP created:', $ppmp->toArray());
 

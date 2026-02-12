@@ -39,8 +39,6 @@ class PpmpPriceListController extends Controller
     public function store(StorePpmpPriceListRequest $request)
     {
         $validated = $request->validated();
-
-        // dd($validated);
         
         $newPriceList = PpmpPriceList::create($validated);
         
