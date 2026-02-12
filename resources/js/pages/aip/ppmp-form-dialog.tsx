@@ -69,7 +69,8 @@ export default function PpmpFormDialog({
     selectedEntry = null,
     ppmpItems = [],
 }: PpmpFormDialogProps) {
-    // console.log(chartOfAccounts);
+    console.log(chartOfAccounts);
+    // console.log(ppmpCategories);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -89,6 +90,7 @@ export default function PpmpFormDialog({
     // Watch the custom item toggle
     const isCustomItem = form.watch('isCustomItem');
     const selectedExpenseAccount = form.watch('expenseAccount');
+    const selectedCategory = form.watch('category');
 
     // Flatten all price lists from all chart of accounts
     const allPriceLists = chartOfAccounts.flatMap(
@@ -100,13 +102,23 @@ export default function PpmpFormDialog({
             })) || [],
     );
 
+    // console.log(allPriceLists);
+
     // Filter price lists based on selected expense account
-    const filteredPriceLists = selectedExpenseAccount
-        ? allPriceLists.filter(
-              (priceList) =>
-                  priceList.chart_of_account_id === selectedExpenseAccount,
-          )
-        : allPriceLists;
+    // const filteredPriceLists = selectedExpenseAccount
+    //     ? allPriceLists.filter(
+    //           (priceList) =>
+    //               priceList.chart_of_account_id === selectedExpenseAccount,
+    //       )
+    //     : allPriceLists;
+
+    const filteredPriceLists = allPriceLists.filter((priceList) => {
+        const matchesAccount = selectedExpenseAccount ? priceList.chart_of_account_id === selectedExpenseAccount : true;
+        
+        const matchesCategory = selectedCategory ? priceList.category?.id === selectedCategory : true;
+
+        return matchesAccount && matchesCategory;
+    })
 
     // console.log(filteredPriceLists);
 
@@ -121,6 +133,7 @@ export default function PpmpFormDialog({
             form.setValue('unitOfMeasurement', '');
             form.setValue('price', '');
             form.setValue('ppmp_price_list_id', 0);
+            // form.setValue('category', 0);
         }
         isExpenseAccountChangingFromDescription.current = false;
     }, [selectedExpenseAccount, form, isCustomItem]);
@@ -132,6 +145,7 @@ export default function PpmpFormDialog({
         form.setValue('unitOfMeasurement', '');
         form.setValue('price', '');
         form.setValue('ppmp_price_list_id', 0);
+        form.setValue('category', 0);
     }, [isCustomItem, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
@@ -400,6 +414,7 @@ export default function PpmpFormDialog({
                                     <FieldLabel htmlFor="form-rhf-demo-description">
                                         Description
                                     </FieldLabel>
+
                                     {isCustomItem ? (
                                         // Custom mode - text input
                                         <InputGroup>
@@ -470,6 +485,7 @@ export default function PpmpFormDialog({
                                                     )
                                                     ?.id.toString() || ''
                                             }
+                                            disabled={!filteredPriceLists.length}
                                         >
                                             <SelectTrigger
                                                 id="form-rhf-demo-description"
@@ -478,7 +494,7 @@ export default function PpmpFormDialog({
                                                 }
                                                 className="w-full"
                                             >
-                                                <SelectValue placeholder="Select item description" />
+                                                <SelectValue placeholder={!filteredPriceLists.length ? "No items found" : "Select item description"} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectGroup>
@@ -522,6 +538,7 @@ export default function PpmpFormDialog({
                                             </SelectContent>
                                         </Select>
                                     )}
+
                                     {fieldState.invalid && (
                                         <FieldError
                                             errors={[fieldState.error]}

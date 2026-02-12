@@ -59,7 +59,7 @@ export default function PpmpPage({
     async function exportToExcel() {
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('PPMP');
-        const initailRowCount = worksheet.rowCount; // returns the number of the very first row
+        const initailRowCount = worksheet.rowCount + 5; // returns the number of the very first row
         const headerRowCount = initailRowCount + 1; // returns the number where the header row is
         const firstRowCount = headerRowCount + 1; // returns the number where the header row is
         // const headerRow = worksheet.getRow(headerRowCount); // returns the header row data
@@ -97,6 +97,8 @@ export default function PpmpPage({
             { header: 'DEC-QTY', key: 'decQuantity', width: 8 },
             { header: 'DEC', key: 'decAmount', width: 8 },
         ];
+
+        worksheet.spliceRows(1, 0, [], [], [], [], []);
 
         [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30].forEach(
             (columnNumber) => {
@@ -157,7 +159,7 @@ export default function PpmpPage({
                     }).fill = {
                         type: 'pattern',
                         pattern: 'solid',
-                        fgColor: { argb: 'd0cece' },
+                        fgColor: { argb: 'fbe4d5' },
                     };
 
                     currentRow++;
@@ -207,6 +209,8 @@ export default function PpmpPage({
                             decQuantity: Number(item.dec_qty),
                             decAmount: Number(item.dec_amount),
                         });
+
+                        worksheet.getRow(currentRow).height = 30;
 
                         currentRow++;
                     });
@@ -323,97 +327,120 @@ export default function PpmpPage({
             wrapText: true,
         };
         headerRow.height = 30;
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'deeaf6' },
+        };
 
-        // green color for qty fields
+        [1, 2, 3, 4, 5].forEach((rowNumber) => {
+            const row = worksheet.getRow(rowNumber);
 
-        // [
-        //     'expenseAccount',
-        //     'itemNo',
-        //     'unitOfMeasurement',
-        //     'totalQuantity',
-        //     'janQuantity',
-        //     'febQuantity',
-        //     'marQuantity',
-        //     'aprQuantity',
-        //     'mayQuantity',
-        //     'junQuantity',
-        //     'julQuantity',
-        //     'augQuantity',
-        //     'sepQuantity',
-        //     'octQuantity',
-        //     'novQuantity',
-        //     'decQuantity',
-        // ].forEach((column) => {
-        //     worksheet.getColumn(column).font = {
-        //         name: 'Century Gothic',
-        //         size: 8,
-        //     };
-        // });
+            // Setting border to an empty object removes all borders
+            row.border = {};
+            row.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'ffffff' },
+            };
+            row.alignment = {};
+        });
 
-        // worksheet.columns.map((column) => {
-        //     worksheet.getColumn(column.key).font = {
-        //         name: 'Century Gothic',
-        //         size: 8,
-        //     };
-        // });
+        worksheet.mergeCells('B1:G2');
+        worksheet.mergeCells('B3:G3');
+        worksheet.mergeCells('B4:G4');
+        worksheet.mergeCells('B5:G5');
+        worksheet.mergeCells('H1:AE3');
+        worksheet.mergeCells('H4:AE5');
 
-        // worksheet.columns.map((key) => {
-        //     worksheet.getColumn(key.key).alignment = {
-        //         horizontal: 'center',
-        //         vertical: 'middle',
-        //         wrapText: true,
-        //     };
-        // });
+        const officeName = worksheet.getCell('B1');
+        const fundingSource = worksheet.getCell('B3'); // not the final name and is dynamic
+        const aipRefCode = worksheet.getCell('B4');
+        const ppaDesc = worksheet.getCell('B5');
+        const headerTitle = worksheet.getCell('H1');
+        const headerSubTitle = worksheet.getCell('H4');
 
-        // worksheet.getColumn(1).alignment = {
-        //     horizontal: 'left',
-        //     vertical: 'middle',
-        //     wrapText: true,
-        // };
+        const fundingSourceSpacer = worksheet.getCell(
+            fundingSource.row,
+            String(Number(fundingSource.col) - 1),
+        );
+        const aipRefCodeSpacer = worksheet.getCell(
+            aipRefCode.row,
+            String(Number(aipRefCode.col) - 1),
+        );
+        const ppaDescSpacer = worksheet.getCell(
+            ppaDesc.row,
+            String(Number(ppaDesc.col) - 1),
+        );
 
-        // headerRow.font = {
-        //     bold: true,
-        //     name: 'Century Gothic',
-        //     size: 8,
-        // };
+        officeName.value = 'NAME OF OFFICE';
+        officeName.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'ffff00' },
+        };
+        officeName.font = {
+            bold: true,
+            size: 12,
+            name: 'Century Gothic',
+        };
+        officeName.alignment = {
+            vertical: 'middle',
+        };
 
-        // headerRow.alignment = {
-        //     horizontal: 'center',
-        //     vertical: 'middle',
-        //     wrapText: true,
-        // };
+        fundingSource.value = 'FUNDING SOURCE';
+        aipRefCode.value = 'AIP REF. CODE';
+        ppaDesc.value = 'PPA DESCRIPTION';
+        headerTitle.value = 'PROVINCIAL GOVERNMENT OF LA UNION';
+        headerSubTitle.value = 'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026';
 
-        // headerRow.alignment.horizontal = 'center';
-        // headerRow.alignment.vertical = 'middle';
-        // headerRow.alignment.wrapText = true;
+        // {
+        //             text: 'PROJECT PROCUREMENT PLAN(PPMP) CY 2026',
+        //             font: { bold: true, size: 15, name: 'Century Gothic' },
+        //         },
+        // 'PROVINCIAL GOVERNMENT OF LA UNION PROJECT PROCUREMENT PLAN(PPMP) CY 2026';
 
-        // headerRow.height = 30;
+        [
+            fundingSource,
+            aipRefCode,
+            ppaDesc,
+            fundingSourceSpacer,
+            aipRefCodeSpacer,
+            ppaDescSpacer,
+        ].map(
+            (cell) => (
+                (cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: '92d050' },
+                }),
+                (cell.font = {
+                    bold: true,
+                    size: 8,
+                    name: 'Century Gothic',
+                    underline: true
+                })
+            ),
+        );
 
-        // [
-        //     'expenseAccount',
-        //     'itemNo',
-        //     'unitOfMeasurement',
-        //     'totalQuantity',
-        //     'janQuantity',
-        //     'febQuantity',
-        //     'marQuantity',
-        //     'aprQuantity',
-        //     'mayQuantity',
-        //     'junQuantity',
-        //     'julQuantity',
-        //     'augQuantity',
-        //     'sepQuantity',
-        //     'octQuantity',
-        //     'novQuantity',
-        //     'decQuantity',
-        // ].forEach((key) => {
-        //     // const column = worksheet.getColumn(key);
+        headerTitle.alignment = {
+            vertical: 'bottom',
+            horizontal: 'center',
+        };
+        headerTitle.font = { bold: true, size: 30, name: 'Century Gothic' };
+        
+        headerSubTitle.alignment = {
+            vertical: 'top',
+            horizontal: 'center',
+        };
+        headerSubTitle.font = { bold: true, size: 20, name: 'Century Gothic' };
 
-        //     console.log(headerRow.getCell(2));
-
-        //     worksheet.getColumn(key).alignment.horizontal = 'left';
-        //     headerRow.getCell(2).alignment.horizontal = 'center';
-        // });
+        console.log(worksheet.getRow(1));
+        console.log(worksheet.getCell('A1'));
+        console.log(worksheet.getCell('A2'));
+        console.log(worksheet.getCell('A3'));
+        console.log(worksheet.getCell('A4'));
+        console.log(worksheet.getCell('A5'));
 
         const buf = await workbook.xlsx.writeBuffer();
 
