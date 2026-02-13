@@ -13,6 +13,7 @@ import {
 import { MoreHorizontal, CheckCircle2, XCircle } from 'lucide-react';
 import { summary } from '@/routes/aip';
 import { FiscalYear } from '@/pages/types/types';
+import { update } from '@/routes/aip/index';
 
 export const columns: ColumnDef<FiscalYear>[] = [
     {
@@ -24,17 +25,13 @@ export const columns: ColumnDef<FiscalYear>[] = [
         header: 'Status',
         cell: ({ row }) => {
             const status = row.getValue('status') as string;
-            
+
             return (
                 <Badge
                     variant={`${status === 'Open' ? 'default' : 'destructive'}`}
                     className="secondary text-white"
                 >
-                    {status === 'Open' ? (
-                        <CheckCircle2/>
-                    ) : (
-                        <XCircle/>
-                    )}
+                    {status === 'Open' ? <CheckCircle2 /> : <XCircle />}
                     {status}
                 </Badge>
             );
@@ -72,7 +69,7 @@ export const columns: ColumnDef<FiscalYear>[] = [
         cell: ({ row }) => {
             const aip = row.original;
             const handleStatusChange = (newStatus: string) => {
-                router.patch(`/aip/${aip.id}`, { status: newStatus });
+                router.patch(update({ id: aip.id }), { status: newStatus });
             };
 
             return (

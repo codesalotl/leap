@@ -34,6 +34,15 @@ Route::middleware(['auth', 'verified'])->group(
     ),
 );
 
+// aip
+Route::get('aip', [FiscalYearController::class, 'index'])->name('aip.index');
+Route::post('aip', [FiscalYearController::class, 'store'])->name('aip.store');
+Route::patch('/aip/{fiscal_year}', [FiscalYearController::class, 'update'])->name(
+    'aip.update',
+);
+
+// ---
+
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
 
 Route::get('home', function () {
@@ -74,11 +83,6 @@ Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
     'offices.destroy',
 );
 
-// aip
-Route::get('aip', [FiscalYearController::class, 'index'])->name('aip.index');
-Route::post('aip', [FiscalYearController::class, 'store']);
-Route::patch('/aip/{aip}', [FiscalYearController::class, 'update']);
-
 // aip summary
 Route::prefix('aip/{fiscalYear}')->group(function () {
     Route::get('summary', [AipEntryController::class, 'index'])->name(
@@ -98,7 +102,9 @@ Route::get('/aip/{fiscalYear}/summary/{aipEntry}/ppmp', [
     'index',
 ])->name('aip.summary.ppmp.index');
 Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
-Route::post('/ppmp/custom', [PpmpController::class, 'storeCustomItem'])->name('ppmp.store.custom');
+Route::post('/ppmp/custom', [PpmpController::class, 'storeCustomItem'])->name(
+    'ppmp.store.custom',
+);
 Route::put('/ppmp/{ppmp}/update-monthly-quantity', [
     PpmpController::class,
     'updateMonthlyQuantity',

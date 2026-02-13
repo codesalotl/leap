@@ -32,6 +32,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Plus } from 'lucide-react';
 import { generateYearRange } from '@/pages/aip/utils/generate-year-range';
+import { store } from "@/routes/aip/index";
 
 const formSchema = z.object({
     year: z.number().int(),
@@ -54,7 +55,7 @@ export default function FiscalYearFormDialog() {
     function onSubmit(data: z.infer<typeof formSchema>) {
         setIsLoading(true);
 
-        router.post('/aip', data, {
+        router.post(store(), data, {
             onSuccess: () => {
                 setOpen(false);
                 setIsLoading(false);
