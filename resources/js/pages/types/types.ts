@@ -132,9 +132,31 @@ export interface Office {
     acronym: string | null;
     is_lee: boolean;
     full_code: string;
-    lgu_level: LguLevel;
-    office_type: OfficeType;
-    sector: string | null;
+    lgu_level?: LguLevel;
+    office_type?: OfficeType;
+    sector?: Sector;
     created_at: string | null;
     updated_at: string | null;
+}
+
+export interface Sector {
+    id: number;
+    code: string;
+    sector: string;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface Ppa {
+    id: number;
+    office_id: number;
+    parent_id: number | null;
+    title: string;
+    type: 'Program' | 'Project' | 'Activity';
+    code_suffix: string;
+    is_active: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    children?: Ppa[];
+    office?: Office;
 }

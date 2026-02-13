@@ -1,6 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
 import { router } from '@inertiajs/react';
-
 import {
     Library,
     FileDown,
@@ -40,16 +39,7 @@ import {
     exportToPDF,
 } from '@/pages/aip-summary/utils/export-utils';
 import { type BreadcrumbItem } from '@/types';
-import { type FiscalYear } from '@/pages/types/types';
-
-type Ppa = {
-    id: number;
-    title: string;
-    type: 'Program' | 'Project' | 'Activity';
-    full_code: string;
-    is_active: boolean;
-    children?: Ppa[];
-};
+import { FiscalYear, Ppa } from '@/pages/types/types';
 
 interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
@@ -87,6 +77,8 @@ export default function AipSummaryTable({
     aipEntries,
     masterPpas,
 }: AipSummaryTableProp) {
+    // console.log(masterPpas);
+
     const [searchValue, setSearchValue] = useState('');
     const [selectorState, setSelectorState] = useState({
         isOpen: false,

@@ -1,7 +1,5 @@
-import * as React from 'react';
 import { useState, useMemo } from 'react';
 import { router } from '@inertiajs/react';
-
 import {
     Dialog,
     DialogContent,
@@ -13,13 +11,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Download } from 'lucide-react';
-
 import { DataTable } from '@/pages/aip-summary/ppa-import-table/data-table';
 import {
     getPpaColumns,
-    Ppa,
+    // Ppa,
 } from '@/pages/aip-summary/ppa-import-table/columns';
 import { RowSelectionState } from '@tanstack/react-table';
+import { Ppa } from '@/pages/types/types';
 
 interface PpaSelectorDialogProps {
     isOpen: boolean;
