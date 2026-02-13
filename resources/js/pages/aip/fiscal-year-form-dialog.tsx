@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Plus } from 'lucide-react';
-import { generateYearRange } from '@/pages/aip/utils';
+import { generateYearRange } from '@/pages/aip/utils/generate-year-range';
 
 const formSchema = z.object({
     year: z.number().int(),
