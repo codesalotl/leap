@@ -12,7 +12,6 @@ class FiscalYear extends Model
 
     protected $fillable = ['year', 'status'];
 
-    // Optional: Set default values for new records
     protected $attributes = [
         'status' => 'Open',
     ];

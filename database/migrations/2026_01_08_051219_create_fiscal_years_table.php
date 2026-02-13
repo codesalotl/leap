@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('fiscal_years', function (Blueprint $table) {
             $table->id();
             $table->year('year')->unique();
-            $table->string('status', 20)->nullable();
+            $table->string('status', 20); // change later to enum
             $table->timestamps();
         });
     }

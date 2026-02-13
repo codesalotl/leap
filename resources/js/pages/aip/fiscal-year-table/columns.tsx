@@ -24,15 +24,16 @@ export const columns: ColumnDef<FiscalYear>[] = [
         header: 'Status',
         cell: ({ row }) => {
             const status = row.getValue('status') as string;
+            
             return (
                 <Badge
                     variant={`${status === 'Open' ? 'default' : 'destructive'}`}
                     className="secondary text-white"
                 >
                     {status === 'Open' ? (
-                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                        <CheckCircle2/>
                     ) : (
-                        <XCircle className="mr-1 h-3 w-3" />
+                        <XCircle/>
                     )}
                     {status}
                 </Badge>
@@ -43,7 +44,9 @@ export const columns: ColumnDef<FiscalYear>[] = [
         accessorKey: 'created_at',
         header: 'Created At',
         cell: ({ row }) => {
-            const date = new Date(row.original.created_at);
+            const rawDate = row.getValue('created_at');
+            const date = new Date(rawDate as string);
+
             return date.toLocaleString('en-US', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
@@ -54,7 +57,9 @@ export const columns: ColumnDef<FiscalYear>[] = [
         accessorKey: 'updated_at',
         header: 'Updated At',
         cell: ({ row }) => {
-            const date = new Date(row.original.updated_at);
+            const rawDate = row.getValue('updated_at');
+            const date = new Date(rawDate as string);
+
             return date.toLocaleString('en-US', {
                 dateStyle: 'medium',
                 timeStyle: 'short',
@@ -63,9 +68,9 @@ export const columns: ColumnDef<FiscalYear>[] = [
     },
     {
         id: 'actions',
+        // header: 'Action',
         cell: ({ row }) => {
             const aip = row.original;
-
             const handleStatusChange = (newStatus: string) => {
                 router.patch(`/aip/${aip.id}`, { status: newStatus });
             };

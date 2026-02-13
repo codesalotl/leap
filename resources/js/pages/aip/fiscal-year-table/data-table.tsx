@@ -1,15 +1,12 @@
-import * as React from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import {
     ColumnDef,
     ColumnFiltersState,
-    SortingState,
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    getSortedRowModel,
     useReactTable,
 } from '@tanstack/react-table';
-import { Input } from '@/components/ui/input';
 import {
     Table,
     TableBody,
@@ -18,13 +15,14 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    searchKey?: string; // e.g. "year"
-    children?: React.ReactNode; // For the FiscalYearDialog
+    searchKey?: string;
+    children?: ReactNode;
 }
 
 export function FiscalYearDataTable<TData, TValue>({
@@ -33,29 +31,22 @@ export function FiscalYearDataTable<TData, TValue>({
     searchKey,
     children,
 }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     // Reset filters and sorting when data changes
-    React.useEffect(() => {
+    useEffect(() => {
         setColumnFilters([]);
-        setSorting([]);
     }, [data]);
 
     const table = useReactTable({
         data,
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
+        onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
         state: {
-            sorting,
             columnFilters,
         },
-        enableColumnPinning: true,
     });
 
     return (
@@ -107,9 +98,7 @@ export function FiscalYearDataTable<TData, TValue>({
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                >
+                                <TableRow key={row.id}>
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(
