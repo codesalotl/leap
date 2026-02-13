@@ -4,7 +4,6 @@ import { router } from '@inertiajs/react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -24,35 +23,24 @@ import {
 } from '@/components/ui/alert-dialog';
 import AppLayout from '@/layouts/app-layout';
 import DataTable from '@/pages/aip-summary/table/data-table';
-
 import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
-// import MooeDialog from '@/pages/aip/mooe-dialog';
-// import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
-
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-
 import { type BreadcrumbItem } from '@/types';
 import {
     getColumns,
     AipEntry,
     formatNumber,
 } from '@/pages/aip-summary/table/columns';
-import { ChartOfAccount } from '@/pages/types/types';
-
-type FiscalYear = {
-    id: number;
-    year: number;
-    status: string | null;
-};
-
-type Office = {
-    id: number;
-    code: string;
-    name: string;
-};
+import {
+    FiscalYear,
+    ChartOfAccount,
+    PriceList,
+    Office,
+    Ppmp,
+} from '@/pages/types/types';
 
 type Ppa = {
     id: number;
@@ -63,20 +51,14 @@ type Ppa = {
     children?: Ppa[];
 };
 
-type PpmpPriceList = {
-    id: number;
-    price: string;
-    description: string;
-};
-
 interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
     aipEntries: AipEntry[];
     masterPpas: Ppa[];
     offices: Office[];
     chartOfAccounts: ChartOfAccount[];
-    ppmpPriceList: PpmpPriceList[];
-    ppmpItems: any[];
+    ppmpPriceList: PriceList[];
+    ppmpItems: Ppmp[];
 }
 
 const findEntryInTree = (
@@ -113,10 +95,8 @@ export default function AipSummaryTable({
     ppmpPriceList,
     ppmpItems,
 }: AipSummaryTableProp) {
-    // console.log(fiscalYear);
-    // console.log(chartOfAccounts);
+    // console.log(ppmpItems);
 
-    // --- State ---
     const [searchValue, setSearchValue] = useState('');
     const [selectorState, setSelectorState] = useState({
         isOpen: false,
@@ -130,7 +110,6 @@ export default function AipSummaryTable({
     const [selectedEntry, setSelectedEntry] = useState<AipEntry | null>(null);
     const [mode, setMode] = useState<string | null>(null);
 
-    // --- Effects ---
     useEffect(() => {
         if (selectedEntry) {
             const updated = findEntryInTree(aipEntries, selectedEntry.id);
@@ -138,11 +117,10 @@ export default function AipSummaryTable({
         }
     }, [aipEntries]);
 
-    // --- Handlers ---
     const handleImportLibrary = () => {
         setSelectorState({
             isOpen: true,
-            data: masterPpas, // Show everything
+            data: masterPpas,
             title: 'Import from Library',
             description:
                 'Select Programs, Projects, and Activities to import. Items already in the AIP are disabled.',
@@ -150,16 +128,13 @@ export default function AipSummaryTable({
     };
 
     const handleAddEntry = (entry: AipEntry) => {
-        // 1. Find the Master Node to get its children (the "Next Level")
         const masterNode = findPpaInTree(masterPpas, entry.ppa_id);
 
-        // 2. Safety check (though dropdown should be disabled)
         if (
             !masterNode ||
             !masterNode.children ||
             masterNode.children.length === 0
         ) {
-            // Show toast: "Cannot add entries to an Activity"
             console.warn(
                 'Cannot add entries to an Activity or item without children',
             );
@@ -168,7 +143,7 @@ export default function AipSummaryTable({
 
         setSelectorState({
             isOpen: true,
-            data: masterNode.children, // Show ONLY children of selected item
+            data: masterNode.children,
             title: `Add Sub-entries to: ${masterNode.title}`,
             description: `Select items to add under ${masterNode.type} ${masterNode.full_code}`,
         });
@@ -189,7 +164,6 @@ export default function AipSummaryTable({
         });
     };
 
-    // --- Export Logic ---
     const flattenForExport = (entries: AipEntry[], depth = 0): any[] => {
         let flat: any[] = [];
         entries.forEach((entry) => {
@@ -351,6 +325,7 @@ export default function AipSummaryTable({
                                 className="max-w-sm pl-8"
                             />
                         </div>
+
                         <div className="ml-auto flex gap-2">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -370,6 +345,7 @@ export default function AipSummaryTable({
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
+
                             <Button onClick={handleImportLibrary}>
                                 <Library className="mr-2 h-4 w-4" /> Import from
                                 Library
@@ -391,7 +367,20 @@ export default function AipSummaryTable({
                 </div>
             </div>
 
-            {/* Dialogs */}
+            {/* for importing and adding of ppa */}
+            <PpaSelectorDialog
+                isOpen={selectorState.isOpen}
+                onClose={() =>
+                    setSelectorState((prev) => ({ ...prev, isOpen: false }))
+                }
+                data={selectorState.data}
+                title={selectorState.title}
+                description={selectorState.description}
+                fiscalYearId={fiscalYear.id}
+                existingPpaIds={Array.from(existingPpaIds)}
+            />
+
+            {/* for editing ppa */}
             <AipEntryFormDialog
                 open={isEditOpen}
                 onOpenChange={setIsEditOpen}
@@ -402,15 +391,7 @@ export default function AipSummaryTable({
                 fiscalYear={fiscalYear}
             />
 
-            {/* <PpmpFormDialog
-                open={isMooeOpen}
-                onOpenChange={setIsMooeOpen}
-                ppmpPriceList={ppmpPriceList}
-                chartOfAccounts={chartOfAccounts}
-                selectedEntry={selectedEntry}
-                ppmpItems={ppmpItems}
-            /> */}
-
+            {/* for delete ppa */}
             <AlertDialog
                 open={isDeleteAlertOpen}
                 onOpenChange={setIsDeleteAlertOpen}
@@ -452,18 +433,6 @@ export default function AipSummaryTable({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <PpaSelectorDialog
-                isOpen={selectorState.isOpen}
-                onClose={() =>
-                    setSelectorState((prev) => ({ ...prev, isOpen: false }))
-                }
-                data={selectorState.data}
-                title={selectorState.title}
-                description={selectorState.description}
-                fiscalYearId={fiscalYear.id}
-                existingPpaIds={Array.from(existingPpaIds)}
-            />
         </AppLayout>
     );
 }

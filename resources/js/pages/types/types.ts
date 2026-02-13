@@ -84,3 +84,16 @@ export interface PpmpCategory {
     created_at: string | null;
     updated_at: string | null;
 }
+
+export interface Office {
+    id: number;
+    sector_id: number | null;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    acronym: string | null;
+    is_lee: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+}
