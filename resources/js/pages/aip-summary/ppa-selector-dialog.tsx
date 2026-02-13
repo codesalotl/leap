@@ -14,8 +14,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Download } from 'lucide-react';
 
-import { DataTable } from '@/pages/aip/ppa-import-table/data-table';
-import { getPpaColumns, Ppa } from '@/pages/aip/ppa-import-table/columns';
+import { DataTable } from '@/pages/aip-summary/ppa-import-table/data-table';
+import {
+    getPpaColumns,
+    Ppa,
+} from '@/pages/aip-summary/ppa-import-table/columns';
 import { RowSelectionState } from '@tanstack/react-table';
 
 interface PpaSelectorDialogProps {
@@ -35,27 +38,36 @@ export default function PpaSelectorDialog({
     title,
     description,
     fiscalYearId,
-    existingPpaIds = [], 
+    existingPpaIds = [],
 }: PpaSelectorDialogProps) {
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [globalFilter, setGlobalFilter] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Create a Set for faster lookups in the column definitions
-    const existingIdsSet = useMemo(() => new Set(existingPpaIds), [existingPpaIds]);
+    const existingIdsSet = useMemo(
+        () => new Set(existingPpaIds),
+        [existingPpaIds],
+    );
 
     // Pass the existing IDs Set to the columns
-    const columns = useMemo(() => getPpaColumns({ 
-        setRowSelection, 
-        existingPpaIds: existingIdsSet 
-    }), [setRowSelection, existingIdsSet]);
+    const columns = useMemo(
+        () =>
+            getPpaColumns({
+                setRowSelection,
+                existingPpaIds: existingIdsSet,
+            }),
+        [setRowSelection, existingIdsSet],
+    );
 
     const handleImport = () => {
         // Since rowSelection keys are the string IDs
         // Filter out any IDs that are already in existingIdsSet (just in case)
-        const selectedIds = Object.keys(rowSelection).filter(id => !existingIdsSet.has(Number(id)));
-        
-        console.log("Importing IDs:", selectedIds);
+        const selectedIds = Object.keys(rowSelection).filter(
+            (id) => !existingIdsSet.has(Number(id)),
+        );
+
+        console.log('Importing IDs:', selectedIds);
 
         if (selectedIds.length === 0) return;
 
@@ -76,16 +88,16 @@ export default function PpaSelectorDialog({
     };
 
     // Calculate actual new items selected (excluding already added ones that might be visually checked)
-    const newSelectedCount = Object.keys(rowSelection).filter(id => !existingIdsSet.has(Number(id))).length;
+    const newSelectedCount = Object.keys(rowSelection).filter(
+        (id) => !existingIdsSet.has(Number(id)),
+    ).length;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0 sm:max-w-[80%]">
                 <DialogHeader className="p-6 pb-2">
                     <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>
-                        {description}
-                    </DialogDescription>
+                    <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
 
                 <div className="px-6 py-2">

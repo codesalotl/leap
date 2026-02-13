@@ -31,7 +31,7 @@ class PpmpController extends Controller
 
         $ppmpCategories = PpmpCategory::all();
 
-        return Inertia::render('aip/ppmp-page', [
+        return Inertia::render('ppmp/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntry' => $aipEntry,
             'ppmpItems' => $ppmpItems,

@@ -1,18 +1,10 @@
-// resources\js\pages\aip\aip-summary-form.tsx
-
-import React, { useState, useMemo, useEffect } from 'react';
-import {
-    Library,
-    FileDown,
-    FileSpreadsheet,
-    FileText,
-} from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Library, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
 import { router } from '@inertiajs/react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Components
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -31,26 +23,23 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import AppLayout from '@/layouts/app-layout';
-import DataTable from '@/pages/aip/aip-summary-table/data-table';
+import DataTable from '@/pages/aip-summary/table/data-table';
 
-// Modals
-import PpaSelectorDialog from '@/pages/aip/ppa-selector-dialog';
-import AipEntryFormDialog from '@/pages/aip/aip-entry-form-dialog';
-import MooeDialog from '@/pages/aip/mooe-dialog';
-import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
+import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
+import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
+// import MooeDialog from '@/pages/aip/mooe-dialog';
+// import PpmpFormDialog from '@/pages/aip/ppmp-form-dialog';
 
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-// Data & Logic
 import { type BreadcrumbItem } from '@/types';
 import {
     getColumns,
     AipEntry,
     formatNumber,
-} from '@/pages/aip/aip-summary-table/columns';
-
+} from '@/pages/aip-summary/table/columns';
 import { ChartOfAccount } from '@/pages/types/types';
 
 type FiscalYear = {
@@ -124,8 +113,8 @@ export default function AipSummaryTable({
     ppmpPriceList,
     ppmpItems,
 }: AipSummaryTableProp) {
-    console.log(fiscalYear);
-    console.log(chartOfAccounts);
+    // console.log(fiscalYear);
+    // console.log(chartOfAccounts);
 
     // --- State ---
     const [searchValue, setSearchValue] = useState('');
@@ -349,34 +338,6 @@ export default function AipSummaryTable({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full px-4 pb-4">
-                {/* <DataTable
-                    data={aipEntries}
-                    columns={columns}
-                    searchKey="ppa_desc"
-                    getSubRows={(row) => row.children}
-                >
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline">
-                                <FileDown className="mr-2 h-4 w-4" /> Export
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={exportToExcel}>
-                                <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />{' '}
-                                Excel (.xlsx)
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={exportToPDF}>
-                                <FileText className="mr-2 h-4 w-4 text-red-600" />{' '}
-                                PDF (.pdf)
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button onClick={handleImportLibrary}>
-                        <Library className="mr-2 h-4 w-4" /> Import from Library
-                    </Button>
-                </DataTable> */}
-
                 <div className="w-full">
                     <div className="flex items-center justify-between py-4">
                         <div className="relative">
@@ -384,7 +345,9 @@ export default function AipSummaryTable({
                             <Input
                                 placeholder="Search projects or activities..."
                                 value={searchValue}
-                                onChange={(event) => setSearchValue(event.target.value)}
+                                onChange={(event) =>
+                                    setSearchValue(event.target.value)
+                                }
                                 className="max-w-sm pl-8"
                             />
                         </div>
@@ -439,14 +402,14 @@ export default function AipSummaryTable({
                 fiscalYear={fiscalYear}
             />
 
-            <PpmpFormDialog
+            {/* <PpmpFormDialog
                 open={isMooeOpen}
                 onOpenChange={setIsMooeOpen}
                 ppmpPriceList={ppmpPriceList}
                 chartOfAccounts={chartOfAccounts}
                 selectedEntry={selectedEntry}
                 ppmpItems={ppmpItems}
-            />
+            /> */}
 
             <AlertDialog
                 open={isDeleteAlertOpen}

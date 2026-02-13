@@ -766,7 +766,11 @@ export default function AipEntryFormDialog({
                                                         variant="outline"
                                                         size="icon"
                                                         className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                        onClick={() => router.visit(`/aip/${fiscalYear.id}/summary/${data.id}/ppmp`)}
+                                                        onClick={() =>
+                                                            router.visit(
+                                                                `/aip/${fiscalYear.id}/summary/${data.id}/ppmp`,
+                                                            )
+                                                        }
                                                         title="Manage Itemized MOOE"
                                                     >
                                                         <ListPlus className="h-4 w-4" />

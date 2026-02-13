@@ -9,14 +9,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
-    SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
@@ -27,14 +23,13 @@ import { useForm } from 'react-hook-form';
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
 import { router } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 const formSchema = z.object({
     year: z.number().int(),
@@ -43,9 +38,7 @@ const formSchema = z.object({
 export default function FiscalYearDialog() {
     const years = generateYearRange(2026, 5, 5);
     const [open, setOpen] = useState(false);
-    const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-    // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -53,17 +46,12 @@ export default function FiscalYearDialog() {
         },
     });
 
-    // 2. Define a submit handler.
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // console.log(values);
-
         router.post('/aip', values, {
             onSuccess: () => {
                 setOpen(false);
             },
-            // onError: (errors) => console.log('Validation Errors:', errors),
             onError: (errors) => {
-                // Handle backend errors
                 if (errors.year) {
                     form.setError('year', {
                         type: 'manual',
@@ -97,8 +85,6 @@ export default function FiscalYearDialog() {
 
                         <div className="grid gap-4 py-2">
                             <div className="grid gap-3">
-                                {/* <Label htmlFor="name-1">Year</Label> */}
-
                                 <FormField
                                     control={form.control}
                                     name="year"
@@ -138,10 +124,6 @@ export default function FiscalYearDialog() {
                                                     </SelectContent>
                                                 </Select>
                                             </FormControl>
-                                            {/*<FormDescription>
-                                                This is your public display
-                                                name.
-                                            </FormDescription>*/}
                                             <FormMessage />
                                         </FormItem>
                                     )}
