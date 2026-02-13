@@ -1,10 +1,16 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Library, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
 import { router } from '@inertiajs/react';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+
+import {
+    Library,
+    FileDown,
+    FileSpreadsheet,
+    FileText,
+    Search,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,31 +22,25 @@ import {
     AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
-    AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
+    AlertDialogDescription,
 } from '@/components/ui/alert-dialog';
 import AppLayout from '@/layouts/app-layout';
 import DataTable from '@/pages/aip-summary/table/data-table';
 import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { type BreadcrumbItem } from '@/types';
 import {
-    getColumns,
-    AipEntry,
-    formatNumber,
+    useAipColumns,
+    type AipEntry,
 } from '@/pages/aip-summary/table/columns';
 import {
-    FiscalYear,
-    ChartOfAccount,
-    PriceList,
-    Office,
-    Ppmp,
-} from '@/pages/types/types';
+    exportToExcel,
+    exportToPDF,
+} from '@/pages/aip-summary/utils/export-utils';
+import { type BreadcrumbItem } from '@/types';
+import { type FiscalYear } from '@/pages/types/types';
 
 type Ppa = {
     id: number;
@@ -55,10 +55,6 @@ interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
     aipEntries: AipEntry[];
     masterPpas: Ppa[];
-    offices: Office[];
-    chartOfAccounts: ChartOfAccount[];
-    ppmpPriceList: PriceList[];
-    ppmpItems: Ppmp[];
 }
 
 const findEntryInTree = (
@@ -75,7 +71,7 @@ const findEntryInTree = (
     return null;
 };
 
-const findPpaInTree = (nodes: any[], targetId: number) => {
+const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
     for (const node of nodes) {
         if (node.id === targetId) return node;
         if (node.children && node.children.length > 0) {
@@ -90,13 +86,7 @@ export default function AipSummaryTable({
     fiscalYear,
     aipEntries,
     masterPpas,
-    offices,
-    chartOfAccounts,
-    ppmpPriceList,
-    ppmpItems,
 }: AipSummaryTableProp) {
-    // console.log(ppmpItems);
-
     const [searchValue, setSearchValue] = useState('');
     const [selectorState, setSelectorState] = useState({
         isOpen: false,
@@ -105,17 +95,13 @@ export default function AipSummaryTable({
         description: '',
     });
     const [isEditOpen, setIsEditOpen] = useState(false);
-    const [isMooeOpen, setIsMooeOpen] = useState(false);
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-    const [selectedEntry, setSelectedEntry] = useState<AipEntry | null>(null);
-    const [mode, setMode] = useState<string | null>(null);
+    const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (selectedEntry) {
-            const updated = findEntryInTree(aipEntries, selectedEntry.id);
-            if (updated) setSelectedEntry(updated);
-        }
-    }, [aipEntries]);
+    const selectedEntry = useMemo(() => {
+        if (!selectedEntryId) return null;
+        return findEntryInTree(aipEntries, selectedEntryId);
+    }, [aipEntries, selectedEntryId]);
 
     const handleImportLibrary = () => {
         setSelectorState({
@@ -149,152 +135,44 @@ export default function AipSummaryTable({
         });
     };
 
-    const handleSwitchToMooe = () => {
-        setIsEditOpen(false);
-        setIsMooeOpen(true);
-    };
-
     const handleDelete = (entry: AipEntry) => {
         router.delete(`/aip-entries/${entry.id}`, {
             preserveScroll: true,
             onFinish: () => {
                 setIsDeleteAlertOpen(false);
-                setSelectedEntry(null);
+                setSelectedEntryId(null);
             },
         });
     };
 
-    const flattenForExport = (entries: AipEntry[], depth = 0): any[] => {
-        let flat: any[] = [];
-        entries.forEach((entry) => {
-            const indent = '    '.repeat(depth);
-            const prefix = depth > 0 ? '↳ ' : '';
-            flat.push({
-                ...entry,
-                indented_desc: `${indent}${prefix}${entry.ppa_desc}`,
-            });
-            if (entry.children && entry.children.length > 0) {
-                flat = [
-                    ...flat,
-                    ...flattenForExport(entry.children, depth + 1),
-                ];
-            }
-        });
-        return flat;
+    const handleExportExcel = () => {
+        exportToExcel(aipEntries, fiscalYear);
     };
 
-    const exportToExcel = () => {
-        const flatData = flattenForExport(aipEntries);
-        const data = flatData.map((e) => ({
-            'AIP Ref Code': e.aip_ref_code ?? '',
-            'Program/Project/Activity Description': e.indented_desc ?? '',
-            'Implementing Office': e.implementing_office_department ?? '',
-            'Start Date': e.sched_implementation?.start_date ?? '',
-            'Completion Date': e.sched_implementation?.completion_date ?? '',
-            'Expected Outputs': e.expected_outputs ?? '',
-            'Funding Source': e.funding_source ?? '',
-            PS: e.amount?.ps ?? '0.00',
-            MOOE: e.amount?.mooe ?? '0.00',
-            FE: e.amount?.fe ?? '0.00',
-            CO: e.amount?.co ?? '0.00',
-            Total: e.amount?.total ?? '0.00',
-            'CC Adaptation': e.cc_adaptation ?? '0.00',
-            'CC Mitigation': e.cc_mitigation ?? '0.00',
-            'Typology Code': e.cc_typology_code ?? '',
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'AIP Summary');
-        XLSX.writeFile(wb, `AIP_Summary_${fiscalYear.year}.xlsx`);
+    const handleExportPDF = () => {
+        exportToPDF(aipEntries, fiscalYear);
     };
 
-    const exportToPDF = () => {
-        const doc = new jsPDF('l', 'mm', 'a4');
-        const flatData = flattenForExport(aipEntries);
+    const handleEdit = useCallback((entry: AipEntry) => {
+        setSelectedEntryId(entry.id);
+        setIsEditOpen(true);
+    }, []);
 
-        doc.setFontSize(10);
-        doc.text(
-            `Annual Investment Program (AIP) Summary FY ${fiscalYear.year}`,
-            14,
-            10,
-        );
+    const handleDeleteClick = useCallback((entry: AipEntry) => {
+        setSelectedEntryId(entry.id);
+        setIsDeleteAlertOpen(true);
+    }, []);
 
-        autoTable(doc, {
-            startY: 15,
-            head: [
-                [
-                    'Ref Code',
-                    'Description',
-                    'Office',
-                    'Start',
-                    'End',
-                    'Outputs',
-                    'Source',
-                    'PS',
-                    'MOOE',
-                    'FE',
-                    'CO',
-                    'Total',
-                    'Adapt',
-                    'Mitig',
-                    'Typo',
-                ],
-            ],
-            body: flatData.map((e) => [
-                e.aip_ref_code ?? '',
-                e.indented_desc ?? '',
-                e.implementing_office_department ?? '',
-                e.sched_implementation?.start_date ?? '',
-                e.sched_implementation?.completion_date ?? '',
-                e.expected_outputs ?? '',
-                e.funding_source ?? '',
-                formatNumber(e.amount?.ps ?? '0'),
-                formatNumber(e.amount?.mooe ?? '0'),
-                formatNumber(e.amount?.fe ?? '0'),
-                formatNumber(e.amount?.co ?? '0'),
-                formatNumber(e.amount?.total ?? '0'),
-                formatNumber(e.cc_adaptation ?? '0'),
-                formatNumber(e.cc_mitigation ?? '0'),
-                e.cc_typology_code ?? '',
-            ]),
-            styles: { fontSize: 5.5, cellPadding: 1, valign: 'middle' },
-            headStyles: { fillColor: [40, 40, 40], halign: 'center' },
-            margin: { left: 5, right: 5 },
-        });
-
-        doc.save(`AIP_Summary_${fiscalYear.year}.pdf`);
-    };
-
-    // --- Table Columns ---
-    const columns = useMemo(
-        () =>
-            getColumns({
-                onAddEntry: (entry) => {
-                    handleAddEntry(entry);
-                },
-                onEdit: (entry) => {
-                    setSelectedEntry(entry);
-                    setIsEditOpen(true);
-                    setMode('edit');
-                },
-                onDelete: (entry) => {
-                    setSelectedEntry(entry);
-                    setIsDeleteAlertOpen(true);
-                },
-            }),
-        [],
-    );
+    const columns = useAipColumns({
+        onAddEntry: handleAddEntry,
+        onEdit: handleEdit,
+        onDelete: handleDeleteClick,
+    });
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
         { title: `AIP Summary FY ${fiscalYear.year}`, href: '#' },
     ];
-
-    const selectedPpaMasterData = useMemo(() => {
-        if (!selectedEntry || !masterPpas) return null;
-        return findPpaInTree(masterPpas, selectedEntry.ppa_id);
-    }, [selectedEntry, masterPpas]);
 
     const existingPpaIds = useMemo(() => {
         const ids = new Set<number>();
@@ -335,11 +213,13 @@ export default function AipSummaryTable({
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={exportToExcel}>
+                                    <DropdownMenuItem
+                                        onClick={handleExportExcel}
+                                    >
                                         <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />{' '}
                                         Excel (.xlsx)
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={exportToPDF}>
+                                    <DropdownMenuItem onClick={handleExportPDF}>
                                         <FileText className="mr-2 h-4 w-4 text-red-600" />{' '}
                                         PDF (.pdf)
                                     </DropdownMenuItem>
@@ -384,10 +264,7 @@ export default function AipSummaryTable({
             <AipEntryFormDialog
                 open={isEditOpen}
                 onOpenChange={setIsEditOpen}
-                onSwitch={handleSwitchToMooe}
                 data={selectedEntry}
-                mode={mode}
-                offices={offices}
                 fiscalYear={fiscalYear}
             />
 
@@ -418,7 +295,7 @@ export default function AipSummaryTable({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel
-                            onClick={() => setSelectedEntry(null)}
+                            onClick={() => setSelectedEntryId(null)}
                         >
                             Cancel
                         </AlertDialogCancel>

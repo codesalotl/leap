@@ -1,7 +1,44 @@
 export interface AipEntry {
     id: number;
-    // Add other AipEntry properties as needed
+    ppa_id: number;
+    parent_ppa_id: number | null;
+    aip_ref_code: string;
+    ppa_desc: string;
+    implementing_office_department: string;
+    sched_implementation: {
+        start_date: string;
+        completion_date: string;
+    };
+    expected_outputs: string;
+    funding_source: string;
+    amount: {
+        ps: string;
+        mooe: string;
+        fe: string;
+        co: string;
+        total: string;
+    };
+    cc_adaptation: string;
+    cc_mitigation: string;
+    cc_typology_code: string;
+    children?: AipEntry[];
     created_at: string;
+    updated_at: string;
+}
+
+export interface LguLevel {
+    code: string;
+    created_at: string;
+    id: number;
+    level: string;
+    updated_at: string;
+}
+
+export interface OfficeType {
+    code: string;
+    created_at: string;
+    id: number;
+    type: string;
     updated_at: string;
 }
 
@@ -94,6 +131,10 @@ export interface Office {
     name: string;
     acronym: string | null;
     is_lee: boolean;
+    full_code: string;
+    lgu_level: LguLevel;
+    office_type: OfficeType;
+    sector: string | null;
     created_at: string | null;
     updated_at: string | null;
 }

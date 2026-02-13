@@ -1,5 +1,3 @@
-// resources/js/pages/aip/aip-entry-form-dialog.tsx
-
 import React, { useEffect } from 'react';
 import { useForm, useWatch, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -7,8 +5,7 @@ import * as z from 'zod';
 import Decimal from 'decimal.js';
 import { router } from '@inertiajs/react';
 import { format } from 'date-fns';
-import { ListPlus, CalendarIcon } from 'lucide-react';
-
+import { ListPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,73 +25,13 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-
-interface LguLevel {
-    code: string;
-    created_at: string;
-    id: number;
-    level: string;
-    updated_at: string;
-}
-
-interface OfficeType {
-    code: string;
-    created_at: string;
-    id: number;
-    type: string;
-    updated_at: string;
-}
-
-interface Office {
-    code: string;
-    created_at: string;
-    full_code: string;
-    id: number;
-    is_lee: boolean;
-    lgu_level: LguLevel;
-    lgu_level_id: number;
-    name: string;
-    office_type: OfficeType;
-    office_type_id: number;
-    sector: string | null;
-    sector_id: string | null;
-    update_at: string;
-}
-
-export interface AipEntry {
-    id: number;
-    ppa_id: number;
-    parent_ppa_id: number | null;
-    aip_ref_code: string;
-    ppa_desc: string;
-    implementing_office_department: string;
-    sched_implementation: {
-        start_date: string;
-        completion_date: string;
-    };
-    expected_outputs: string;
-    funding_source: string;
-    amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
-    };
-    cc_adaptation: string;
-    cc_mitigation: string;
-    cc_typology_code: string;
-    children?: AipEntry[];
-}
+import { FiscalYear, AipEntry } from '@/pages/types/types';
 
 interface AipFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSwitch: () => void; // Added missing prop type from your usage
-    data: AipEntry;
-    mode: string | null; // Changed to match parent usage
-    offices: Office[];
-    fiscalYear: { id: number; year: number; status: string | null };
+    data: AipEntry | null;
+    fiscalYear: FiscalYear;
 }
 
 const amountSchema = z
@@ -145,29 +82,75 @@ const formatCurrency = (val: string) => {
     }).format(parseFloat(numericValue));
 };
 
+// Currency Input Component with proper hook usage
+const CurrencyInput = ({
+    field,
+    fieldState,
+    label,
+}: {
+    field: {
+        value: string;
+        onChange: (value: string) => void;
+        onBlur: () => void;
+        name: string;
+    };
+    fieldState: {
+        invalid: boolean;
+        error?: { message?: string };
+    };
+    label: string;
+}) => {
+    const [isFocused, setIsFocused] = React.useState(false);
+    const displayValue = isFocused ? field.value : formatCurrency(field.value);
+
+    return (
+        <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+            <Input
+                value={displayValue}
+                id={field.name}
+                name={field.name}
+                aria-invalid={fieldState.invalid}
+                autoComplete="off"
+                onFocus={() => setIsFocused(true)}
+                onBlur={(e) => {
+                    setIsFocused(false);
+                    const val = e.target.value;
+                    if (val && !isNaN(Number(stripCommas(val)))) {
+                        const roundedValue = parseFloat(
+                            stripCommas(val),
+                        ).toFixed(2);
+                        field.onChange(roundedValue);
+                    }
+                    field.onBlur();
+                }}
+                onChange={(e) => field.onChange(e.target.value)}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+        </Field>
+    );
+};
+
 export default function AipEntryFormDialog({
     open,
     onOpenChange,
-    onSwitch,
     data,
-    mode,
-    offices,
     fiscalYear,
 }: AipFormProps) {
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
-    const getInitialValues = (d: any): z.infer<typeof formSchema> => ({
+    const getInitialValues = (
+        d: AipEntry | null,
+    ): z.infer<typeof formSchema> => ({
         ppa_id: d?.ppa_id || 0,
         aipRefCode: d?.aip_ref_code || '',
         ppaDescription: d?.ppa_desc || '',
         implementingOfficeDepartmentLocation:
             d?.implementing_office_department || '',
         scheduleOfImplementation: {
-            startingDate:
-                d?.sched_implementation?.start_date || d?.start_date || '',
-            completionDate:
-                d?.sched_implementation?.completion_date || d?.end_date || '',
+            startingDate: d?.sched_implementation?.start_date || '',
+            completionDate: d?.sched_implementation?.completion_date || '',
         },
-        expectedOutputs: d?.expected_outputs || d?.expected_output || '',
+        expectedOutputs: d?.expected_outputs || '',
         fundingSource: d?.funding_source || '',
         amount: {
             ps: d?.amount?.ps || '0.00',
@@ -177,8 +160,8 @@ export default function AipEntryFormDialog({
             total: d?.amount?.total || '0.00',
         },
         amountOfCcExpenditure: {
-            ccAdaptation: d?.cc_adaptation || d?.ccet_adaptation || '0.00',
-            ccMitigation: d?.cc_mitigation || d?.ccet_mitigation || '0.00',
+            ccAdaptation: d?.cc_adaptation || '0.00',
+            ccMitigation: d?.cc_mitigation || '0.00',
         },
         ccTypologyCode: d?.cc_typology_code || '',
     });
@@ -238,9 +221,9 @@ export default function AipEntryFormDialog({
             <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle>Edit AIP Entry</DialogTitle>
-                    {/* <DialogDescription>
-                        Modify the details for this program/project allocation.
-                    </DialogDescription> */}
+                    <DialogDescription>
+                        {/* Modify the details for this program/project allocation. */}
+                    </DialogDescription>
                 </DialogHeader>
 
                 <Form {...form}>
@@ -663,74 +646,13 @@ export default function AipEntryFormDialog({
                                     <Controller
                                         name="amount.ps"
                                         control={form.control}
-                                        render={({ field, fieldState }) => {
-                                            const [isFocused, setIsFocused] =
-                                                React.useState(false);
-                                            const displayValue = isFocused
-                                                ? field.value
-                                                : formatCurrency(field.value);
-
-                                            return (
-                                                <Field
-                                                    data-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        PS
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        value={displayValue}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        autoComplete="off"
-                                                        onFocus={() =>
-                                                            setIsFocused(true)
-                                                        }
-                                                        onBlur={(e) => {
-                                                            setIsFocused(false);
-                                                            const val =
-                                                                e.target.value;
-                                                            if (
-                                                                val &&
-                                                                !isNaN(
-                                                                    Number(
-                                                                        stripCommas(
-                                                                            val,
-                                                                        ),
-                                                                    ),
-                                                                )
-                                                            ) {
-                                                                const roundedValue =
-                                                                    parseFloat(
-                                                                        stripCommas(
-                                                                            val,
-                                                                        ),
-                                                                    ).toFixed(
-                                                                        2,
-                                                                    );
-                                                                field.onChange(
-                                                                    roundedValue,
-                                                                );
-                                                            }
-                                                            field.onBlur();
-                                                        }}
-                                                    />
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
-                                                </Field>
-                                            );
-                                        }}
+                                        render={({ field, fieldState }) => (
+                                            <CurrencyInput
+                                                field={field}
+                                                fieldState={fieldState}
+                                                label="PS"
+                                            />
+                                        )}
                                     />
 
                                     <Controller
@@ -766,11 +688,13 @@ export default function AipEntryFormDialog({
                                                         variant="outline"
                                                         size="icon"
                                                         className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                        onClick={() =>
-                                                            router.visit(
-                                                                `/aip/${fiscalYear.id}/summary/${data.id}/ppmp`,
-                                                            )
-                                                        }
+                                                        onClick={() => {
+                                                            if (data?.id) {
+                                                                router.visit(
+                                                                    `/aip/${fiscalYear.id}/summary/${data.id}/ppmp`,
+                                                                );
+                                                            }
+                                                        }}
                                                         title="Manage Itemized MOOE"
                                                     >
                                                         <ListPlus className="h-4 w-4" />
@@ -790,147 +714,25 @@ export default function AipEntryFormDialog({
                                     <Controller
                                         name="amount.fe"
                                         control={form.control}
-                                        render={({ field, fieldState }) => {
-                                            const [isFocused, setIsFocused] =
-                                                React.useState(false);
-                                            const displayValue = isFocused
-                                                ? field.value
-                                                : formatCurrency(field.value);
-
-                                            return (
-                                                <Field
-                                                    data-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        FE
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        value={displayValue}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        autoComplete="off"
-                                                        onFocus={() =>
-                                                            setIsFocused(true)
-                                                        }
-                                                        onBlur={(e) => {
-                                                            setIsFocused(false);
-                                                            const val =
-                                                                e.target.value;
-                                                            if (
-                                                                val &&
-                                                                !isNaN(
-                                                                    Number(
-                                                                        stripCommas(
-                                                                            val,
-                                                                        ),
-                                                                    ),
-                                                                )
-                                                            ) {
-                                                                const roundedValue =
-                                                                    parseFloat(
-                                                                        stripCommas(
-                                                                            val,
-                                                                        ),
-                                                                    ).toFixed(
-                                                                        2,
-                                                                    );
-                                                                field.onChange(
-                                                                    roundedValue,
-                                                                );
-                                                            }
-                                                            field.onBlur();
-                                                        }}
-                                                    />
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
-                                                </Field>
-                                            );
-                                        }}
+                                        render={({ field, fieldState }) => (
+                                            <CurrencyInput
+                                                field={field}
+                                                fieldState={fieldState}
+                                                label="FE"
+                                            />
+                                        )}
                                     />
 
                                     <Controller
                                         name="amount.co"
                                         control={form.control}
-                                        render={({ field, fieldState }) => {
-                                            const [isFocused, setIsFocused] =
-                                                React.useState(false);
-                                            const displayValue = isFocused
-                                                ? field.value
-                                                : formatCurrency(field.value);
-
-                                            return (
-                                                <Field
-                                                    data-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        CO
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        value={displayValue}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        autoComplete="off"
-                                                        onFocus={() =>
-                                                            setIsFocused(true)
-                                                        }
-                                                        onBlur={(e) => {
-                                                            setIsFocused(false);
-                                                            const val =
-                                                                e.target.value;
-                                                            if (
-                                                                val &&
-                                                                !isNaN(
-                                                                    Number(
-                                                                        stripCommas(
-                                                                            val,
-                                                                        ),
-                                                                    ),
-                                                                )
-                                                            ) {
-                                                                const roundedValue =
-                                                                    parseFloat(
-                                                                        stripCommas(
-                                                                            val,
-                                                                        ),
-                                                                    ).toFixed(
-                                                                        2,
-                                                                    );
-                                                                field.onChange(
-                                                                    roundedValue,
-                                                                );
-                                                            }
-                                                            field.onBlur();
-                                                        }}
-                                                    />
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
-                                                </Field>
-                                            );
-                                        }}
+                                        render={({ field, fieldState }) => (
+                                            <CurrencyInput
+                                                field={field}
+                                                fieldState={fieldState}
+                                                label="CO"
+                                            />
+                                        )}
                                     />
 
                                     <Controller

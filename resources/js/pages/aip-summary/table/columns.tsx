@@ -1,4 +1,5 @@
 import { createColumnHelper } from '@tanstack/react-table';
+import { useMemo } from 'react';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -47,7 +48,14 @@ interface ColumnActions {
 
 const columnHelper = createColumnHelper<AipEntry>();
 
-export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions) => [
+export const useAipColumns = (actions: ColumnActions) => {
+    return useMemo(
+        () => getColumns(actions),
+        [actions]
+    );
+};
+
+export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions): ColumnDef<AipEntry, unknown>[] => [
     columnHelper.accessor('aip_ref_code', {
         header: 'AIP Reference Code',
         cell: (info) => (
