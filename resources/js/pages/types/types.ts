@@ -154,6 +154,7 @@ export interface Ppa {
     title: string;
     type: 'Program' | 'Project' | 'Activity';
     code_suffix: string;
+    full_code: string;
     is_active: boolean;
     created_at: string | null;
     updated_at: string | null;

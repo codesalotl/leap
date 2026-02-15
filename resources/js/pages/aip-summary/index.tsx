@@ -32,8 +32,8 @@ import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
 import {
     useAipColumns,
-    type AipEntry,
 } from '@/pages/aip-summary/table/columns';
+import { type AipEntry } from '@/pages/types/types';
 import {
     exportToExcel,
     exportToPDF,
@@ -108,20 +108,16 @@ export default function AipSummaryTable({
     const handleAddEntry = (entry: AipEntry) => {
         const masterNode = findPpaInTree(masterPpas, entry.ppa_id);
 
-        if (
-            !masterNode ||
-            !masterNode.children ||
-            masterNode.children.length === 0
-        ) {
-            console.warn(
-                'Cannot add entries to an Activity or item without children',
-            );
+        console.log(masterNode);
+
+        if (!masterNode) {
+            console.warn('Master PPA not found');
             return;
         }
 
         setSelectorState({
             isOpen: true,
-            data: masterNode.children,
+            data: masterNode.children || [],
             title: `Add Sub-entries to: ${masterNode.title}`,
             description: `Select items to add under ${masterNode.type} ${masterNode.full_code}`,
         });
@@ -159,6 +155,7 @@ export default function AipSummaryTable({
         onAddEntry: handleAddEntry,
         onEdit: handleEdit,
         onDelete: handleDeleteClick,
+        masterPpas,
     });
 
     const breadcrumbs: BreadcrumbItem[] = [

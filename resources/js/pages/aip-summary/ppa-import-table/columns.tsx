@@ -1,7 +1,7 @@
 import { ColumnDef, RowSelectionState, Row } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Ban } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 export interface Ppa {
     id: number;

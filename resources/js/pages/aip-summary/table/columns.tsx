@@ -1,34 +1,9 @@
-import { createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-export interface AipEntry {
-    id: number;
-    ppa_id: number;
-    parent_ppa_id: number | null;
-    aip_ref_code: string;
-    ppa_desc: string;
-    implementing_office_department: string;
-    sched_implementation: {
-        start_date: string;
-        completion_date: string;
-    };
-    expected_outputs: string;
-    funding_source: string;
-    itemized_costs?: unknown[];
-    amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
-    };
-    cc_adaptation: string;
-    cc_mitigation: string;
-    cc_typology_code: string;
-    children?: AipEntry[];
-}
+import { AipEntry } from '@/pages/types/types';
+import { Ppa } from '@/pages/types/types';
 
 export const formatNumber = (val: string) => {
     const num = parseFloat(val);
@@ -44,9 +19,21 @@ interface ColumnActions {
     onAddEntry: (entry: AipEntry) => void;
     onEdit: (entry: AipEntry) => void;
     onDelete: (entry: AipEntry) => void;
+    masterPpas: Ppa[];
 }
 
 const columnHelper = createColumnHelper<AipEntry>();
+
+const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
+    for (const node of nodes) {
+        if (node.id === targetId) return node;
+        if (node.children && node.children.length > 0) {
+            const found = findPpaInTree(node.children, targetId);
+            if (found) return found;
+        }
+    }
+    return null;
+};
 
 export const useAipColumns = (actions: ColumnActions) => {
     return useMemo(
@@ -55,7 +42,7 @@ export const useAipColumns = (actions: ColumnActions) => {
     );
 };
 
-export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions): ColumnDef<AipEntry, unknown>[] => [
+export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnActions): ColumnDef<AipEntry, any>[] => [
     columnHelper.accessor('aip_ref_code', {
         header: 'AIP Reference Code',
         cell: (info) => (
@@ -66,7 +53,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions): Col
     }),
     columnHelper.accessor('ppa_desc', {
         header: 'Program/Project/Activity Description',
-        filterFn: (row, columnId, value) => {
+        filterFn: (row, _columnId, value) => {
             const description = row.getValue('ppa_desc') as string;
             const refCode = row.getValue('aip_ref_code') as string;
             const searchValue = (value as string)?.toLowerCase() || '';
@@ -184,7 +171,8 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions): Col
         size: 116,
         cell: ({ row }) => {
             const entry = row.original;
-            const isLeaf = !entry.children || entry.children.length === 0;
+            const masterNode = findPpaInTree(masterPpas, entry.ppa_id);
+            const isActivity = masterNode?.type === 'Activity';
 
             return (
                 <div className="flex justify-between">
@@ -192,7 +180,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete }: ColumnActions): Col
                         title="Add PPA"
                         size="icon"
                         onClick={() => onAddEntry(entry)}
-                        disabled={isLeaf}
+                        disabled={isActivity}
                     >
                         <Plus />
                     </Button>

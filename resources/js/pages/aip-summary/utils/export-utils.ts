@@ -1,7 +1,8 @@
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { AipEntry, formatNumber } from '@/pages/aip-summary/table/columns';
+import { AipEntry } from '@/pages/types/types';
+import { formatNumber } from '@/pages/aip-summary/table/columns';
 import { FiscalYear } from '@/pages/types/types';
 
 export const flattenForExport = (entries: AipEntry[], depth = 0): any[] => {
