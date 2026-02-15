@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -57,7 +57,7 @@ const formSchema = z.object({
     description: z.string().min(1, 'Description is required.'),
     unitOfMeasurement: z.string().min(1, 'Unit of measurement is required.'),
     price: z.string().min(1, 'Price is required.'),
-    isCustomItem: z.boolean().default(false),
+    isCustomItem: z.boolean(),
 });
 
 export default function PpmpFormDialog({
@@ -501,8 +501,7 @@ export default function PpmpFormDialog({
                                                     );
                                                     form.setValue(
                                                         'category',
-                                                        selectedPriceList
-                                                            .category.id,
+                                                        selectedPriceList.category?.id || 0,
                                                     );
                                                 }
                                             }}

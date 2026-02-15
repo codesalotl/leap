@@ -68,16 +68,24 @@ export default async function exportToExcel({
     let currentRow = firstRowCount;
 
     // processing data
-    const groupedByCategory = Object.groupBy(
-        ppmpItems,
-        ({ ppmp_price_list }) => ppmp_price_list?.category?.id,
-    );
+    const groupedByCategory = ppmpItems.reduce((acc, item) => {
+        const key = item.ppmp_price_list?.category?.id?.toString() || 'undefined';
+        if (!acc[key]) {
+            acc[key] = [];
+        }
+        acc[key].push(item);
+        return acc;
+    }, {} as Record<string, typeof ppmpItems>);
     const groupedByExpenseAccount = Object.fromEntries(
         Object.entries(groupedByCategory).map(([key, value]) => {
-            const subGrouped = Object.groupBy(
-                value,
-                ({ ppmp_price_list }) => ppmp_price_list?.chart_of_account_id,
-            );
+            const subGrouped = value.reduce((acc, item) => {
+                const subKey = item.ppmp_price_list?.chart_of_account_id?.toString() || 'undefined';
+                if (!acc[subKey]) {
+                    acc[subKey] = [];
+                }
+                acc[subKey].push(item);
+                return acc;
+            }, {} as Record<string, typeof value>);
 
             return [key, subGrouped];
         }),

@@ -51,7 +51,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
         );
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.currentTarget.blur();
         }
@@ -94,7 +94,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'ppmp_price_list.price',
         header: () => <div className="w-full text-right">PRICELIST</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -138,7 +138,7 @@ export const columns: ColumnDef<Ppmp>[] = [
                 .plus(row.dec_amount);
         },
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue().toFixed(2)}</span>
+            <span className="block text-right">{Number(getValue()).toFixed(2)}</span>
         ),
         footer: (props) => {
             const rows = props.table.getFilteredRowModel().rows;
@@ -146,7 +146,7 @@ export const columns: ColumnDef<Ppmp>[] = [
             const sum = rows.reduce((acc, row) => {
                 const val = row.getValue('total_amount');
                 // console.log('Value found:', val.toString());
-                return acc.plus(val);
+                return acc.plus(Number(val));
             }, new Decimal(0));
 
             return <span className="block text-right">{sum.toFixed(2)}</span>;
@@ -161,7 +161,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'jan_amount',
         header: () => <div className="w-full text-right">JAN</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -173,7 +173,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'feb_amount',
         header: () => <div className="w-full text-right">FEB</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -185,7 +185,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'mar_amount',
         header: () => <div className="w-full text-right">MAR</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -197,7 +197,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'apr_amount',
         header: () => <div className="w-full text-right">APR</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -209,7 +209,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'may_amount',
         header: () => <div className="w-full text-right">MAY</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -221,7 +221,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'jun_amount',
         header: () => <div className="w-full text-right">JUN</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -233,7 +233,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'jul_amount',
         header: () => <div className="w-full text-right">JUL</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -245,7 +245,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'aug_amount',
         header: () => <div className="w-full text-right">AUG</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -257,7 +257,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'sep_amount',
         header: () => <div className="w-full text-right">SEP</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -269,7 +269,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'oct_amount',
         header: () => <div className="w-full text-right">OCT</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -281,7 +281,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'nov_amount',
         header: () => <div className="w-full text-right">NOV</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
@@ -293,7 +293,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'dec_amount',
         header: () => <div className="w-full text-right">DEC</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{getValue()}</span>
+            <span className="block text-right">{String(getValue())}</span>
         ),
     },
     {
