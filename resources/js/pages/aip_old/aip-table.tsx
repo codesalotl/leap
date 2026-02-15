@@ -7,9 +7,9 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import AppLayout from '@/layouts/app-layout';
-import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
-import AipDialog from '@/pages/aip/aip-dialog';
-import { formatData, nestData } from '@/pages/aip/aip-utils';
+// import AipAlertDialog from '@/pages/aip/aip-alert-dialog';
+// import AipDialog from '@/pages/aip/aip-dialog';
+// import { formatData, nestData } from '@/pages/aip/aip-utils';
 import type { Aip, AipProp } from '@/pages/aip/types';
 import { type BreadcrumbItem } from '@/types';
 import {

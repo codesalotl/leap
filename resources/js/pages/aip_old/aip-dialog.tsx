@@ -10,7 +10,7 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import AipForm from '@/pages/aip/aip-form';
+// import AipForm from '@/pages/aip/aip-form';
 import type { AipDialogProp } from '@/pages/aip/types';
 import { BetweenHorizontalEnd, SquarePen } from 'lucide-react';
 
