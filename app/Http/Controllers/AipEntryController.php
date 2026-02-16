@@ -40,11 +40,13 @@ class AipEntryController extends Controller
                 'ppa.office.sector',
                 'ppa.office.lguLevel',
                 'ppa.office.officeType',
-                'ppa.children',             // Projects under Programs
-                'ppa.children.children',    // Activities under Projects
-                'ppa.parent',               // Parent PPA info
+                'ppa.children', // Projects under Programs
+                'ppa.children.children', // Activities under Projects
+                'ppa.parent', // Parent PPA info
             ])
             ->get();
+
+        // dd($aipEntries);
 
         // $aip_entries = AipEntry::with([
         //     'ppa.office',
@@ -83,7 +85,11 @@ class AipEntryController extends Controller
             ],
         );
 
+        // dd($mappedEntries);
+
         $aipTree = $this->buildAipTree($mappedEntries);
+
+        dd($aipTree);
 
         $offices = Office::all();
 

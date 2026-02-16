@@ -16,11 +16,7 @@ import { Link } from '@inertiajs/react';
 import {
     LayoutGrid,
     FileText,
-    ShoppingCart,
-    DollarSign,
-    Building,
     Users,
-    BookOpen,
     FolderTree,
 } from 'lucide-react';
 import AppLogo from './app-logo';
@@ -46,21 +42,21 @@ const mainNavItems: NavItem[] = [
     //     href: '/ppmp-headers',
     //     icon: ShoppingCart,
     // },
-    {
-        title: 'PPMP Price List',
-        href: '/ppmp-price-list',
-        icon: DollarSign,
-    },
-    {
-        title: 'Chart of Accounts',
-        href: '/chart-of-accounts',
-        icon: BookOpen,
-    },
-    {
-        title: 'Sectors',
-        href: '/sectors',
-        icon: Building,
-    },
+    // {
+    //     title: 'PPMP Price List',
+    //     href: '/ppmp-price-list',
+    //     icon: DollarSign,
+    // },
+    // {
+    //     title: 'Chart of Accounts',
+    //     href: '/chart-of-accounts',
+    //     icon: BookOpen,
+    // },
+    // {
+    //     title: 'Sectors',
+    //     href: '/sectors',
+    //     icon: Building,
+    // },
     {
         title: 'Offices',
         href: '/offices',
