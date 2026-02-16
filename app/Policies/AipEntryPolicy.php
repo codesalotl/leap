@@ -45,7 +45,7 @@ class AipEntryPolicy
      */
     public function delete(User $user, AipEntry $aipEntry): bool
     {
-        return false;
+        return true;
     }
 
     /**

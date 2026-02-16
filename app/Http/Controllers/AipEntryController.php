@@ -89,7 +89,7 @@ class AipEntryController extends Controller
 
         $aipTree = $this->buildAipTree($mappedEntries);
 
-        dd($aipTree);
+        // dd($aipTree);
 
         $offices = Office::all();
 
@@ -273,9 +273,18 @@ class AipEntryController extends Controller
                 $descendantPpaIds,
             );
 
-            // 3. This is the ONLY delete command.
-            // It only removes records from 'aip_entries' (the budget allocations).
-            // The 'ppas' table (the PPA Library) is NOT affected.
+            // 3. Get the AIP entry IDs that will be deleted to handle PPMP constraints
+            $aipEntryIdsToDelete = AipEntry::where('fiscal_year_id', $fiscalYearId)
+                ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
+                ->pluck('id')
+                ->toArray();
+
+            // 4. Delete PPMP records that reference these AIP entries first
+            if (!empty($aipEntryIdsToDelete)) {
+                \App\Models\Ppmp::whereIn('aip_entry_id', $aipEntryIdsToDelete)->delete();
+            }
+
+            // 5. Now delete the AIP entries
             AipEntry::where('fiscal_year_id', $fiscalYearId)
                 ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
                 ->delete();

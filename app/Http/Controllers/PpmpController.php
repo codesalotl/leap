@@ -90,16 +90,15 @@ class PpmpController extends Controller
             $validated = $request->validate([
                 'aip_entry_id' => 'required|exists:aip_entries,id',
                 'item_number' =>
-                    'required|integer|unique:ppmp_price_lists,item_number',
+                    'required|integer|min:1|unique:ppmp_price_lists,item_number',
                 'description' => 'required|string',
                 'unit_of_measurement' => 'required|string|max:20',
                 'price' => 'required|numeric|min:0',
                 'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
-                // 'ppmp_category_id' => 'required|exists:ppmp_categories,id',
-                'ppmp_category_id' => 'required',
+                'ppmp_category_id' => 'required|exists:ppmp_categories,id',
             ]);
 
-            // \Log::info('Custom PPMP Request:', $validated);
+            \Log::info('Custom PPMP Request:', $validated);
 
             // First create the price list
             $newPriceList = PpmpPriceList::create([
@@ -147,7 +146,7 @@ class PpmpController extends Controller
 
             // dd($ppmp);
 
-            // \Log::info('PPMP created:', $ppmp->toArray());
+            \Log::info('PPMP created:', $ppmp->toArray());
 
             // Update AIP MOOE amount after new PPMP creation
             $this->updateAipMooeAmount($ppmp->aip_entry_id);

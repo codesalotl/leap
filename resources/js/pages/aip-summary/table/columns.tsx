@@ -15,6 +15,18 @@ export const formatNumber = (val: string) => {
           });
 };
 
+export const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()];
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${month}-${year}`;
+};
+
 interface ColumnActions {
     onAddEntry: (entry: AipEntry) => void;
     onEdit: (entry: AipEntry) => void;
@@ -83,9 +95,11 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
         columns: [
             columnHelper.accessor('sched_implementation.start_date', {
                 header: 'Start Date',
+                cell: (info) => formatDate(info.getValue()),
             }),
             columnHelper.accessor('sched_implementation.completion_date', {
                 header: 'Completion Date',
+                cell: (info) => formatDate(info.getValue()),
             }),
         ],
     }),
@@ -130,13 +144,21 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.total', {
+            columnHelper.display({
+                id: 'amount.total',
                 header: 'Total',
-                cell: (i) => (
-                    <span className="block text-right font-bold">
-                        {formatNumber(i.getValue())}
-                    </span>
-                ),
+                cell: ({ row }) => {
+                    const amount = row.original.amount;
+                    const total = parseFloat(amount.ps || '0') + 
+                                 parseFloat(amount.mooe || '0') + 
+                                 parseFloat(amount.fe || '0') + 
+                                 parseFloat(amount.co || '0');
+                    return (
+                        <span className="block text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </span>
+                    );
+                },
             }),
         ],
     }),

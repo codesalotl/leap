@@ -131,10 +131,10 @@ export default function DataTable<TData, TValue>({
     return (
         <div className="border">
             <Table
-            // style={{
-            //     width: table.getTotalSize(),
-            //     tableLayout: 'fixed',
-            // }}
+                style={{
+                    //     width: table.getTotalSize(),
+                    // tableLayout: 'fixed',
+                }}
             >
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (

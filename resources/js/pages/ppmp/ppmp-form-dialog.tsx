@@ -159,17 +159,34 @@ export default function PpmpFormDialog({
 
         if (isCustomItem) {
             // Custom item mode - use the dedicated custom route
+            const itemNumber = parseInt(data.itemNo);
+            
+            // Validate item number is a valid integer
+            if (isNaN(itemNumber) || itemNumber <= 0) {
+                console.error('Invalid item number:', data.itemNo);
+                alert('Please enter a valid item number (positive integer)');
+                return;
+            }
+
+            // Validate price is a valid positive number
+            const price = parseFloat(data.price);
+            if (isNaN(price) || price < 0) {
+                console.error('Invalid price:', data.price);
+                alert('Please enter a valid price (positive number)');
+                return;
+            }
+
             const customItemData = {
                 aip_entry_id: data.aip_entry_id,
-                item_number: parseInt(data.itemNo),
+                item_number: itemNumber,
                 description: data.description,
                 unit_of_measurement: data.unitOfMeasurement,
-                price: parseFloat(data.price),
+                price: price,
                 chart_of_account_id: data.expenseAccount,
                 ppmp_category_id: data.category,
             };
 
-            // console.log('Creating custom PPMP item:', customItemData);
+            console.log('Creating custom PPMP item:', customItemData);
 
             // Single API call that creates both price list and PPMP
             router.post('/ppmp/custom', customItemData, {

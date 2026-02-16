@@ -79,7 +79,7 @@ export default function PpmpPage({
                                     >
                                         Excel
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>PDF</DropdownMenuItem>
+                                    {/* <DropdownMenuItem>PDF</DropdownMenuItem> */}
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
