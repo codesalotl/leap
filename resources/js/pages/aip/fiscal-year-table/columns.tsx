@@ -1,4 +1,4 @@
-import { ColumnDef } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table'; // Added this import
 import { router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,59 +15,76 @@ import { summary } from '@/routes/aip';
 import { FiscalYear } from '@/pages/types/types';
 import { update } from '@/routes/aip/index';
 
-export const columns: ColumnDef<FiscalYear>[] = [
-    {
-        accessorKey: 'year',
+// 1. Initialize the helper with your specific Data Type
+const columnHelper = createColumnHelper<FiscalYear>();
+
+// 2. Define columns using the helper methods
+export const columns = [
+    // Accessor Column
+    columnHelper.accessor('year', {
         header: 'Year',
-    },
-    {
-        accessorKey: 'status',
+    }),
+
+    // Accessor Column with Custom Cell
+    columnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ row }) => {
-            const status = row.getValue('status') as string;
+        cell: (info) => {
+            // info.getValue() is now automatically typed as a string
+            const status = info.getValue();
+            const isOpen = status === 'Open';
 
             return (
                 <Badge
-                    variant={`${status === 'Open' ? 'default' : 'destructive'}`}
+                    variant={isOpen ? 'default' : 'destructive'}
                     className="secondary text-white"
                 >
-                    {status === 'Open' ? <CheckCircle2 /> : <XCircle />}
+                    {isOpen ? (
+                        <CheckCircle2 className="mr-1 h-3 w-3" />
+                    ) : (
+                        <XCircle className="mr-1 h-3 w-3" />
+                    )}
                     {status}
                 </Badge>
             );
         },
-    },
-    {
-        accessorKey: 'created_at',
+    }),
+
+    columnHelper.accessor('created_at', {
         header: 'Created At',
-        cell: ({ row }) => {
-            const rawDate = row.getValue('created_at');
-            const date = new Date(rawDate as string);
+        cell: (info) => {
+            const value = info.getValue();
 
-            return date.toLocaleString('en-US', {
+            if (!value)
+                return <span className="text-muted-foreground">N/A</span>;
+
+            return new Date(value).toLocaleString('en-US', {
                 dateStyle: 'medium',
-                timeStyle: 'short',
+                // timeStyle: 'short',
             });
         },
-    },
-    {
-        accessorKey: 'updated_at',
+    }),
+
+    columnHelper.accessor('updated_at', {
         header: 'Updated At',
-        cell: ({ row }) => {
-            const rawDate = row.getValue('updated_at');
-            const date = new Date(rawDate as string);
+        cell: (info) => {
+            const value = info.getValue();
 
-            return date.toLocaleString('en-US', {
+            if (!value)
+                return <span className="text-muted-foreground">N/A</span>;
+
+            return new Date(value).toLocaleString('en-US', {
                 dateStyle: 'medium',
-                timeStyle: 'short',
+                // timeStyle: 'short',
             });
         },
-    },
-    {
+    }),
+
+    // Display Column (Actions)
+    columnHelper.display({
         id: 'actions',
-        // header: 'Action',
         cell: ({ row }) => {
-            const aip = row.original;
+            const aip = row.original; // Access the full object
+
             const handleStatusChange = (newStatus: string) => {
                 router.patch(update({ id: aip.id }), { status: newStatus });
             };
@@ -105,5 +122,5 @@ export const columns: ColumnDef<FiscalYear>[] = [
                 </DropdownMenu>
             );
         },
-    },
+    }),
 ];

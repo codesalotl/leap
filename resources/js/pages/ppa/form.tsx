@@ -9,31 +9,32 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    Command,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 // 1. Validation Schema
 const formSchema = z.object({
@@ -57,23 +58,27 @@ interface Office {
     office_type_id: number;
     code: string;
     name: string;
-    is_lee: number; // Use 0 | 1 if you want to be stricter
+    is_lee: number;
     created_at: string;
     updated_at: string;
     full_code: string;
-
     // Relationships (Eager Loaded)
-    sector?: Sector;
-    lgu_level?: LguLevel;
-    office_type?: OfficeType;
+    sector?: any;
+    lgu_level?: any;
+    office_type?: any;
 }
 
 interface PpaFormDialogProps {
-    data?: any; // The record (if editing) OR the Parent record (if adding child)
+    data?: any;
     mode: 'add' | 'edit';
-    type?: 'Program' | 'Project' | 'Activity'; // Target type from the table action
+    type?: 'Program' | 'Project' | 'Activity';
     onSuccess?: () => void;
     offices: Office[];
+    isDialogOpen: boolean;
+    setIsDialogOpen: (open: boolean) => void;
+    dialogMode: string;
+    targetType: string;
+    activePpa?: any;
 }
 
 export default function PpaFormDialog({
@@ -91,7 +96,8 @@ export default function PpaFormDialog({
     const isEditing = mode === 'edit';
     const isAddingChild = mode === 'add' && !!data;
 
-    // console.log(offices);
+    // State for Office Command Dialog
+    const [openOfficeCommand, setOpenOfficeCommand] = useState(false);
 
     // 2. Initialize Form
     const form = useForm<FormValues>({
@@ -118,7 +124,6 @@ export default function PpaFormDialog({
             return `${officeFullCode || '0000-000-0-00-000'}-${codeSuffix || '000'}`;
         }
         // For Projects/Activities, we use the parent's full_code
-        // 'activePpa' contains the parent info when adding a child
         if (activePpa?.full_code) {
             return `${activePpa.full_code}-${codeSuffix || '000'}`;
         }
@@ -135,7 +140,7 @@ export default function PpaFormDialog({
                 type: data?.type || 'Program',
                 is_active: !!data?.is_active,
             });
-        } else {
+        } else if (mode === 'add') {
             // Adding Mode
             form.reset({
                 office_id: data?.office_id?.toString() || '', // Inherit office from parent if exists
@@ -145,7 +150,7 @@ export default function PpaFormDialog({
                 is_active: true,
             });
         }
-    }, [data, mode, type, form]);
+    }, [data, mode, type, form, isDialogOpen]);
 
     // 4. Submit Handler
     function onSubmit(values: FormValues) {
@@ -192,8 +197,6 @@ export default function PpaFormDialog({
                         <div className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                             AIP Reference Code Preview
                         </div>
-                        {/*<div className="font-mono text-xl font-bold text-primary">
-                        </div>*/}
                         <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-xl font-semibold">
                             {getCodePreview()}
                         </code>
@@ -204,7 +207,7 @@ export default function PpaFormDialog({
                             <span className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
                                 Entry Type
                             </span>
-                            <span className="rounded border bg-background px-2 py-1 text-sm font-bold text-primary shadow-sm">
+                            <span className="w-fit rounded border bg-background px-2 py-1 text-sm font-bold text-primary shadow-sm">
                                 {form.watch('type')}
                             </span>
                         </div>
@@ -218,7 +221,6 @@ export default function PpaFormDialog({
                         className="space-y-6"
                     >
                         {/* OFFICE SELECTION */}
-                        {/* 1. Wrap in a div that spans all columns if inside a grid */}
                         <div className="col-span-1 md:col-span-2">
                             <FormField
                                 control={form.control}
@@ -230,6 +232,7 @@ export default function PpaFormDialog({
                                         </FormLabel>
 
                                         {isEditing || isAddingChild ? (
+                                            // LOCKED STATE (Editing or Adding Child)
                                             <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3 shadow-sm ring-1 ring-black/5 ring-inset">
                                                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background shadow-sm">
                                                     <span className="text-lg">
@@ -258,26 +261,95 @@ export default function PpaFormDialog({
                                                 />
                                             </div>
                                         ) : (
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                value={field.value}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="h-11 w-full shadow-sm">
-                                                        <SelectValue placeholder="Select implementing office..." />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {offices.map((o) => (
-                                                        <SelectItem
-                                                            key={o.id}
-                                                            value={o.id.toString()}
-                                                        >
-                                                            {o.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            // SELECTABLE STATE (New Program) - COMMAND DIALOG
+                                            <>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={
+                                                        openOfficeCommand
+                                                    }
+                                                    className={cn(
+                                                        'w-full justify-between px-3 text-left font-normal',
+                                                        !field.value &&
+                                                            'text-muted-foreground',
+                                                    )}
+                                                    onClick={() =>
+                                                        setOpenOfficeCommand(
+                                                            true,
+                                                        )
+                                                    }
+                                                >
+                                                    {field.value ? (
+                                                        <span className="truncate">
+                                                            {
+                                                                offices.find(
+                                                                    (o) =>
+                                                                        o.id.toString() ===
+                                                                        field.value,
+                                                                )?.name
+                                                            }
+                                                        </span>
+                                                    ) : (
+                                                        'Select implementing office...'
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+
+                                                <CommandDialog
+                                                    open={openOfficeCommand}
+                                                    onOpenChange={
+                                                        setOpenOfficeCommand
+                                                    }
+                                                >
+                                                    <Command>
+                                                        <CommandInput placeholder="Search office name..." />
+                                                        <CommandList>
+                                                            <CommandEmpty>
+                                                                No office found.
+                                                            </CommandEmpty>
+                                                            <CommandGroup heading="Offices">
+                                                                {offices.map(
+                                                                    (
+                                                                        office,
+                                                                    ) => (
+                                                                        <CommandItem
+                                                                            key={
+                                                                                office.id
+                                                                            }
+                                                                            value={
+                                                                                office.name
+                                                                            }
+                                                                            onSelect={() => {
+                                                                                form.setValue(
+                                                                                    'office_id',
+                                                                                    office.id.toString(),
+                                                                                );
+                                                                                setOpenOfficeCommand(
+                                                                                    false,
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex w-full items-center justify-between">
+                                                                                <span>
+                                                                                    {
+                                                                                        office.name
+                                                                                    }
+                                                                                </span>
+                                                                                {field.value ===
+                                                                                    office.id.toString() && (
+                                                                                    <Check className="ml-2 h-4 w-4 opacity-100" />
+                                                                                )}
+                                                                            </div>
+                                                                        </CommandItem>
+                                                                    ),
+                                                                )}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </CommandDialog>
+                                            </>
                                         )}
                                         <FormMessage />
                                     </FormItem>
@@ -285,11 +357,10 @@ export default function PpaFormDialog({
                             />
                         </div>
 
-                        {/* CODE SUFFIX */}
-                        <div className="grid grid-cols-5 gap-4">
-                            <div className="col-span-2">
+                        {/* CODE SUFFIX & ACTIVE STATUS */}
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
+                            <div className="md:col-span-2">
                                 <FormField
-                                    className="flex flex-1"
                                     control={form.control}
                                     name="code_suffix"
                                     render={({ field }) => (
@@ -301,7 +372,8 @@ export default function PpaFormDialog({
                                                 <Input
                                                     placeholder="e.g. 001"
                                                     {...field}
-                                                    // maxLength={3}
+                                                    maxLength={3}
+                                                    autoComplete="off"
                                                 />
                                             </FormControl>
                                             <FormDescription>
@@ -314,12 +386,12 @@ export default function PpaFormDialog({
                                 />
                             </div>
 
-                            <div className="col-span-3">
+                            <div className="md:col-span-3">
                                 <FormField
                                     control={form.control}
                                     name="is_active"
                                     render={({ field }) => (
-                                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4 shadow-sm">
+                                        <FormItem className="flex h-full flex-row items-start space-y-0 space-x-3 rounded-md border p-4 shadow-sm">
                                             <FormControl>
                                                 <Checkbox
                                                     checked={field.value}

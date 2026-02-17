@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -14,17 +14,19 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldDescription,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group';
 import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    Command,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -33,6 +35,8 @@ import { router } from '@inertiajs/react';
 
 // Import toggle component
 import { Switch } from '@/components/ui/switch';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PpmpFormDialogProps {
     open: boolean;
@@ -49,7 +53,7 @@ const formSchema = z.object({
     ppmp_price_list_id: z.number().optional(),
     expenseAccount: z
         .number()
-        .refine((val) => val !== undefined && val !== null, {
+        .refine((val) => val !== undefined && val !== null && val !== 0, {
             message: 'Expense account is required',
         }),
     category: z.number(),
@@ -69,10 +73,10 @@ export default function PpmpFormDialog({
     selectedEntry = null,
     ppmpItems = [],
 }: PpmpFormDialogProps) {
-    console.log(chartOfAccounts);
-    // console.log(ppmpCategories);
-
-    // const [isCustomCategoryActive, setIsCustomCategoryActive] = useState(false);
+    // State for the Command Dialogs
+    const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
+    const [openCategoryCommand, setOpenCategoryCommand] = useState(false);
+    const [openDescriptionCommand, setOpenDescriptionCommand] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -104,16 +108,6 @@ export default function PpmpFormDialog({
             })) || [],
     );
 
-    // console.log(allPriceLists);
-
-    // Filter price lists based on selected expense account
-    // const filteredPriceLists = selectedExpenseAccount
-    //     ? allPriceLists.filter(
-    //           (priceList) =>
-    //               priceList.chart_of_account_id === selectedExpenseAccount,
-    //       )
-    //     : allPriceLists;
-
     const filteredPriceLists = allPriceLists.filter((priceList) => {
         const matchesAccount = selectedExpenseAccount
             ? priceList.chart_of_account_id === selectedExpenseAccount
@@ -126,8 +120,6 @@ export default function PpmpFormDialog({
         return matchesAccount && matchesCategory;
     });
 
-    // console.log(filteredPriceLists);
-
     // Track if expense account change was triggered by description selection
     const isExpenseAccountChangingFromDescription = React.useRef(false);
 
@@ -139,7 +131,6 @@ export default function PpmpFormDialog({
             form.setValue('unitOfMeasurement', '');
             form.setValue('price', '');
             form.setValue('ppmp_price_list_id', 0);
-            // form.setValue('category', 0);
         }
         isExpenseAccountChangingFromDescription.current = false;
     }, [selectedExpenseAccount, form, isCustomItem]);
@@ -155,23 +146,17 @@ export default function PpmpFormDialog({
     }, [isCustomItem, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        // console.log(data);
-
         if (isCustomItem) {
-            // Custom item mode - use the dedicated custom route
+            // Custom item mode logic...
             const itemNumber = parseInt(data.itemNo);
-            
-            // Validate item number is a valid integer
+
             if (isNaN(itemNumber) || itemNumber <= 0) {
-                console.error('Invalid item number:', data.itemNo);
                 alert('Please enter a valid item number (positive integer)');
                 return;
             }
 
-            // Validate price is a valid positive number
             const price = parseFloat(data.price);
             if (isNaN(price) || price < 0) {
-                console.error('Invalid price:', data.price);
                 alert('Please enter a valid price (positive number)');
                 return;
             }
@@ -186,21 +171,14 @@ export default function PpmpFormDialog({
                 ppmp_category_id: data.category,
             };
 
-            console.log('Creating custom PPMP item:', customItemData);
-
-            // Single API call that creates both price list and PPMP
             router.post('/ppmp/custom', customItemData, {
-                onSuccess: () => {
-                    // console.log('Custom PPMP item created successfully');
-                    onOpenChange(false); // Close dialog on success
-                },
-                onError: (errors) => {
-                    console.error('Error creating custom PPMP item:', errors);
-                },
+                onSuccess: () => onOpenChange(false),
+                onError: (errors) =>
+                    console.error('Error creating custom PPMP item:', errors),
                 preserveState: false,
             });
         } else {
-            // Price list mode - use existing price list
+            // Price list mode logic...
             if (!data.ppmp_price_list_id) {
                 alert('Please select an item from the price list');
                 return;
@@ -211,18 +189,11 @@ export default function PpmpFormDialog({
                 ppmp_price_list_id: data.ppmp_price_list_id,
             };
 
-            // console.log('Submitting price list item:', submitData);
-
-            // Make API call using Inertia router
             router.post('/ppmp', submitData, {
-                onSuccess: () => {
-                    // console.log('PPMP item created successfully');
-                    onOpenChange(false); // Close dialog on success
-                },
-                onError: (errors) => {
-                    console.error('Error creating PPMP item:', errors);
-                },
-                preserveState: false, // Refresh the page data
+                onSuccess: () => onOpenChange(false),
+                onError: (errors) =>
+                    console.error('Error creating PPMP item:', errors),
+                preserveState: false,
             });
         }
     }
@@ -232,6 +203,7 @@ export default function PpmpFormDialog({
             aip_entry_id: selectedEntry?.id || 0,
             ppmp_price_list_id: 0,
             expenseAccount: undefined,
+            category: undefined,
             itemNo: '',
             description: '',
             unitOfMeasurement: '',
@@ -242,7 +214,8 @@ export default function PpmpFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
+            {/* Increased width to max-w-2xl for better side-by-side layout */}
+            <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Add PPMP Item</DialogTitle>
                     <DialogDescription>
@@ -251,7 +224,7 @@ export default function PpmpFormDialog({
                 </DialogHeader>
 
                 {/* Toggle for Price List vs Custom Item */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 py-2">
                     <Switch
                         id="custom-item-toggle"
                         checked={isCustomItem}
@@ -268,392 +241,509 @@ export default function PpmpFormDialog({
                 </div>
 
                 <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
-                    <FieldGroup>
-                        <Controller
-                            name="expenseAccount"
-                            control={form.control}
-                            render={({ field, fieldState }) => {
-                                return (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldContent>
-                                            <FieldLabel htmlFor="expense-select">
-                                                Expense Account
-                                            </FieldLabel>
-
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </FieldContent>
-
-                                        <Select
-                                            onValueChange={(val) =>
-                                                field.onChange(Number(val))
-                                            }
-                                            value={
-                                                field.value
-                                                    ? field.value.toString()
-                                                    : ''
-                                            }
+                    {/* Replaced FieldGroup with CSS Grid */}
+                    <div className="grid gap-4 md:grid-cols-2">
+                        {/* Row 1: Expense Account (Full Width) */}
+                        <div className="md:col-span-2">
+                            <Controller
+                                name="expenseAccount"
+                                control={form.control}
+                                render={({ field, fieldState }) => {
+                                    const selectedAccount =
+                                        chartOfAccounts.find(
+                                            (acc) => acc.id === field.value,
+                                        );
+                                    return (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
                                         >
-                                            <SelectTrigger
-                                                id="expense-select"
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                className="w-full"
-                                            >
-                                                <SelectValue placeholder="Select expense account" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {chartOfAccounts.map(
-                                                        (account) => (
-                                                            <SelectItem
-                                                                key={account.id}
-                                                                value={account.id.toString()}
-                                                            >
-                                                                <code className="mr-2 bg-muted p-1 text-xs">
-                                                                    {
-                                                                        account.account_number
-                                                                    }
-                                                                </code>
-                                                                {
-                                                                    account.account_title
-                                                                }
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
+                                            <FieldContent>
+                                                <FieldLabel htmlFor="expense-select">
+                                                    Expense Account
+                                                </FieldLabel>
 
-                                        {/* {fieldState.invalid && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={
+                                                        openExpenseCommand
+                                                    }
+                                                    className={cn(
+                                                        'w-full justify-between px-3 text-left font-normal',
+                                                        !field.value &&
+                                                            'text-muted-foreground',
+                                                        fieldState.invalid &&
+                                                            'border-destructive ring-destructive',
+                                                    )}
+                                                    onClick={() =>
+                                                        setOpenExpenseCommand(
+                                                            true,
+                                                        )
+                                                    }
+                                                >
+                                                    {selectedAccount ? (
+                                                        <span className="truncate">
+                                                            <code className="mr-2 rounded bg-muted p-0.5 text-xs">
+                                                                {
+                                                                    selectedAccount.account_number
+                                                                }
+                                                            </code>
+                                                            {
+                                                                selectedAccount.account_title
+                                                            }
+                                                        </span>
+                                                    ) : (
+                                                        'Select expense account'
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+
+                                                <CommandDialog
+                                                    open={openExpenseCommand}
+                                                    onOpenChange={
+                                                        setOpenExpenseCommand
+                                                    }
+                                                >
+                                                    <Command>
+                                                        <CommandInput placeholder="Search account number or title..." />
+                                                        <CommandList>
+                                                            <CommandEmpty>
+                                                                No account
+                                                                found.
+                                                            </CommandEmpty>
+                                                            <CommandGroup heading="Chart of Accounts">
+                                                                {chartOfAccounts.map(
+                                                                    (
+                                                                        account,
+                                                                    ) => (
+                                                                        <CommandItem
+                                                                            key={
+                                                                                account.id
+                                                                            }
+                                                                            value={`${account.account_number} ${account.account_title}`}
+                                                                            onSelect={() => {
+                                                                                field.onChange(
+                                                                                    account.id,
+                                                                                );
+                                                                                setOpenExpenseCommand(
+                                                                                    false,
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex w-full items-center justify-between">
+                                                                                <div>
+                                                                                    <code className="mr-2 rounded bg-muted p-1 text-xs">
+                                                                                        {
+                                                                                            account.account_number
+                                                                                        }
+                                                                                    </code>
+                                                                                    {
+                                                                                        account.account_title
+                                                                                    }
+                                                                                </div>
+                                                                                {field.value ===
+                                                                                    account.id && (
+                                                                                    <Check className="ml-2 h-4 w-4 opacity-100" />
+                                                                                )}
+                                                                            </div>
+                                                                        </CommandItem>
+                                                                    ),
+                                                                )}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </CommandDialog>
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
+                                        </Field>
+                                    );
+                                }}
+                            />
+                        </div>
+
+                        {/* Row 2: Category (Left) */}
+                        <div className="md:col-span-1">
+                            <Controller
+                                name="category"
+                                control={form.control}
+                                render={({ field, fieldState }) => {
+                                    const selectedCat = ppmpCategories.find(
+                                        (c) => c.id === field.value,
+                                    );
+                                    return (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            <FieldContent>
+                                                <FieldLabel htmlFor="category-select">
+                                                    Category
+                                                </FieldLabel>
+
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={
+                                                        openCategoryCommand
+                                                    }
+                                                    className={cn(
+                                                        'w-full justify-between px-3 text-left font-normal',
+                                                        !field.value &&
+                                                            'text-muted-foreground',
+                                                        fieldState.invalid &&
+                                                            'border-destructive ring-destructive',
+                                                    )}
+                                                    onClick={() =>
+                                                        setOpenCategoryCommand(
+                                                            true,
+                                                        )
+                                                    }
+                                                >
+                                                    {selectedCat
+                                                        ? selectedCat.name
+                                                        : 'Select category'}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+
+                                                <CommandDialog
+                                                    open={openCategoryCommand}
+                                                    onOpenChange={
+                                                        setOpenCategoryCommand
+                                                    }
+                                                >
+                                                    <Command>
+                                                        <CommandInput placeholder="Search category..." />
+                                                        <CommandList>
+                                                            <CommandEmpty>
+                                                                No category
+                                                                found.
+                                                            </CommandEmpty>
+                                                            <CommandGroup heading="Categories">
+                                                                {ppmpCategories.map(
+                                                                    (
+                                                                        category,
+                                                                    ) => (
+                                                                        <CommandItem
+                                                                            key={
+                                                                                category.id
+                                                                            }
+                                                                            value={
+                                                                                category.name
+                                                                            }
+                                                                            onSelect={() => {
+                                                                                field.onChange(
+                                                                                    category.id,
+                                                                                );
+                                                                                setOpenCategoryCommand(
+                                                                                    false,
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex w-full items-center justify-between">
+                                                                                {
+                                                                                    category.name
+                                                                                }
+                                                                                {field.value ===
+                                                                                    category.id && (
+                                                                                    <Check className="ml-2 h-4 w-4 opacity-100" />
+                                                                                )}
+                                                                            </div>
+                                                                        </CommandItem>
+                                                                    ),
+                                                                )}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </CommandDialog>
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
+                                        </Field>
+                                    );
+                                }}
+                            />
+                        </div>
+
+                        {/* Row 2: Item No (Right) */}
+                        <div className="md:col-span-1">
+                            <Controller
+                                name="itemNo"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <FieldLabel htmlFor="form-rhf-demo-item-no">
+                                            Item No.
+                                        </FieldLabel>
+                                        <Input
+                                            {...field}
+                                            id="form-rhf-demo-item-no"
+                                            aria-invalid={fieldState.invalid}
+                                            placeholder="Enter item number"
+                                            autoComplete="off"
+                                            readOnly={!isCustomItem}
+                                        />
+                                        {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
                                             />
-                                        )} */}
+                                        )}
                                     </Field>
-                                );
-                            }}
-                        />
+                                )}
+                            />
+                        </div>
 
-                        <Controller
-                            name="category"
-                            control={form.control}
-                            render={({ field, fieldState }) => {
-                                return (
+                        {/* Row 3: Description (Full Width) */}
+                        <div className="md:col-span-2">
+                            <Controller
+                                name="description"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldContent>
-                                            <FieldLabel htmlFor="category-select">
-                                                Category
-                                            </FieldLabel>
+                                        <FieldLabel htmlFor="form-rhf-demo-description">
+                                            Description
+                                        </FieldLabel>
 
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </FieldContent>
-
-                                        {/* {!isCustomCategoryActive ? ( */}
-                                            <Select
-                                                onValueChange={(val) =>
-                                                    field.onChange(Number(val))
-                                                }
-                                                value={
-                                                    field.value
-                                                        ? field.value.toString()
-                                                        : ''
-                                                }
-                                            >
-                                                <SelectTrigger
-                                                    id="category-select"
+                                        {isCustomItem ? (
+                                            <InputGroup>
+                                                <InputGroupTextarea
+                                                    {...field}
+                                                    id="form-rhf-demo-description"
+                                                    placeholder="Enter item description"
+                                                    rows={3}
+                                                    className="min-h-24 resize-none"
                                                     aria-invalid={
                                                         fieldState.invalid
                                                     }
-                                                    className="w-full"
-                                                >
-                                                    <SelectValue placeholder="Select category" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {ppmpCategories.map(
-                                                            (category) => (
-                                                                <SelectItem
-                                                                    key={
-                                                                        category.id
-                                                                    }
-                                                                    value={category.id.toString()}
-                                                                >
-                                                                    {
-                                                                        category.name
-                                                                    }
-                                                                </SelectItem>
-                                                            ),
-                                                        )}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                        {/* // ) : (
-                                        //     <Input placeholder="Enter new category" />
-                                        // )} */}
-
-                                        {/* {isCustomItem && (
-                                            <Field orientation="horizontal">
-                                                <Switch
-                                                    size="sm"
-                                                    id="add-new-category"
-                                                    onCheckedChange={
-                                                        setIsCustomCategoryActive
-                                                    }
                                                 />
-                                                <FieldLabel
-                                                    htmlFor="add-new-category"
-                                                    className={`${isCustomCategoryActive ? 'text-primary' : ''}`}
+                                            </InputGroup>
+                                        ) : (
+                                            <>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={
+                                                        openDescriptionCommand
+                                                    }
+                                                    className={cn(
+                                                        'h-auto min-h-[40px] w-full justify-between px-3 text-left font-normal whitespace-normal',
+                                                        !field.value &&
+                                                            'text-muted-foreground',
+                                                        fieldState.invalid &&
+                                                            'border-destructive ring-destructive',
+                                                    )}
+                                                    disabled={
+                                                        !filteredPriceLists.length
+                                                    }
+                                                    onClick={() =>
+                                                        setOpenDescriptionCommand(
+                                                            true,
+                                                        )
+                                                    }
                                                 >
-                                                    Add new category
-                                                </FieldLabel>
-                                            </Field>
-                                        )} */}
+                                                    {field.value ? (
+                                                        <span className="line-clamp-2">
+                                                            {field.value}
+                                                        </span>
+                                                    ) : (
+                                                        <span>
+                                                            {!filteredPriceLists.length
+                                                                ? 'No items found (Select Expense/Category)'
+                                                                : 'Search description...'}
+                                                        </span>
+                                                    )}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
 
-                                        {/* {fieldState.invalid && (
+                                                <CommandDialog
+                                                    open={
+                                                        openDescriptionCommand
+                                                    }
+                                                    onOpenChange={
+                                                        setOpenDescriptionCommand
+                                                    }
+                                                >
+                                                    <Command>
+                                                        <CommandInput placeholder="Search item description..." />
+                                                        <CommandList>
+                                                            <CommandEmpty>
+                                                                No item found.
+                                                            </CommandEmpty>
+                                                            <CommandGroup heading="Price List Items">
+                                                                {filteredPriceLists.map(
+                                                                    (
+                                                                        priceList,
+                                                                    ) => (
+                                                                        <CommandItem
+                                                                            key={
+                                                                                priceList.id
+                                                                            }
+                                                                            value={
+                                                                                priceList.description
+                                                                            }
+                                                                            onSelect={() => {
+                                                                                field.onChange(
+                                                                                    priceList.description,
+                                                                                );
+                                                                                isExpenseAccountChangingFromDescription.current = true;
+
+                                                                                form.setValue(
+                                                                                    'itemNo',
+                                                                                    priceList.item_number.toString(),
+                                                                                );
+                                                                                form.setValue(
+                                                                                    'unitOfMeasurement',
+                                                                                    priceList.unit_of_measurement,
+                                                                                );
+                                                                                form.setValue(
+                                                                                    'price',
+                                                                                    priceList.price,
+                                                                                );
+                                                                                form.setValue(
+                                                                                    'expenseAccount',
+                                                                                    priceList.chart_of_account_id,
+                                                                                );
+                                                                                form.setValue(
+                                                                                    'ppmp_price_list_id',
+                                                                                    priceList.id,
+                                                                                );
+                                                                                form.setValue(
+                                                                                    'category',
+                                                                                    priceList
+                                                                                        .category
+                                                                                        ?.id ||
+                                                                                        0,
+                                                                                );
+
+                                                                                setOpenDescriptionCommand(
+                                                                                    false,
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex w-full flex-col gap-1">
+                                                                                <div className="flex items-center justify-between">
+                                                                                    <span className="font-medium">
+                                                                                        {
+                                                                                            priceList.description
+                                                                                        }
+                                                                                    </span>
+                                                                                    {field.value ===
+                                                                                        priceList.description && (
+                                                                                        <Check className="ml-2 h-4 w-4" />
+                                                                                    )}
+                                                                                </div>
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    <code className="mr-1 rounded bg-muted p-0.5">
+                                                                                        {
+                                                                                            priceList.account_number
+                                                                                        }
+                                                                                    </code>
+                                                                                    {
+                                                                                        priceList.unit_of_measurement
+                                                                                    }{' '}
+                                                                                    @{' '}
+                                                                                    {
+                                                                                        priceList.price
+                                                                                    }
+                                                                                </span>
+                                                                            </div>
+                                                                        </CommandItem>
+                                                                    ),
+                                                                )}
+                                                            </CommandGroup>
+                                                        </CommandList>
+                                                    </Command>
+                                                </CommandDialog>
+
+                                                <FieldDescription>
+                                                    Click to search items from
+                                                    the price list.
+                                                </FieldDescription>
+                                            </>
+                                        )}
+
+                                        {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
                                             />
-                                        )} */}
+                                        )}
                                     </Field>
-                                );
-                            }}
-                        />
+                                )}
+                            />
+                        </div>
 
-                        <Controller
-                            name="itemNo"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-item-no">
-                                        Item No.
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="form-rhf-demo-item-no"
-                                        aria-invalid={fieldState.invalid}
-                                        placeholder="Enter item number"
-                                        autoComplete="off"
-                                        readOnly={!isCustomItem}
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError
-                                            errors={[fieldState.error]}
+                        {/* Row 4: Unit (Left) */}
+                        <div className="md:col-span-1">
+                            <Controller
+                                name="unitOfMeasurement"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <FieldLabel htmlFor="form-rhf-demo-unit">
+                                            Unit of Measurement
+                                        </FieldLabel>
+                                        <Input
+                                            {...field}
+                                            id="form-rhf-demo-unit"
+                                            aria-invalid={fieldState.invalid}
+                                            placeholder="Enter unit of measurement"
+                                            autoComplete="off"
+                                            readOnly={!isCustomItem}
                                         />
-                                    )}
-                                </Field>
-                            )}
-                        />
-
-                        <Controller
-                            name="description"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-description">
-                                        Description
-                                    </FieldLabel>
-
-                                    {isCustomItem ? (
-                                        // Custom mode - text input
-                                        <InputGroup>
-                                            <InputGroupTextarea
-                                                {...field}
-                                                id="form-rhf-demo-description"
-                                                placeholder="Enter item description"
-                                                rows={3}
-                                                className="min-h-24 resize-none"
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
+                                        {fieldState.invalid && (
+                                            <FieldError
+                                                errors={[fieldState.error]}
                                             />
-                                        </InputGroup>
-                                    ) : (
-                                        // Price list mode - select dropdown
-                                        <Select
-                                            onValueChange={(val) => {
-                                                const selectedPriceList =
-                                                    filteredPriceLists.find(
-                                                        (pl) =>
-                                                            pl.id.toString() ===
-                                                            val,
-                                                    );
+                                        )}
+                                    </Field>
+                                )}
+                            />
+                        </div>
 
-                                                // console.log(selectedPriceList);
-
-                                                if (selectedPriceList) {
-                                                    field.onChange(
-                                                        selectedPriceList.description,
-                                                    );
-                                                    // Set flag to prevent clearing fields when expense account changes
-                                                    isExpenseAccountChangingFromDescription.current = true;
-                                                    // Auto-fill other fields
-                                                    form.setValue(
-                                                        'itemNo',
-                                                        selectedPriceList.item_number.toString(),
-                                                    );
-                                                    form.setValue(
-                                                        'unitOfMeasurement',
-                                                        selectedPriceList.unit_of_measurement,
-                                                    );
-                                                    form.setValue(
-                                                        'price',
-                                                        selectedPriceList.price,
-                                                    );
-                                                    form.setValue(
-                                                        'expenseAccount',
-                                                        selectedPriceList.chart_of_account_id,
-                                                    );
-                                                    form.setValue(
-                                                        'ppmp_price_list_id',
-                                                        selectedPriceList.id,
-                                                    );
-                                                    form.setValue(
-                                                        'category',
-                                                        selectedPriceList.category?.id || 0,
-                                                    );
-                                                }
-                                            }}
-                                            value={
-                                                filteredPriceLists
-                                                    .find(
-                                                        (pl) =>
-                                                            pl.description ===
-                                                            field.value,
-                                                    )
-                                                    ?.id.toString() || ''
-                                            }
-                                            disabled={
-                                                !filteredPriceLists.length
-                                            }
-                                        >
-                                            <SelectTrigger
-                                                id="form-rhf-demo-description"
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                className="w-full"
-                                            >
-                                                <SelectValue
-                                                    placeholder={
-                                                        !filteredPriceLists.length
-                                                            ? 'No items found'
-                                                            : 'Select item description'
-                                                    }
-                                                />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {filteredPriceLists.map(
-                                                        (priceList) => (
-                                                            <SelectItem
-                                                                key={
-                                                                    priceList.id
-                                                                }
-                                                                value={priceList.id.toString()}
-                                                            >
-                                                                <div className="flex flex-col py-1">
-                                                                    <span className="font-medium">
-                                                                        {
-                                                                            priceList.description
-                                                                        }
-                                                                    </span>
-                                                                    <span className="text-sm text-muted-foreground">
-                                                                        <code className="mr-1 bg-muted p-1 text-xs">
-                                                                            {
-                                                                                priceList.account_number
-                                                                            }
-                                                                        </code>
-                                                                        {
-                                                                            priceList.account_title
-                                                                        }{' '}
-                                                                        -{' '}
-                                                                        {
-                                                                            priceList.unit_of_measurement
-                                                                        }{' '}
-                                                                        @{' '}
-                                                                        {
-                                                                            priceList.price
-                                                                        }
-                                                                    </span>
-                                                                </div>
-                                                            </SelectItem>
-                                                        ),
-                                                    )}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-
-                                    {fieldState.invalid && (
-                                        <FieldError
-                                            errors={[fieldState.error]}
+                        {/* Row 4: Price (Right) */}
+                        <div className="md:col-span-1">
+                            <Controller
+                                name="price"
+                                control={form.control}
+                                render={({ field, fieldState }) => (
+                                    <Field data-invalid={fieldState.invalid}>
+                                        <FieldLabel htmlFor="form-rhf-demo-price">
+                                            Price
+                                        </FieldLabel>
+                                        <Input
+                                            {...field}
+                                            id="form-rhf-demo-price"
+                                            type="number"
+                                            step="0.01"
+                                            aria-invalid={fieldState.invalid}
+                                            placeholder="0.00"
+                                            autoComplete="off"
+                                            readOnly={!isCustomItem}
                                         />
-                                    )}
-                                </Field>
-                            )}
-                        />
-
-                        <Controller
-                            name="unitOfMeasurement"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-unit">
-                                        Unit of Measurement
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="form-rhf-demo-unit"
-                                        aria-invalid={fieldState.invalid}
-                                        placeholder="Enter unit of measurement"
-                                        autoComplete="off"
-                                        readOnly={!isCustomItem}
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    )}
-                                </Field>
-                            )}
-                        />
-
-                        <Controller
-                            name="price"
-                            control={form.control}
-                            render={({ field, fieldState }) => (
-                                <Field data-invalid={fieldState.invalid}>
-                                    <FieldLabel htmlFor="form-rhf-demo-price">
-                                        Price
-                                    </FieldLabel>
-                                    <Input
-                                        {...field}
-                                        id="form-rhf-demo-price"
-                                        type="number"
-                                        step="0.01"
-                                        aria-invalid={fieldState.invalid}
-                                        placeholder="0.00"
-                                        autoComplete="off"
-                                        readOnly={!isCustomItem}
-                                    />
-                                    {fieldState.invalid && (
-                                        <FieldError
-                                            errors={[fieldState.error]}
-                                        />
-                                    )}
-                                </Field>
-                            )}
-                        />
-                    </FieldGroup>
+                                        {fieldState.invalid && (
+                                            <FieldError
+                                                errors={[fieldState.error]}
+                                            />
+                                        )}
+                                    </Field>
+                                )}
+                            />
+                        </div>
+                    </div>
                 </form>
 
                 <DialogFooter>

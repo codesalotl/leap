@@ -1,4 +1,8 @@
-import { ColumnDef, RowSelectionState, Row } from '@tanstack/react-table';
+import {
+    createColumnHelper,
+    RowSelectionState,
+    Row,
+} from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle } from 'lucide-react';
@@ -17,9 +21,15 @@ interface ColumnProps {
     existingPpaIds: Set<number>;
 }
 
-export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps): ColumnDef<Ppa>[] => [
-    {
+const columnHelper = createColumnHelper<Ppa>();
+
+export const getPpaColumns = ({
+    setRowSelection,
+    existingPpaIds,
+}: ColumnProps) => [
+    columnHelper.display({
         id: 'select',
+        // size: 10,
         header: ({ table }) => (
             <Checkbox
                 checked={
@@ -53,9 +63,11 @@ export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps):
                                 // 2. Select All Children (Downward)
                                 const selectChildren = (r: Row<Ppa>) => {
                                     r.subRows.forEach((child) => {
-                                        // Don't select if it's already in database (optional preference, 
-                                        // keeping it selected in state ensures consistency if enabled later)
-                                        if (!existingPpaIds.has(child.original.id)) {
+                                        if (
+                                            !existingPpaIds.has(
+                                                child.original.id,
+                                            )
+                                        ) {
                                             next[child.id] = true;
                                         }
                                         selectChildren(child);
@@ -66,13 +78,13 @@ export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps):
                                 // 3. Select All Parents (Upward)
                                 let parent = row.getParentRow();
                                 while (parent) {
-                                    // Ensure parent isn't disabled before selecting (though usually parents exist if child does)
-                                    if (!existingPpaIds.has(parent.original.id)) {
+                                    if (
+                                        !existingPpaIds.has(parent.original.id)
+                                    ) {
                                         next[parent.id] = true;
                                     }
                                     parent = parent.getParentRow();
                                 }
-
                             } else {
                                 // 1. Unselect Current
                                 delete next[row.id];
@@ -85,11 +97,7 @@ export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps):
                                     });
                                 };
                                 unselectChildren(row);
-                                
-                                // Note: We do NOT unselect parents when unchecking a child 
-                                // because the parent might contain other selected children.
                             }
-
                             return next;
                         });
                     }}
@@ -97,12 +105,14 @@ export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps):
                 />
             );
         },
-    },
-    {
-        accessorKey: 'title',
+    }),
+    columnHelper.accessor('title', {
         header: 'Type & Title',
-        cell: ({ row }) => {
-            const ppa = row.original;
+        // size: 600,
+        cell: ({ row, getValue }) => {
+            const type = row.original.type;
+            const title = getValue();
+
             return (
                 <div
                     style={{ paddingLeft: `${row.depth * 24}px` }}
@@ -115,39 +125,41 @@ export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps):
                     )}
                     <div className="flex flex-col">
                         <span className="text-[10px] leading-none font-bold text-muted-foreground uppercase">
-                            {ppa.type}
+                            {type}
                         </span>
                         <span
-                            className={
+                            className={`leading-tight break-words whitespace-normal ${
                                 row.depth === 0 ? 'font-bold' : 'font-medium'
-                            }
+                            }`}
                         >
-                            {ppa.title}
+                            {title}
                         </span>
                     </div>
                 </div>
             );
         },
-    },
-    {
-        accessorKey: 'full_code',
+    }),
+    columnHelper.accessor('full_code', {
         header: 'Code',
-        cell: ({ getValue }) => (
+        // size: 100,
+        cell: (info) => (
             <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-semibold">
-                {getValue<string>()}
+                {info.getValue()}
             </code>
         ),
-    },
-    {
-        accessorKey: 'is_active',
+    }),
+    columnHelper.accessor('is_active', {
         header: 'Status',
-        cell: ({ row }) => {
-            const isActive = row.original.is_active;
+        cell: ({ row, getValue }) => {
+            const isActive = getValue();
             const isAdded = existingPpaIds.has(row.original.id);
 
             if (isAdded) {
                 return (
-                    <Badge variant="outline" className="h-5 px-1.5 text-[10px] text-muted-foreground">
+                    <Badge
+                        variant="outline"
+                        className="h-5 px-1.5 text-[10px] text-muted-foreground"
+                    >
                         <CheckCircle2 className="mr-1 h-3 w-3" /> Added
                     </Badge>
                 );
@@ -163,5 +175,5 @@ export const getPpaColumns = ({ setRowSelection, existingPpaIds }: ColumnProps):
                 </Badge>
             );
         },
-    },
+    }),
 ];

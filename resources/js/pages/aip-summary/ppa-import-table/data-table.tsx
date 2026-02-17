@@ -10,7 +10,7 @@ import {
 } from '@tanstack/react-table';
 
 import {
-    Table as UITable,
+    Table,
     TableBody,
     TableCell,
     TableHead,
@@ -66,7 +66,12 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="rounded-md border">
-            <UITable>
+            <Table
+                style={{
+                    // width: table.getTotalSize(),
+                    tableLayout: 'fixed',
+                }}
+            >
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>
@@ -114,7 +119,7 @@ export function DataTable<TData, TValue>({
                         </TableRow>
                     )}
                 </TableBody>
-            </UITable>
+            </Table>
         </div>
     );
 }

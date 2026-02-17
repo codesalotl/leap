@@ -19,11 +19,24 @@ export const formatDate = (dateString: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
-    
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+    ];
     const month = months[date.getMonth()];
     const year = date.getFullYear().toString().slice(-2);
-    
+
     return `${month}-${year}`;
 };
 
@@ -48,15 +61,18 @@ const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
 };
 
 export const useAipColumns = (actions: ColumnActions) => {
-    return useMemo(
-        () => getColumns(actions),
-        [actions]
-    );
+    return useMemo(() => getColumns(actions), [actions]);
 };
 
-export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnActions): ColumnDef<AipEntry, any>[] => [
+export const getColumns = ({
+    onAddEntry,
+    onEdit,
+    onDelete,
+    masterPpas,
+}: ColumnActions): ColumnDef<AipEntry, any>[] => [
     columnHelper.accessor('aip_ref_code', {
         header: 'AIP Reference Code',
+        size: 300,
         cell: (info) => (
             <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
                 {info.getValue()}
@@ -75,6 +91,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                 refCode.toLowerCase().includes(searchValue)
             );
         },
+        size: 600,
         cell: ({ row, getValue }) => (
             <div
                 style={{ paddingLeft: `${row.depth * 20}px` }}
@@ -83,12 +100,18 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                 {row.depth > 0 && (
                     <span className="text-muted-foreground opacity-50">↳</span>
                 )}
-                <span>{getValue()}</span>
+                <span className="break-words whitespace-normal">{getValue()}</span>
             </div>
         ),
     }),
     columnHelper.accessor('implementing_office_department', {
         header: 'Implementing Office/Department',
+        size: 500,
+        cell: (info) => (
+            <div className="break-words whitespace-normal">
+                {info.getValue()}
+            </div>
+        ),
     }),
     columnHelper.group({
         header: 'Schedule of Implementation',
@@ -105,15 +128,22 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
     }),
     columnHelper.accessor('expected_outputs', {
         header: 'Expected Outputs',
+        size: 600,
+        cell: (info) => (
+            <div className="break-words whitespace-normal">
+                {info.getValue()}
+            </div>
+        ),
     }),
     columnHelper.accessor('funding_source', {
         header: 'Funding Source',
+        cell: (info) => info.getValue() || '-',
     }),
     columnHelper.group({
         header: 'Amount (in thousand pesos)',
         columns: [
             columnHelper.accessor('amount.ps', {
-                header: 'PS',
+                header: () => <div className="text-right">PS</div>,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -121,7 +151,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                 ),
             }),
             columnHelper.accessor('amount.mooe', {
-                header: 'MOOE',
+                header: () => <div className="text-right">MOOE</div>,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -129,7 +159,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                 ),
             }),
             columnHelper.accessor('amount.fe', {
-                header: 'FE',
+                header: () => <div className="text-right">FE</div>,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -137,7 +167,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                 ),
             }),
             columnHelper.accessor('amount.co', {
-                header: 'CO',
+                header: () => <div className="text-right">CO</div>,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -146,13 +176,14 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
             }),
             columnHelper.display({
                 id: 'amount.total',
-                header: 'Total',
+                header: () => <div className="text-right">Total</div>,
                 cell: ({ row }) => {
                     const amount = row.original.amount;
-                    const total = parseFloat(amount.ps || '0') + 
-                                 parseFloat(amount.mooe || '0') + 
-                                 parseFloat(amount.fe || '0') + 
-                                 parseFloat(amount.co || '0');
+                    const total =
+                        parseFloat(amount.ps || '0') +
+                        parseFloat(amount.mooe || '0') +
+                        parseFloat(amount.fe || '0') +
+                        parseFloat(amount.co || '0');
                     return (
                         <span className="block text-right font-bold">
                             {formatNumber(total.toString())}
@@ -166,7 +197,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
         header: 'CC Expenditure',
         columns: [
             columnHelper.accessor('cc_adaptation', {
-                header: 'Adaptation',
+                header: () => <div className="text-right">Adaptation</div>,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -174,7 +205,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
                 ),
             }),
             columnHelper.accessor('cc_mitigation', {
-                header: 'Mitigation',
+                header: () => <div className="text-right">Mitigation</div>,
                 cell: (i) => (
                     <span className="block text-right">
                         {formatNumber(i.getValue())}
@@ -185,6 +216,7 @@ export const getColumns = ({ onAddEntry, onEdit, onDelete, masterPpas }: ColumnA
     }),
     columnHelper.accessor('cc_typology_code', {
         header: 'CC Typology Code',
+        cell: (info) => info.getValue() || '-',
     }),
     columnHelper.display({
         id: 'actions',

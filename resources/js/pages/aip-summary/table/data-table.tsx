@@ -89,7 +89,6 @@ export default function DataTable<TData, TValue>({
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
         React.useState<ColumnFiltersState>([]);
-    // const [expanded, setExpanded] = React.useState<ExpandedState>(true);
 
     const table = useReactTable({
         data,
@@ -101,7 +100,6 @@ export default function DataTable<TData, TValue>({
         },
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
-        // onExpandedChange: setExpanded,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
@@ -131,10 +129,12 @@ export default function DataTable<TData, TValue>({
     return (
         <div className="border">
             <Table
-                style={{
-                    //     width: table.getTotalSize(),
-                    // tableLayout: 'fixed',
-                }}
+                style={
+                    {
+                        //     width: table.getTotalSize(),
+                        tableLayout: 'fixed',
+                    }
+                }
             >
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (

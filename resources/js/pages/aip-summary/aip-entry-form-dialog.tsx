@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Form } from '@/components/ui/form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Calendar } from '@/components/ui/calendar';
 import {
     Popover,
@@ -218,7 +219,8 @@ export default function AipEntryFormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl">
+            {/* <DialogContent className="max-h-[90vh] max-w-full overflow-y-auto sm:max-w-4xl lg:max-w-5xl"> */}
+            <DialogContent className="sm:max-w-[70rem]">
                 <DialogHeader>
                     <DialogTitle>Edit AIP Entry</DialogTitle>
                     <DialogDescription>
@@ -226,355 +228,16 @@ export default function AipEntryFormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <Form {...form}>
-                    <form
-                        id="aip-entry-form"
-                        onSubmit={form.handleSubmit(onSubmit)}
-                    >
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <Controller
-                                    name="aipRefCode"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                AIP Reference Code
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                readOnly
-                                                className="cursor-not-allowed bg-muted text-muted-foreground"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="expectedOutputs"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                Expected Outputs
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                autoComplete="off"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <Controller
-                                    name="ppaDescription"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                Program/Project/Activity
-                                                Description
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                autoComplete="off"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="fundingSource"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                Funding Source
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                autoComplete="off"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <Controller
-                                    name="implementingOfficeDepartmentLocation"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                Implementing Office/Department
-                                            </FieldLabel>
-                                            {/* Changed from Select to ReadOnly Input */}
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                readOnly
-                                                className="cursor-not-allowed bg-muted text-muted-foreground"
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="ccTypologyCode"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor={field.name}>
-                                                CC Typology Code
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                autoComplete="off"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                {/* Date Pickers Section */}
-                                <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
+                <ScrollArea className="h-120">
+                    <Form {...form}>
+                        <form
+                            id="aip-entry-form"
+                            onSubmit={form.handleSubmit(onSubmit)}
+                        >
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
                                     <Controller
-                                        name="scheduleOfImplementation.startingDate"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                className="flex flex-col"
-                                            >
-                                                <FieldLabel>
-                                                    Start Date
-                                                </FieldLabel>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant={'outline'}
-                                                            className={cn(
-                                                                'w-full justify-start text-left font-normal',
-                                                                !field.value &&
-                                                                    'text-muted-foreground',
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(
-                                                                    new Date(
-                                                                        field.value,
-                                                                    ),
-                                                                    'PPP',
-                                                                )
-                                                            ) : (
-                                                                <span>
-                                                                    Pick a date
-                                                                </span>
-                                                            )}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        className="w-auto overflow-hidden p-0"
-                                                        align="start"
-                                                    >
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={
-                                                                field.value
-                                                                    ? new Date(
-                                                                          field.value,
-                                                                      )
-                                                                    : undefined
-                                                            }
-                                                            defaultMonth={
-                                                                field.value
-                                                                    ? new Date(
-                                                                          field.value,
-                                                                      )
-                                                                    : undefined
-                                                            }
-                                                            captionLayout="dropdown"
-                                                            onSelect={(date) =>
-                                                                field.onChange(
-                                                                    date
-                                                                        ? format(
-                                                                              date,
-                                                                              'yyyy-MM-dd',
-                                                                          )
-                                                                        : '',
-                                                                )
-                                                            }
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="scheduleOfImplementation.completionDate"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                className="flex flex-col"
-                                            >
-                                                <FieldLabel>
-                                                    Completion Date
-                                                </FieldLabel>
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button
-                                                            variant={'outline'}
-                                                            className={cn(
-                                                                'w-full justify-start text-left font-normal',
-                                                                !field.value &&
-                                                                    'text-muted-foreground',
-                                                            )}
-                                                        >
-                                                            {field.value ? (
-                                                                format(
-                                                                    new Date(
-                                                                        field.value,
-                                                                    ),
-                                                                    'PPP',
-                                                                )
-                                                            ) : (
-                                                                <span>
-                                                                    Pick a date
-                                                                </span>
-                                                            )}
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent
-                                                        className="w-auto overflow-hidden p-0"
-                                                        align="start"
-                                                    >
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={
-                                                                field.value
-                                                                    ? new Date(
-                                                                          field.value,
-                                                                      )
-                                                                    : undefined
-                                                            }
-                                                            defaultMonth={
-                                                                field.value
-                                                                    ? new Date(
-                                                                          field.value,
-                                                                      )
-                                                                    : undefined
-                                                            }
-                                                            captionLayout="dropdown"
-                                                            onSelect={(date) =>
-                                                                field.onChange(
-                                                                    date
-                                                                        ? format(
-                                                                              date,
-                                                                              'yyyy-MM-dd',
-                                                                          )
-                                                                        : '',
-                                                                )
-                                                            }
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-                                </div>
-
-                                <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
-                                    <Controller
-                                        name="amountOfCcExpenditure.ccAdaptation"
+                                        name="aipRefCode"
                                         control={form.control}
                                         render={({ field, fieldState }) => (
                                             <Field
@@ -585,169 +248,7 @@ export default function AipEntryFormDialog({
                                                 <FieldLabel
                                                     htmlFor={field.name}
                                                 >
-                                                    Climate Change Adaptation
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    autoComplete="off"
-                                                />
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="amountOfCcExpenditure.ccMitigation"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    Climate Change Mitigation
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    autoComplete="off"
-                                                />
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="rounded-md border p-4">
-                                <div className="grid grid-cols-5 gap-4">
-                                    <Controller
-                                        name="amount.ps"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <CurrencyInput
-                                                field={field}
-                                                fieldState={fieldState}
-                                                label="PS"
-                                            />
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="amount.mooe"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    MOOE
-                                                </FieldLabel>
-                                                <div className="flex gap-2">
-                                                    <Input
-                                                        {...field}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        placeholder="0.00"
-                                                        readOnly
-                                                        className="cursor-not-allowed bg-muted text-right font-mono text-muted-foreground"
-                                                        value={formatCurrency(
-                                                            field.value,
-                                                        )}
-                                                    />
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                        onClick={() => {
-                                                            if (data?.id) {
-                                                                router.visit(
-                                                                    `/aip/${fiscalYear.id}/summary/${data.id}/ppmp`,
-                                                                );
-                                                            }
-                                                        }}
-                                                        title="Manage Itemized MOOE"
-                                                    >
-                                                        <ListPlus className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="amount.fe"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <CurrencyInput
-                                                field={field}
-                                                fieldState={fieldState}
-                                                label="FE"
-                                            />
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="amount.co"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <CurrencyInput
-                                                field={field}
-                                                fieldState={fieldState}
-                                                label="CO"
-                                            />
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="amount.total"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    TOTAL
+                                                    AIP Reference Code
                                                 </FieldLabel>
                                                 <Input
                                                     {...field}
@@ -756,7 +257,40 @@ export default function AipEntryFormDialog({
                                                         fieldState.invalid
                                                     }
                                                     readOnly
-                                                    className="cursor-not-allowed bg-muted font-bold text-muted-foreground"
+                                                    className="cursor-not-allowed bg-muted text-muted-foreground"
+                                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+
+                                    <Controller
+                                        name="expectedOutputs"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Expected Outputs
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    autoComplete="off"
                                                 />
                                                 {fieldState.invalid && (
                                                     <FieldError
@@ -769,10 +303,529 @@ export default function AipEntryFormDialog({
                                         )}
                                     />
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Controller
+                                        name="ppaDescription"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Program/Project/Activity
+                                                    Description
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    autoComplete="off"
+                                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+
+                                    <Controller
+                                        name="fundingSource"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Funding Source
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    autoComplete="off"
+                                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <Controller
+                                        name="implementingOfficeDepartmentLocation"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Implementing
+                                                    Office/Department
+                                                </FieldLabel>
+                                                {/* Changed from Select to ReadOnly Input */}
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    readOnly
+                                                    className="cursor-not-allowed bg-muted text-muted-foreground"
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+
+                                    <Controller
+                                        name="ccTypologyCode"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    CC Typology Code
+                                                </FieldLabel>
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    autoComplete="off"
+                                                />
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Date Pickers Section */}
+                                    <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
+                                        <Controller
+                                            name="scheduleOfImplementation.startingDate"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    className="flex flex-col"
+                                                >
+                                                    <FieldLabel>
+                                                        Start Date
+                                                    </FieldLabel>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant={
+                                                                    'outline'
+                                                                }
+                                                                className={cn(
+                                                                    'w-full justify-start text-left font-normal',
+                                                                    !field.value &&
+                                                                        'text-muted-foreground',
+                                                                )}
+                                                            >
+                                                                {field.value ? (
+                                                                    format(
+                                                                        new Date(
+                                                                            field.value,
+                                                                        ),
+                                                                        'PPP',
+                                                                    )
+                                                                ) : (
+                                                                    <span>
+                                                                        Pick a
+                                                                        date
+                                                                    </span>
+                                                                )}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent
+                                                            className="w-auto overflow-hidden p-0"
+                                                            align="start"
+                                                        >
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={
+                                                                    field.value
+                                                                        ? new Date(
+                                                                              field.value,
+                                                                          )
+                                                                        : undefined
+                                                                }
+                                                                defaultMonth={
+                                                                    field.value
+                                                                        ? new Date(
+                                                                              field.value,
+                                                                          )
+                                                                        : undefined
+                                                                }
+                                                                captionLayout="dropdown"
+                                                                onSelect={(
+                                                                    date,
+                                                                ) =>
+                                                                    field.onChange(
+                                                                        date
+                                                                            ? format(
+                                                                                  date,
+                                                                                  'yyyy-MM-dd',
+                                                                              )
+                                                                            : '',
+                                                                    )
+                                                                }
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            )}
+                                        />
+
+                                        <Controller
+                                            name="scheduleOfImplementation.completionDate"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    className="flex flex-col"
+                                                >
+                                                    <FieldLabel>
+                                                        Completion Date
+                                                    </FieldLabel>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant={
+                                                                    'outline'
+                                                                }
+                                                                className={cn(
+                                                                    'w-full justify-start text-left font-normal',
+                                                                    !field.value &&
+                                                                        'text-muted-foreground',
+                                                                )}
+                                                            >
+                                                                {field.value ? (
+                                                                    format(
+                                                                        new Date(
+                                                                            field.value,
+                                                                        ),
+                                                                        'PPP',
+                                                                    )
+                                                                ) : (
+                                                                    <span>
+                                                                        Pick a
+                                                                        date
+                                                                    </span>
+                                                                )}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent
+                                                            className="w-auto overflow-hidden p-0"
+                                                            align="start"
+                                                        >
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={
+                                                                    field.value
+                                                                        ? new Date(
+                                                                              field.value,
+                                                                          )
+                                                                        : undefined
+                                                                }
+                                                                defaultMonth={
+                                                                    field.value
+                                                                        ? new Date(
+                                                                              field.value,
+                                                                          )
+                                                                        : undefined
+                                                                }
+                                                                captionLayout="dropdown"
+                                                                onSelect={(
+                                                                    date,
+                                                                ) =>
+                                                                    field.onChange(
+                                                                        date
+                                                                            ? format(
+                                                                                  date,
+                                                                                  'yyyy-MM-dd',
+                                                                              )
+                                                                            : '',
+                                                                    )
+                                                                }
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-rows-2 gap-4 rounded-md border p-4">
+                                        <Controller
+                                            name="amountOfCcExpenditure.ccAdaptation"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        Climate Change
+                                                        Adaptation
+                                                    </FieldLabel>
+                                                    <Input
+                                                        {...field}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
+                                                        }
+                                                        autoComplete="off"
+                                                    />
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            )}
+                                        />
+
+                                        <Controller
+                                            name="amountOfCcExpenditure.ccMitigation"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        Climate Change
+                                                        Mitigation
+                                                    </FieldLabel>
+                                                    <Input
+                                                        {...field}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
+                                                        }
+                                                        autoComplete="off"
+                                                    />
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="rounded-md border p-4">
+                                    <div className="grid grid-cols-5 gap-4">
+                                        <Controller
+                                            name="amount.ps"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <CurrencyInput
+                                                    field={field}
+                                                    fieldState={fieldState}
+                                                    label="PS"
+                                                />
+                                            )}
+                                        />
+
+                                        <Controller
+                                            name="amount.mooe"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        MOOE
+                                                    </FieldLabel>
+                                                    <div className="flex gap-2">
+                                                        <Input
+                                                            {...field}
+                                                            id={field.name}
+                                                            aria-invalid={
+                                                                fieldState.invalid
+                                                            }
+                                                            placeholder="0.00"
+                                                            readOnly
+                                                            className="cursor-not-allowed bg-muted text-right font-mono text-muted-foreground"
+                                                            value={formatCurrency(
+                                                                field.value,
+                                                            )}
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                                            onClick={() => {
+                                                                if (data?.id) {
+                                                                    router.visit(
+                                                                        `/aip/${fiscalYear.id}/summary/${data.id}/ppmp`,
+                                                                    );
+                                                                }
+                                                            }}
+                                                            title="Manage Itemized MOOE"
+                                                        >
+                                                            <ListPlus className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            )}
+                                        />
+
+                                        <Controller
+                                            name="amount.fe"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <CurrencyInput
+                                                    field={field}
+                                                    fieldState={fieldState}
+                                                    label="FE"
+                                                />
+                                            )}
+                                        />
+
+                                        <Controller
+                                            name="amount.co"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <CurrencyInput
+                                                    field={field}
+                                                    fieldState={fieldState}
+                                                    label="CO"
+                                                />
+                                            )}
+                                        />
+
+                                        <Controller
+                                            name="amount.total"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                    >
+                                                        TOTAL
+                                                    </FieldLabel>
+                                                    <Input
+                                                        {...field}
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
+                                                        }
+                                                        readOnly
+                                                        className="cursor-not-allowed bg-muted font-bold text-muted-foreground"
+                                                    />
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </Field>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </form>
-                </Form>
+                        </form>
+                    </Form>
+                </ScrollArea>
 
                 <DialogFooter>
                     <Button

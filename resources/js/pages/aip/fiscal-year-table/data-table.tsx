@@ -6,7 +6,9 @@ import {
     getCoreRowModel,
     getFilteredRowModel,
     useReactTable,
+    Column,
 } from '@tanstack/react-table';
+import { CSSProperties } from 'react';
 import {
     Table,
     TableBody,
@@ -24,6 +26,50 @@ interface DataTableProps<TData, TValue> {
     searchKey?: string;
     children?: ReactNode;
 }
+
+const PINNED_COLUMN_COLORS = {
+    header: {
+        background: 'var(--primary)',
+    },
+    cell: {
+        background: 'var(--background)',
+        evenBackground: 'var(--muted)',
+    },
+};
+
+const getCommonPinningStyles = <TData,>(
+    column: Column<TData>,
+    isHeaderCell = false,
+    isEvenRow = false,
+): CSSProperties => {
+    const isPinned = column.getIsPinned();
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left');
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right');
+
+    return {
+        boxShadow: isLastLeftPinnedColumn
+            ? '-1px 0 0 0 var(--muted) inset'
+            : isFirstRightPinnedColumn
+              ? '1px 0 0 0 var(--muted) inset'
+              : undefined,
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right:
+            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        minWidth: column.columnDef.minSize,
+        maxWidth: column.columnDef.maxSize,
+        backgroundColor: isPinned
+            ? isHeaderCell
+                ? PINNED_COLUMN_COLORS.header.background
+                : isEvenRow
+                  ? PINNED_COLUMN_COLORS.cell.evenBackground
+                  : PINNED_COLUMN_COLORS.cell.background
+            : undefined,
+    };
+};
 
 export function FiscalYearDataTable<TData, TValue>({
     columns,
@@ -47,6 +93,8 @@ export function FiscalYearDataTable<TData, TValue>({
         state: {
             columnFilters,
         },
+        enableColumnPinning: true,
+        columnResizeMode: 'onChange',
     });
 
     return (
@@ -80,8 +128,19 @@ export function FiscalYearDataTable<TData, TValue>({
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
+                                    const { column } = header;
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            className="bg-primary font-bold text-primary-foreground"
+                                            style={{
+                                                ...getCommonPinningStyles(
+                                                    column,
+                                                    true,
+                                                ),
+                                                width: header.getSize(),
+                                            }}
+                                        >
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -95,18 +154,30 @@ export function FiscalYearDataTable<TData, TValue>({
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="[&_tr:nth-child(even)]:bg-muted">
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    ))}
+                                    {row.getVisibleCells().map((cell, index) => {
+                                        const { column } = cell;
+                                        return (
+                                            <TableCell
+                                                key={cell.id}
+                                                style={{
+                                                    ...getCommonPinningStyles(
+                                                        column,
+                                                        false,
+                                                        index % 2 === 1,
+                                                    ),
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
                                 </TableRow>
                             ))
                         ) : (
