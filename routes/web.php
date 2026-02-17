@@ -176,4 +176,8 @@ Route::post('/ppmp-headers/{ppmpHeaderId}/items', [
     'store',
 ])->name('ppmp-items.store');
 
+Route::get('test-combobox', function () {
+    return Inertia::render('test-combobox');
+});
+
 require __DIR__ . '/settings.php';
