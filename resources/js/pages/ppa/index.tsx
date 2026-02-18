@@ -1,5 +1,3 @@
-// resources\js\pages\ppa\index.tsx
-
 import * as React from 'react';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
@@ -45,20 +43,7 @@ export default function PpaPage({
         <AppLayout
             breadcrumbs={[{ title: 'PPA Master Library', href: '/offices' }]}
         >
-            <div className="w-full px-4 pb-4">
-                <div className="flex justify-end py-4">
-                    <Button
-                        onClick={() => {
-                            setDialogMode('add');
-                            setActivePpa(null);
-                            setTargetType('Program');
-                            setIsDialogOpen(true);
-                        }}
-                    >
-                        New Program
-                    </Button>
-                </div>
-
+            <div className="w-full px-4 pt-4">
                 <PpaDataTable
                     columns={columns}
                     data={ppaTree}
@@ -80,7 +65,18 @@ export default function PpaPage({
                             setIsDeleteDialogOpen(true);
                         },
                     }}
-                />
+                >
+                    <Button
+                        onClick={() => {
+                            setDialogMode('add');
+                            setActivePpa(null);
+                            setTargetType('Program');
+                            setIsDialogOpen(true);
+                        }}
+                    >
+                        New Program
+                    </Button>
+                </PpaDataTable>
 
                 <PpaFormDialog
                     mode={dialogMode}

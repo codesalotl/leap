@@ -40,11 +40,13 @@ class AipEntryController extends Controller
                 'ppa.office.sector',
                 'ppa.office.lguLevel',
                 'ppa.office.officeType',
-                'ppa.children',             // Projects under Programs
-                'ppa.children.children',    // Activities under Projects
-                'ppa.parent',               // Parent PPA info
+                'ppa.children', // Projects under Programs
+                'ppa.children.children', // Activities under Projects
+                'ppa.parent', // Parent PPA info
             ])
             ->get();
+
+        // dd($aipEntries);
 
         // $aip_entries = AipEntry::with([
         //     'ppa.office',
@@ -83,11 +85,15 @@ class AipEntryController extends Controller
             ],
         );
 
+        // dd($mappedEntries);
+
         $aipTree = $this->buildAipTree($mappedEntries);
+
+        // dd($aipTree);
 
         $offices = Office::all();
 
-        return Inertia::render('aip/aip-summary-form', [
+        return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipTree,
             'masterPpas' => $masterPpaTree,
@@ -267,9 +273,18 @@ class AipEntryController extends Controller
                 $descendantPpaIds,
             );
 
-            // 3. This is the ONLY delete command.
-            // It only removes records from 'aip_entries' (the budget allocations).
-            // The 'ppas' table (the PPA Library) is NOT affected.
+            // 3. Get the AIP entry IDs that will be deleted to handle PPMP constraints
+            $aipEntryIdsToDelete = AipEntry::where('fiscal_year_id', $fiscalYearId)
+                ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
+                ->pluck('id')
+                ->toArray();
+
+            // 4. Delete PPMP records that reference these AIP entries first
+            if (!empty($aipEntryIdsToDelete)) {
+                \App\Models\Ppmp::whereIn('aip_entry_id', $aipEntryIdsToDelete)->delete();
+            }
+
+            // 5. Now delete the AIP entries
             AipEntry::where('fiscal_year_id', $fiscalYearId)
                 ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
                 ->delete();

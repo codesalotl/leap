@@ -1,3 +1,47 @@
+export interface AipEntry {
+    id: number;
+    ppa_id: number;
+    parent_ppa_id: number | null;
+    aip_ref_code: string;
+    ppa_desc: string;
+    implementing_office_department: string;
+    sched_implementation: {
+        start_date: string;
+        completion_date: string;
+    };
+    expected_outputs: string;
+    funding_source: string;
+    amount: {
+        ps: string;
+        mooe: string;
+        fe: string;
+        co: string;
+        total: string;
+    };
+    cc_adaptation: string;
+    cc_mitigation: string;
+    cc_typology_code: string;
+    children?: AipEntry[];
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LguLevel {
+    code: string;
+    created_at: string;
+    id: number;
+    level: string;
+    updated_at: string;
+}
+
+export interface OfficeType {
+    code: string;
+    created_at: string;
+    id: number;
+    type: string;
+    updated_at: string;
+}
+
 export interface ChartOfAccount {
     id: number;
     account_number: string;
@@ -13,14 +57,15 @@ export interface ChartOfAccount {
     description: string | null;
     created_at: string;
     updated_at: string;
+    ppmp_price_lists?: PriceList[];
 }
 
 export interface FiscalYear {
     id: number;
     year: string;
-    status: string;
-    created_at: string;
-    updated_at: string;
+    status: string; // change later to enum
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export interface Ppmp {
@@ -64,6 +109,55 @@ export interface PriceList {
     unit_of_measurement: string;
     price: string;
     chart_of_account_id: number;
-    created_at: string;
-    updated_at: string;
+    ppmp_category_id: number;
+    created_at: string | null;
+    updated_at: string | null;
+    category?: PpmpCategory;
+}
+
+export interface PpmpCategory {
+    id: number;
+    name: string;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface Office {
+    id: number;
+    sector_id: number | null;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    acronym: string | null;
+    is_lee: boolean;
+    full_code: string;
+    lgu_level?: LguLevel;
+    office_type?: OfficeType;
+    sector?: Sector;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface Sector {
+    id: number;
+    code: string;
+    sector: string;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+export interface Ppa {
+    id: number;
+    office_id: number;
+    parent_id: number | null;
+    title: string;
+    type: 'Program' | 'Project' | 'Activity';
+    code_suffix: string;
+    full_code: string;
+    is_active: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    children?: Ppa[];
+    office?: Office;
 }

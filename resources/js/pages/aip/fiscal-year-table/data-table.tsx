@@ -1,26 +1,14 @@
-import * as React from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import {
     ColumnDef,
     ColumnFiltersState,
-    SortingState,
-    VisibilityState,
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
     useReactTable,
+    Column,
 } from '@tanstack/react-table';
-import { ChevronDown } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+import { CSSProperties } from 'react';
 import {
     Table,
     TableBody,
@@ -29,13 +17,59 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
-    searchKey?: string; // e.g. "year"
-    children?: React.ReactNode; // For the FiscalYearDialog
+    searchKey?: string;
+    children?: ReactNode;
 }
+
+const PINNED_COLUMN_COLORS = {
+    header: {
+        background: 'var(--primary)',
+    },
+    cell: {
+        background: 'var(--background)',
+        evenBackground: 'var(--muted)',
+    },
+};
+
+const getCommonPinningStyles = <TData,>(
+    column: Column<TData>,
+    isHeaderCell = false,
+    isEvenRow = false,
+): CSSProperties => {
+    const isPinned = column.getIsPinned();
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left');
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right');
+
+    return {
+        boxShadow: isLastLeftPinnedColumn
+            ? '-1px 0 0 0 var(--muted) inset'
+            : isFirstRightPinnedColumn
+              ? '1px 0 0 0 var(--muted) inset'
+              : undefined,
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right:
+            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        minWidth: column.columnDef.minSize,
+        maxWidth: column.columnDef.maxSize,
+        backgroundColor: isPinned
+            ? isHeaderCell
+                ? PINNED_COLUMN_COLORS.header.background
+                : isEvenRow
+                  ? PINNED_COLUMN_COLORS.cell.evenBackground
+                  : PINNED_COLUMN_COLORS.cell.background
+            : undefined,
+    };
+};
 
 export function FiscalYearDataTable<TData, TValue>({
     columns,
@@ -43,48 +77,29 @@ export function FiscalYearDataTable<TData, TValue>({
     searchKey,
     children,
 }: DataTableProps<TData, TValue>) {
-    const [sorting, setSorting] = React.useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] =
-        React.useState<ColumnFiltersState>([]);
-    const [columnVisibility, setColumnVisibility] =
-        React.useState<VisibilityState>({});
-    const [rowSelection, setRowSelection] = React.useState({});
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-    // Reset selection when data changes (from your original code)
-    React.useEffect(() => {
-        setRowSelection({});
+    // Reset filters and sorting when data changes
+    useEffect(() => {
         setColumnFilters([]);
-        setSorting([]);
     }, [data]);
 
     const table = useReactTable({
         data,
         columns,
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
-        getSortedRowModel: getSortedRowModel(),
+        onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
-        onColumnVisibilityChange: setColumnVisibility,
-        onRowSelectionChange: setRowSelection,
         state: {
-            sorting,
             columnFilters,
-            columnVisibility,
-            rowSelection,
-        },
-        initialState: {
-            pagination: {
-                pageSize: 10,
-            },
         },
         enableColumnPinning: true,
+        columnResizeMode: 'onChange',
     });
 
     return (
-        <div className="w-full">
-            <div className="flex items-center justify-between py-4">
+        <div className="flex flex-col gap-4">
+            <div className="flex justify-between">
                 {searchKey && (
                     <Input
                         placeholder={`Filter ${searchKey}...`}
@@ -102,47 +117,30 @@ export function FiscalYearDataTable<TData, TValue>({
                     />
                 )}
 
-                <div className="flex gap-2">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
-                                Columns <ChevronDown className="ml-2 h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            {table
-                                .getAllColumns()
-                                .filter((column) => column.getCanHide())
-                                .map((column) => {
-                                    return (
-                                        <DropdownMenuCheckboxItem
-                                            key={column.id}
-                                            className="capitalize"
-                                            checked={column.getIsVisible()}
-                                            onCheckedChange={(value) =>
-                                                column.toggleVisibility(!!value)
-                                            }
-                                        >
-                                            {column.id}
-                                        </DropdownMenuCheckboxItem>
-                                    );
-                                })}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Render injected actions (like the Dialog) */}
-                    {children}
-                </div>
+                <div className="flex gap-2">{children}</div>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
+            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+                <Table
+                // className="fixed"
+                >
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
+                                    const { column } = header;
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead
+                                            key={header.id}
+                                            className="bg-primary font-bold text-primary-foreground"
+                                            style={{
+                                                ...getCommonPinningStyles(
+                                                    column,
+                                                    true,
+                                                ),
+                                                width: header.getSize(),
+                                            }}
+                                        >
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -156,23 +154,30 @@ export function FiscalYearDataTable<TData, TValue>({
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="[&_tr:nth-child(even)]:bg-muted">
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={
-                                        row.getIsSelected() && 'selected'
-                                    }
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    ))}
+                                <TableRow key={row.id}>
+                                    {row.getVisibleCells().map((cell, index) => {
+                                        const { column } = cell;
+                                        return (
+                                            <TableCell
+                                                key={cell.id}
+                                                style={{
+                                                    ...getCommonPinningStyles(
+                                                        column,
+                                                        false,
+                                                        index % 2 === 1,
+                                                    ),
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
                                 </TableRow>
                             ))
                         ) : (
@@ -187,32 +192,7 @@ export function FiscalYearDataTable<TData, TValue>({
                         )}
                     </TableBody>
                 </Table>
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
-            </div>
+            </ScrollArea>
         </div>
     );
 }

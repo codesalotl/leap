@@ -9,4 +9,9 @@ class ChartOfAccount extends Model
 {
     /** @use HasFactory<\Database\Factories\ChartOfAccountFactory> */
     use HasFactory;
+
+    public function ppmpPriceLists()
+    {
+        return $this->hasMany(PpmpPriceList::class);
+    }
 }

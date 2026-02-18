@@ -34,6 +34,23 @@ Route::middleware(['auth', 'verified'])->group(
     ),
 );
 
+// aip
+Route::get('aip', [FiscalYearController::class, 'index'])->name('aip.index');
+Route::post('aip', [FiscalYearController::class, 'store'])->name('aip.store');
+Route::patch('/aip/{fiscal_year}', [
+    FiscalYearController::class,
+    'update',
+])->name('aip.update');
+
+// aip-summary
+Route::prefix('aip/{fiscalYear}')->group(function () {
+    Route::get('summary', [AipEntryController::class, 'index'])->name(
+        'aip.summary',
+    );
+});
+
+// ---
+
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
 
 Route::get('home', function () {
@@ -74,17 +91,7 @@ Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
     'offices.destroy',
 );
 
-// aip
-Route::get('aip', [FiscalYearController::class, 'index'])->name('aip.index');
-Route::post('aip', [FiscalYearController::class, 'store']);
-Route::patch('/aip/{aip}', [FiscalYearController::class, 'update']);
-
 // aip summary
-Route::prefix('aip/{fiscalYear}')->group(function () {
-    Route::get('summary', [AipEntryController::class, 'index'])->name(
-        'aip.summary',
-    );
-});
 Route::post('aip/{aip_id}/import', [AipEntryController::class, 'store']);
 Route::put('/aip-entries/{aipEntry}', [AipEntryController::class, 'update']);
 Route::delete('/aip-entries/{aipEntry}', [
@@ -97,6 +104,17 @@ Route::get('/aip/{fiscalYear}/summary/{aipEntry}/ppmp', [
     PpmpController::class,
     'index',
 ])->name('aip.summary.ppmp.index');
+Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
+Route::post('/ppmp/custom', [PpmpController::class, 'storeCustomItem'])->name(
+    'ppmp.store.custom',
+);
+Route::put('/ppmp/{ppmp}/update-monthly-quantity', [
+    PpmpController::class,
+    'updateMonthlyQuantity',
+])->name('ppmp.update-monthly-quantity');
+Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
+    'ppmp.destroy',
+);
 
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
 Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
@@ -158,14 +176,8 @@ Route::post('/ppmp-headers/{ppmpHeaderId}/items', [
     'store',
 ])->name('ppmp-items.store');
 
-// PPMP Routes
-Route::post('/ppmp', [PpmpController::class, 'store'])->name('ppmp.store');
-Route::put('/ppmp/{ppmp}/update-monthly-quantity', [
-    PpmpController::class,
-    'updateMonthlyQuantity',
-])->name('ppmp.update-monthly-quantity');
-Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
-    'ppmp.destroy',
-);
+Route::get('test-combobox', function () {
+    return Inertia::render('test-combobox');
+});
 
 require __DIR__ . '/settings.php';

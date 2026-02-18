@@ -10,6 +10,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Table,
     TableBody,
@@ -23,12 +24,58 @@ interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     meta?: any; // Used for the onAdd/onEdit/onDelete callbacks
+    children?: React.ReactNode;
 }
+
+const PINNED_COLUMN_COLORS = {
+    header: {
+        background: 'var(--primary)',
+    },
+    cell: {
+        background: 'var(--background)',
+        evenBackground: 'var(--muted)',
+    },
+};
+
+const getCommonPinningStyles = <TData,>(
+    column: Column<TData>,
+    isHeaderCell = false,
+    isEvenRow = false,
+): CSSProperties => {
+    const isPinned = column.getIsPinned();
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left');
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right');
+
+    return {
+        boxShadow: isLastLeftPinnedColumn
+            ? '-1px 0 0 0 var(--muted) inset'
+            : isFirstRightPinnedColumn
+              ? '1px 0 0 0 var(--muted) inset'
+              : undefined,
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right:
+            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        minWidth: column.columnDef.minSize,
+        maxWidth: column.columnDef.maxSize,
+        backgroundColor: isPinned
+            ? isHeaderCell
+                ? PINNED_COLUMN_COLORS.header.background
+                : isEvenRow
+                  ? PINNED_COLUMN_COLORS.cell.evenBackground
+                  : PINNED_COLUMN_COLORS.cell.background
+            : undefined,
+    };
+};
 
 export function PpaDataTable<TData, TValue>({
     columns,
     data,
     meta,
+    children,
 }: DataTableProps<TData, TValue>) {
     const [value, setValue] = React.useState('');
     const [globalFilter, setGlobalFilter] = React.useState('');
@@ -58,19 +105,27 @@ export function PpaDataTable<TData, TValue>({
 
     return (
         <div className="space-y-4">
-            <Input
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="Search Programs/Projects/Activities..."
-                className="max-w-sm"
-            />
-            <div className="rounded-md border">
+            <div className="flex justify-between">
+                <Input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder="Search Programs/Projects/Activities..."
+                    className="max-w-sm"
+                />
+
+                <div>{children}</div>
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
-                                    <TableHead key={header.id}>
+                                    <TableHead
+                                        key={header.id}
+                                        className="bg-primary font-bold text-primary-foreground"
+                                    >
                                         {header.isPlaceholder
                                             ? null
                                             : flexRender(
@@ -83,7 +138,7 @@ export function PpaDataTable<TData, TValue>({
                             </TableRow>
                         ))}
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="[&_tr:nth-child(even)]:bg-muted">
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
@@ -109,7 +164,7 @@ export function PpaDataTable<TData, TValue>({
                         )}
                     </TableBody>
                 </Table>
-            </div>
+            </ScrollArea>
         </div>
     );
 }

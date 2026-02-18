@@ -1,8 +1,7 @@
-import { ColumnDef } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table'; // Added this import
 import { router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -13,58 +12,33 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, CheckCircle2, XCircle } from 'lucide-react';
 import { summary } from '@/routes/aip';
+import { FiscalYear } from '@/pages/types/types';
+import { update } from '@/routes/aip/index';
 
-// Define the shape of your data
-export interface FiscalYear {
-    id: number;
-    year: number;
-    status: string;
-    created_at: string;
-    updated_at: string;
-}
+// 1. Initialize the helper with your specific Data Type
+const columnHelper = createColumnHelper<FiscalYear>();
 
-export const columns: ColumnDef<FiscalYear>[] = [
-    {
-        id: 'select',
-        size: 30,
-        minSize: 30,
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && 'indeterminate')
-                }
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-    },
-    {
-        accessorKey: 'year',
+// 2. Define columns using the helper methods
+export const columns = [
+    // Accessor Column
+    columnHelper.accessor('year', {
         header: 'Year',
-    },
-    {
-        accessorKey: 'status',
+    }),
+
+    // Accessor Column with Custom Cell
+    columnHelper.accessor('status', {
         header: 'Status',
-        cell: ({ row }) => {
-            const status = row.getValue('status') as string;
+        cell: (info) => {
+            // info.getValue() is now automatically typed as a string
+            const status = info.getValue();
+            const isOpen = status === 'Open';
+
             return (
                 <Badge
-                    variant={`${status === 'Open' ? 'default' : 'destructive'}`}
+                    variant={isOpen ? 'default' : 'destructive'}
                     className="secondary text-white"
                 >
-                    {status === 'Open' ? (
+                    {isOpen ? (
                         <CheckCircle2 className="mr-1 h-3 w-3" />
                     ) : (
                         <XCircle className="mr-1 h-3 w-3" />
@@ -73,38 +47,46 @@ export const columns: ColumnDef<FiscalYear>[] = [
                 </Badge>
             );
         },
-    },
-    {
-        accessorKey: 'created_at',
+    }),
+
+    columnHelper.accessor('created_at', {
         header: 'Created At',
-        cell: ({ row }) => {
-            const date = new Date(row.original.created_at);
-            return date.toLocaleString('en-US', {
+        cell: (info) => {
+            const value = info.getValue();
+
+            if (!value)
+                return <span className="text-muted-foreground">N/A</span>;
+
+            return new Date(value).toLocaleString('en-US', {
                 dateStyle: 'medium',
-                timeStyle: 'short',
+                // timeStyle: 'short',
             });
         },
-    },
-    {
-        accessorKey: 'updated_at',
+    }),
+
+    columnHelper.accessor('updated_at', {
         header: 'Updated At',
-        cell: ({ row }) => {
-            const date = new Date(row.original.updated_at);
-            return date.toLocaleString('en-US', {
+        cell: (info) => {
+            const value = info.getValue();
+
+            if (!value)
+                return <span className="text-muted-foreground">N/A</span>;
+
+            return new Date(value).toLocaleString('en-US', {
                 dateStyle: 'medium',
-                timeStyle: 'short',
+                // timeStyle: 'short',
             });
         },
-    },
-    {
+    }),
+
+    // Display Column (Actions)
+    columnHelper.display({
         id: 'actions',
-        size: 30,
-        enableHiding: false,
         cell: ({ row }) => {
-            const aip = row.original;
+            const aip = row.original; // Access the full object
 
             const handleStatusChange = (newStatus: string) => {
-                router.patch(`/aip/${aip.id}`, { status: newStatus });
+                router.patch(update({ id: aip.id }), { status: newStatus });
             };
 
             return (
@@ -119,9 +101,7 @@ export const columns: ColumnDef<FiscalYear>[] = [
                     <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem
-                            onClick={() =>
-                                router.visit(summary(aip.id).url)
-                            }
+                            onClick={() => router.visit(summary(aip.id).url)}
                         >
                             Open AIP Summary
                         </DropdownMenuItem>
@@ -142,5 +122,5 @@ export const columns: ColumnDef<FiscalYear>[] = [
                 </DropdownMenu>
             );
         },
-    },
+    }),
 ];

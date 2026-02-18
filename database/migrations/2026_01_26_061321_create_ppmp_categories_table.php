@@ -10,10 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('fiscal_years', function (Blueprint $table) {
+        Schema::create('ppmp_categories', function (Blueprint $table) {
             $table->id();
-            $table->year('year')->unique();
-            $table->string('status', 20); // change later to enum
+            $table->string('name', 100);
             $table->timestamps();
         });
     }
@@ -23,6 +22,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('fiscal_years');
+        Schema::dropIfExists('ppmp_categories');
     }
 };

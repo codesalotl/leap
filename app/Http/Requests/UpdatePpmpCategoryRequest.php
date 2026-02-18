@@ -4,14 +4,14 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePpmpRequest extends FormRequest
+class UpdatePpmpCategoryRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -22,8 +22,7 @@ class StorePpmpRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'aip_entry_id' => 'required|exists:aip_entries,id',
-            'ppmp_price_list_id' => 'required|exists:ppmp_price_lists,id',
+            //
         ];
     }
 }

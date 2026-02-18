@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\AipEntry;
+use App\Models\PpmpCategory;
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
 
-class AipEntryPolicy
+class PpmpCategoryPolicy
 {
     /**
      * Determine whether the user can view any models.
@@ -19,7 +19,7 @@ class AipEntryPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, AipEntry $aipEntry): bool
+    public function view(User $user, PpmpCategory $ppmpCategory): bool
     {
         return false;
     }
@@ -35,7 +35,7 @@ class AipEntryPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, AipEntry $aipEntry): bool
+    public function update(User $user, PpmpCategory $ppmpCategory): bool
     {
         return false;
     }
@@ -43,15 +43,15 @@ class AipEntryPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, AipEntry $aipEntry): bool
+    public function delete(User $user, PpmpCategory $ppmpCategory): bool
     {
-        return true;
+        return false;
     }
 
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, AipEntry $aipEntry): bool
+    public function restore(User $user, PpmpCategory $ppmpCategory): bool
     {
         return false;
     }
@@ -59,7 +59,7 @@ class AipEntryPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, AipEntry $aipEntry): bool
+    public function forceDelete(User $user, PpmpCategory $ppmpCategory): bool
     {
         return false;
     }

@@ -50,9 +50,9 @@ export const columns: ColumnDef<Ppa>[] = [
                             {ppa.type}
                         </span>
                         <span
-                            className={
+                            className={`leading-tight break-words whitespace-normal ${
                                 row.depth === 0 ? 'font-bold' : 'font-medium'
-                            }
+                            }`}
                         >
                             {ppa.title}
                         </span>
@@ -102,7 +102,7 @@ export const columns: ColumnDef<Ppa>[] = [
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        
+
                         {/* 1. Edit is always available */}
                         <DropdownMenuItem onClick={() => meta.onEdit(ppa)}>
                             Edit Details
@@ -111,7 +111,7 @@ export const columns: ColumnDef<Ppa>[] = [
                         <DropdownMenuSeparator />
 
                         {/* 2. Strict Hierarchy Logic */}
-                        
+
                         {/* If it's a Program, it can ONLY have a Project */}
                         {ppa.type === 'Program' && (
                             <DropdownMenuItem
@@ -133,7 +133,7 @@ export const columns: ColumnDef<Ppa>[] = [
                         {/* Note: If it's an Activity, no "Add" options will appear */}
 
                         <DropdownMenuSeparator />
-                        
+
                         {/* 3. Delete Logic */}
                         <DropdownMenuItem
                             className="text-destructive"

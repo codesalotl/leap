@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Ppmp;
 use App\Models\FiscalYear;
 use App\Models\AipEntry;
+use App\Models\Ppmp;
+use App\Models\PpmpCategory;
 use App\Models\ChartOfAccount;
+use App\Models\PpmpPriceList;
 use App\Http\Requests\StorePpmpRequest;
 use App\Http\Requests\UpdatePpmpRequest;
 use Illuminate\Http\Request;
@@ -20,16 +22,55 @@ class PpmpController extends Controller
     public function index(FiscalYear $fiscalYear, AipEntry $aipEntry)
     {
         $ppmpItems = Ppmp::where('aip_entry_id', $aipEntry->id)
-            ->with(['ppmpPriceList'])
+            ->with(['ppmpPriceList.category'])
             ->get();
 
-        $chartOfAccounts = ChartOfAccount::all();
+        $chartOfAccounts = ChartOfAccount::where('expense_class', 'MOOE')
+            ->with(['ppmpPriceLists.category'])
+            ->get();
 
-        return Inertia::render('aip/ppmp-page', [
+        $ppmpCategories = PpmpCategory::all();
+
+        return Inertia::render('ppmp/index', [
             'fiscalYear' => $fiscalYear,
+            'aipEntry' => $aipEntry,
             'ppmpItems' => $ppmpItems,
             'chartOfAccounts' => $chartOfAccounts,
+            'ppmpCategories' => $ppmpCategories,
         ]);
+    }
+
+    /**
+     * Update AIP MOOE amount based on total PPMP amounts
+     */
+    private function updateAipMooeAmount($aipEntryId)
+    {
+        try {
+            // Calculate total from all PPMP items for this AIP entry
+            $totalAmount =
+                Ppmp::where('aip_entry_id', $aipEntryId)
+                    ->selectRaw(
+                        'SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total',
+                    )
+                    ->value('total') ?? 0;
+
+            // Update the corresponding AIP entry
+            $aipEntry = AipEntry::find($aipEntryId);
+            if ($aipEntry) {
+                $aipEntry->mooe_amount = $totalAmount;
+                $aipEntry->save();
+
+                \Log::info('AIP MOOE amount updated:', [
+                    'aip_entry_id' => $aipEntryId,
+                    'mooe_amount' => $totalAmount,
+                ]);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to update AIP MOOE amount:', [
+                'aip_entry_id' => $aipEntryId,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -41,18 +82,168 @@ class PpmpController extends Controller
     }
 
     /**
+     * Store a custom PPMP item (creates price list first, then PPMP)
+     */
+    public function storeCustomItem(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'aip_entry_id' => 'required|exists:aip_entries,id',
+                'item_number' =>
+                    'required|integer|min:1|unique:ppmp_price_lists,item_number',
+                'description' => 'required|string',
+                'unit_of_measurement' => 'required|string|max:20',
+                'price' => 'required|numeric|min:0',
+                'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
+                'ppmp_category_id' => 'nullable|exists:ppmp_categories,id',
+                'custom_category' =>
+                    'nullable|string|max:100|required_without:ppmp_category_id',
+            ]);
+
+            \Log::info('Custom PPMP Request:', $validated);
+
+            // Handle category - either use existing or create new custom category
+            $categoryId = $validated['ppmp_category_id'];
+            if (
+                empty($validated['ppmp_category_id']) &&
+                !empty($validated['custom_category'])
+            ) {
+                // Create new custom category
+                $newCategory = PpmpCategory::create([
+                    'name' => $validated['custom_category'],
+                ]);
+                $categoryId = $newCategory->id;
+
+                \Log::info('Created new PPMP category:', [
+                    'id' => $newCategory->id,
+                    'name' => $newCategory->name,
+                ]);
+            }
+
+            // First create the price list
+            $newPriceList = PpmpPriceList::create([
+                'item_number' => $validated['item_number'],
+                'description' => $validated['description'],
+                'unit_of_measurement' => $validated['unit_of_measurement'],
+                'price' => $validated['price'],
+                'chart_of_account_id' => $validated['chart_of_account_id'],
+                'ppmp_category_id' => $categoryId,
+            ]);
+
+            // Then create the PPMP with the new price list ID
+            $ppmp = Ppmp::create([
+                'aip_entry_id' => $validated['aip_entry_id'],
+                'ppmp_price_list_id' => $newPriceList->id,
+                // Set all monthly quantities and amounts to 0 by default
+                'jan_qty' => 0,
+                'jan_amount' => 0,
+                'feb_qty' => 0,
+                'feb_amount' => 0,
+                'mar_qty' => 0,
+                'mar_amount' => 0,
+                'apr_qty' => 0,
+                'apr_amount' => 0,
+                'may_qty' => 0,
+                'may_amount' => 0,
+                'jun_qty' => 0,
+                'jun_amount' => 0,
+                'jul_qty' => 0,
+                'jul_amount' => 0,
+                'aug_qty' => 0,
+                'aug_amount' => 0,
+                'sep_qty' => 0,
+                'sep_amount' => 0,
+                'oct_qty' => 0,
+                'oct_amount' => 0,
+                'nov_qty' => 0,
+                'nov_amount' => 0,
+                'dec_qty' => 0,
+                'dec_amount' => 0,
+            ]);
+
+            \Log::info('PPMP created:', $ppmp->toArray());
+
+            // Update AIP MOOE amount after new PPMP creation
+            $this->updateAipMooeAmount($ppmp->aip_entry_id);
+
+            return back()->with(
+                'success',
+                'Custom PPMP item created successfully',
+            );
+        } catch (\Exception $e) {
+            \Log::error('Custom PPMP Creation Error:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return back()->with(
+                'error',
+                'Failed to create custom PPMP item: ' . $e->getMessage(),
+            );
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(StorePpmpRequest $request)
     {
+        // dd($request);
+
         $validated = $request->validated();
+
+        // dd($validated);
+
+        // $newCategory = PpmpCategory::create([
+        //     'name' => $validated['customCategory'],
+        // ]);
+
+        // // dd($newCategory);
+
+        // $currentPriceList = PpmpPriceList::find(
+        //     $validated['ppmp_price_list_id'],
+        // );
+
+        // dd($currentPriceList);
 
         // Debug logging
         \Log::info('PPMP Store Request:', $validated);
 
         try {
-            $ppmp = Ppmp::create($validated);
+            // Create PPMP with default values for all monthly fields
+            $ppmp = Ppmp::create([
+                'aip_entry_id' => $validated['aip_entry_id'],
+                'ppmp_price_list_id' => $validated['ppmp_price_list_id'],
+                // Set all monthly quantities and amounts to 0 by default
+                'jan_qty' => 0,
+                'jan_amount' => 0,
+                'feb_qty' => 0,
+                'feb_amount' => 0,
+                'mar_qty' => 0,
+                'mar_amount' => 0,
+                'apr_qty' => 0,
+                'apr_amount' => 0,
+                'may_qty' => 0,
+                'may_amount' => 0,
+                'jun_qty' => 0,
+                'jun_amount' => 0,
+                'jul_qty' => 0,
+                'jul_amount' => 0,
+                'aug_qty' => 0,
+                'aug_amount' => 0,
+                'sep_qty' => 0,
+                'sep_amount' => 0,
+                'oct_qty' => 0,
+                'oct_amount' => 0,
+                'nov_qty' => 0,
+                'nov_amount' => 0,
+                'dec_qty' => 0,
+                'dec_amount' => 0,
+            ]);
+
             \Log::info('PPMP Created:', $ppmp->toArray());
+
+            // Update AIP MOOE amount after new PPMP creation
+            $this->updateAipMooeAmount($ppmp->aip_entry_id);
 
             return back()->with('success', 'PPMP item created successfully');
         } catch (\Exception $e) {
@@ -90,6 +281,9 @@ class PpmpController extends Controller
             $amountColumn => $quantity * $unitPrice,
         ]);
 
+        // Update AIP MOOE amount after PPMP update
+        $this->updateAipMooeAmount($ppmp->aip_entry_id);
+
         return back()->with('success', 'PPMP item updated successfully');
     }
 
@@ -121,10 +315,15 @@ class PpmpController extends Controller
                 'description' => $ppmp->item_description,
             ]);
 
+            $aipEntryId = $ppmp->aip_entry_id; // Store before deletion
+
             // Delete the PPMP item
             $ppmp->delete();
 
             \Log::info('PPMP item deleted successfully:', ['id' => $ppmp->id]);
+
+            // Update AIP MOOE amount after PPMP deletion
+            $this->updateAipMooeAmount($aipEntryId);
 
             return back()->with('success', 'PPMP item deleted successfully');
         } catch (\Exception $e) {
