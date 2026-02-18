@@ -9,4 +9,6 @@ class PpmpCategory extends Model
 {
     /** @use HasFactory<\Database\Factories\PpmpCategoryFactory> */
     use HasFactory;
+
+    protected $fillable = ['name'];
 }

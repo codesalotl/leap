@@ -95,10 +95,30 @@ class PpmpController extends Controller
                 'unit_of_measurement' => 'required|string|max:20',
                 'price' => 'required|numeric|min:0',
                 'chart_of_account_id' => 'required|exists:chart_of_accounts,id',
-                'ppmp_category_id' => 'required|exists:ppmp_categories,id',
+                'ppmp_category_id' => 'nullable|exists:ppmp_categories,id',
+                'custom_category' =>
+                    'nullable|string|max:100|required_without:ppmp_category_id',
             ]);
 
             \Log::info('Custom PPMP Request:', $validated);
+
+            // Handle category - either use existing or create new custom category
+            $categoryId = $validated['ppmp_category_id'];
+            if (
+                empty($validated['ppmp_category_id']) &&
+                !empty($validated['custom_category'])
+            ) {
+                // Create new custom category
+                $newCategory = PpmpCategory::create([
+                    'name' => $validated['custom_category'],
+                ]);
+                $categoryId = $newCategory->id;
+
+                \Log::info('Created new PPMP category:', [
+                    'id' => $newCategory->id,
+                    'name' => $newCategory->name,
+                ]);
+            }
 
             // First create the price list
             $newPriceList = PpmpPriceList::create([
@@ -107,11 +127,8 @@ class PpmpController extends Controller
                 'unit_of_measurement' => $validated['unit_of_measurement'],
                 'price' => $validated['price'],
                 'chart_of_account_id' => $validated['chart_of_account_id'],
-                'ppmp_category_id' => $validated['ppmp_category_id'],
+                'ppmp_category_id' => $categoryId,
             ]);
-
-            // dd($validated);
-            // dd($newPriceList);
 
             // Then create the PPMP with the new price list ID
             $ppmp = Ppmp::create([
@@ -144,8 +161,6 @@ class PpmpController extends Controller
                 'dec_amount' => 0,
             ]);
 
-            // dd($ppmp);
-
             \Log::info('PPMP created:', $ppmp->toArray());
 
             // Update AIP MOOE amount after new PPMP creation
@@ -172,7 +187,23 @@ class PpmpController extends Controller
      */
     public function store(StorePpmpRequest $request)
     {
+        // dd($request);
+
         $validated = $request->validated();
+
+        // dd($validated);
+
+        // $newCategory = PpmpCategory::create([
+        //     'name' => $validated['customCategory'],
+        // ]);
+
+        // // dd($newCategory);
+
+        // $currentPriceList = PpmpPriceList::find(
+        //     $validated['ppmp_price_list_id'],
+        // );
+
+        // dd($currentPriceList);
 
         // Debug logging
         \Log::info('PPMP Store Request:', $validated);

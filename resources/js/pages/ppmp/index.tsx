@@ -10,7 +10,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, FileDown } from 'lucide-react';
+import { Plus, FileDown, Sheet } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import DataTable from '@/pages/ppmp/ppmp-table/data-table';
@@ -56,7 +56,7 @@ export default function PpmpPage({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full flex-1 px-4 py-4">
-                <div className="mb-2 flex items-center justify-between">
+                <div className="mb-4 flex items-center justify-between">
                     <h1 className="text-2xl font-bold">PPMP Management</h1>
 
                     <div className="flex gap-2">
@@ -77,7 +77,7 @@ export default function PpmpPage({
                                             })
                                         }
                                     >
-                                        Excel
+                                        <Sheet /> Excel
                                     </DropdownMenuItem>
                                     {/* <DropdownMenuItem>PDF</DropdownMenuItem> */}
                                 </DropdownMenuGroup>

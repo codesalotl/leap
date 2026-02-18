@@ -7,6 +7,16 @@ import { Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 
+export const formatNumber = (val: string | number) => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num as number) || num === null
+        ? '0.00'
+        : num.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+          });
+};
+
 interface EditableCellProps {
     getValue: () => any;
     row: any;
@@ -19,42 +29,59 @@ const EditableCell: React.FC<EditableCellProps> = ({
     column,
 }) => {
     const initialValue = getValue();
-    const [value, setValue] = useState(initialValue);
+    const [value, setValue] = useState(formatNumber(initialValue));
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // Update local state if the server data changes
     useEffect(() => {
-        setValue(initialValue);
+        setValue(formatNumber(initialValue));
     }, [initialValue]);
-
-    const handleBlur = () => {
-        if (value === initialValue || isUpdating) return;
-
-        setIsUpdating(true);
-
-        router.put(
-            `/ppmp/${row.original.id}/update-monthly-quantity`,
-            {
-                month: column.id,
-                quantity: value,
-            },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                only: ['ppmpItems'],
-                onFinish: () => setIsUpdating(false),
-                onError: () => {
-                    setValue(initialValue); // Reset on error
-                    setIsUpdating(false);
-                },
-            },
-        );
-    };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.currentTarget.blur();
         }
+    };
+
+    const handleBlur = () => {
+        // 1. Always strip commas to get the raw numbers for comparison
+        const cleanValue = value.replace(/,/g, '');
+        const cleanInitial = String(initialValue || '').replace(/,/g, '');
+
+        // 2. If the value is actually different, update the server
+        if (cleanValue !== cleanInitial && !isUpdating) {
+            setIsUpdating(true);
+            router.put(
+                `/ppmp/${row.original.id}/update-monthly-quantity`,
+                {
+                    month: column.id,
+                    quantity: cleanValue,
+                },
+                {
+                    preserveScroll: true,
+                    preserveState: true,
+                    only: ['ppmpItems'],
+                    onFinish: () => {
+                        setIsUpdating(false);
+                        // Format the new value after server sync
+                        setValue(formatNumber(cleanValue));
+                    },
+                    onError: () => {
+                        setValue(formatNumber(initialValue));
+                        setIsUpdating(false);
+                    },
+                },
+            );
+        } else {
+            // 3. If nothing changed or we are already updating,
+            // just re-format the local state to put the commas back.
+            setValue(formatNumber(cleanValue));
+        }
+    };
+
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        // Remove commas on focus for easier editing
+        setValue(value.replace(/,/g, ''));
+        e.target.select();
     };
 
     return (
@@ -63,11 +90,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onBlur={handleBlur}
+            onFocus={handleFocus}
             onKeyDown={handleKeyDown}
             disabled={isUpdating}
             className="w-full rounded border bg-transparent px-2 py-1 text-right focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50"
-            min="0"
-            step="0.01"
         />
     );
 };
@@ -94,7 +120,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'ppmp_price_list.price',
         header: () => <div className="w-full text-right">PRICELIST</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
     {
@@ -102,21 +128,24 @@ export const columns: ColumnDef<Ppmp>[] = [
         header: () => <div className="w-full text-right">CY 2026-QTY</div>,
         cell: ({ row }) => {
             const ppmp = row.original;
+            const totalQty = new Decimal(ppmp.jan_qty || 0)
+                .plus(ppmp.feb_qty || 0)
+                .plus(ppmp.mar_qty || 0)
+                .plus(ppmp.apr_qty || 0)
+                .plus(ppmp.may_qty || 0)
+                .plus(ppmp.jun_qty || 0)
+                .plus(ppmp.jul_qty || 0)
+                .plus(ppmp.aug_qty || 0)
+                .plus(ppmp.sep_qty || 0)
+                .plus(ppmp.oct_qty || 0)
+                .plus(ppmp.nov_qty || 0)
+                .plus(ppmp.dec_qty || 0);
 
-            const totalQty = new Decimal(ppmp.jan_qty)
-                .plus(ppmp.feb_qty)
-                .plus(ppmp.mar_qty)
-                .plus(ppmp.apr_qty)
-                .plus(ppmp.may_qty)
-                .plus(ppmp.jun_qty)
-                .plus(ppmp.jul_qty)
-                .plus(ppmp.aug_qty)
-                .plus(ppmp.sep_qty)
-                .plus(ppmp.oct_qty)
-                .plus(ppmp.nov_qty)
-                .plus(ppmp.dec_qty);
-
-            return <span className="block text-right">{totalQty.toFixed(2)}</span>;
+            return (
+                <span className="block text-right">
+                    {formatNumber(totalQty.toString())}
+                </span>
+            );
         },
     },
     {
@@ -124,201 +153,211 @@ export const columns: ColumnDef<Ppmp>[] = [
         accessorKey: 'total_amount',
         header: () => <div className="w-full text-right">TOTAL</div>,
         accessorFn: (row) => {
-            return new Decimal(row.jan_amount)
-                .plus(row.feb_amount)
-                .plus(row.mar_amount)
-                .plus(row.apr_amount)
-                .plus(row.may_amount)
-                .plus(row.jun_amount)
-                .plus(row.jul_amount)
-                .plus(row.aug_amount)
-                .plus(row.sep_amount)
-                .plus(row.oct_amount)
-                .plus(row.nov_amount)
-                .plus(row.dec_amount);
+            return new Decimal(row.jan_amount || 0)
+                .plus(row.feb_amount || 0)
+                .plus(row.mar_amount || 0)
+                .plus(row.apr_amount || 0)
+                .plus(row.may_amount || 0)
+                .plus(row.jun_amount || 0)
+                .plus(row.jul_amount || 0)
+                .plus(row.aug_amount || 0)
+                .plus(row.sep_amount || 0)
+                .plus(row.oct_amount || 0)
+                .plus(row.nov_amount || 0)
+                .plus(row.dec_amount || 0);
         },
         cell: ({ getValue }) => (
-            <span className="block text-right">{Number(getValue()).toFixed(2)}</span>
+            <span className="block text-right font-bold">
+                {formatNumber(String(getValue()))}
+            </span>
         ),
         footer: (props) => {
             const rows = props.table.getFilteredRowModel().rows;
-
             const sum = rows.reduce((acc, row) => {
                 const val = row.getValue('total_amount');
-                // console.log('Value found:', val.toString());
-                return acc.plus(Number(val));
+                return acc.plus(Number(val || 0));
             }, new Decimal(0));
 
-            return <span className="block text-right">{sum.toFixed(2)}</span>;
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
         },
     },
+    // JANUARY
     {
         accessorKey: 'jan_qty',
-        header: () => <div className="w-full text-right">JAN-QTY</div>,
+        header: () => <div className="text-right">JAN-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'jan_amount',
-        header: () => <div className="w-full text-right">JAN</div>,
+        header: () => <div className="text-right">JAN</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue()))}
+            </span>
         ),
     },
+    // FEBRUARY
     {
         accessorKey: 'feb_qty',
-        header: () => <div className="w-full text-right">FEB-QTY</div>,
+        header: () => <div className="text-right">FEB-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'feb_amount',
-        header: () => <div className="w-full text-right">FEB</div>,
+        header: () => <div className="text-right">FEB</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // MARCH
     {
         accessorKey: 'mar_qty',
-        header: () => <div className="w-full text-right">MAR-QTY</div>,
+        header: () => <div className="text-right">MAR-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'mar_amount',
-        header: () => <div className="w-full text-right">MAR</div>,
+        header: () => <div className="text-right">MAR</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // APRIL
     {
         accessorKey: 'apr_qty',
-        header: () => <div className="w-full text-right">APR-QTY</div>,
+        header: () => <div className="text-right">APR-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'apr_amount',
-        header: () => <div className="w-full text-right">APR</div>,
+        header: () => <div className="text-right">APR</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // MAY
     {
         accessorKey: 'may_qty',
-        header: () => <div className="w-full text-right">MAY-QTY</div>,
+        header: () => <div className="text-right">MAY-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'may_amount',
-        header: () => <div className="w-full text-right">MAY</div>,
+        header: () => <div className="text-right">MAY</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // JUNE
     {
         accessorKey: 'jun_qty',
-        header: () => <div className="w-full text-right">JUN-QTY</div>,
+        header: () => <div className="text-right">JUN-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'jun_amount',
-        header: () => <div className="w-full text-right">JUN</div>,
+        header: () => <div className="text-right">JUNE</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // JULY
     {
         accessorKey: 'jul_qty',
-        header: () => <div className="w-full text-right">JUL-QTY</div>,
+        header: () => <div className="text-right">JUL-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'jul_amount',
-        header: () => <div className="w-full text-right">JUL</div>,
+        header: () => <div className="text-right">JULY</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // AUGUST
     {
         accessorKey: 'aug_qty',
-        header: () => <div className="w-full text-right">AUG-QTY</div>,
+        header: () => <div className="text-right">AUG-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'aug_amount',
-        header: () => <div className="w-full text-right">AUG</div>,
+        header: () => <div className="text-right">AUG</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // SEPTEMBER
     {
         accessorKey: 'sep_qty',
-        header: () => <div className="w-full text-right">SEP-QTY</div>,
+        header: () => <div className="text-right">SEP-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'sep_amount',
-        header: () => <div className="w-full text-right">SEP</div>,
+        header: () => <div className="text-right">SEP</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // OCTOBER
     {
         accessorKey: 'oct_qty',
-        header: () => <div className="w-full text-right">OCT-QTY</div>,
+        header: () => <div className="text-right">OCT-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'oct_amount',
-        header: () => <div className="w-full text-right">OCT</div>,
+        header: () => <div className="text-right">OCT</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // NOVEMBER
     {
         accessorKey: 'nov_qty',
-        header: () => <div className="w-full text-right">NOV-QTY</div>,
+        header: () => <div className="text-right">NOV-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'nov_amount',
-        header: () => <div className="w-full text-right">NOV</div>,
+        header: () => <div className="text-right">NOV</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
+    // DECEMBER
     {
         accessorKey: 'dec_qty',
-        header: () => <div className="w-full text-right">DEC-QTY</div>,
+        header: () => <div className="text-right">DEC-QTY</div>,
         cell: EditableCell,
     },
     {
         accessorKey: 'dec_amount',
-        header: () => <div className="w-full text-right">DEC</div>,
+        header: () => <div className="text-right">DEC</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{String(getValue())}</span>
+            <span className="block text-right">{formatNumber(getValue())}</span>
         ),
     },
     {
         id: 'actions',
         size: 50,
-        cell: ({ row, table }) => {
-            const ppmp = row.original;
-
-            return (
-                <div className="flex justify-center">
-                    <Button
-                        size="icon"
-                        variant="destructive"
-                        onClick={() =>
-                            (
-                                table.options.meta as {
-                                    onDelete: (item: Ppmp) => void;
-                                }
-                            )?.onDelete(ppmp)
-                        }
-                    >
-                        <Trash />
-                    </Button>
-                </div>
-            );
-        },
+        cell: ({ row, table }) => (
+            <div className="flex justify-center">
+                <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() =>
+                        (table.options.meta as any)?.onDelete(row.original)
+                    }
+                >
+                    <Trash className="h-4 w-4" />
+                </Button>
+            </div>
+        ),
     },
 ];
