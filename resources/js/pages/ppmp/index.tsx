@@ -24,7 +24,7 @@ import {
     AipEntry,
     PpmpCategory,
 } from '@/pages/types/types';
-import exportToExcel from '@/pages/ppmp/utils/export';
+import { exportToExcel, exportToPDF } from '@/pages/ppmp/utils/export';
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
@@ -70,7 +70,12 @@ export default function PpmpPage({
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToExcel({
+                                            // exportToExcel({
+                                            //     ppmpItems,
+                                            //     ppmpCategories,
+                                            //     chartOfAccounts,
+                                            // })
+                                            exportToPDF({
                                                 ppmpItems,
                                                 ppmpCategories,
                                                 chartOfAccounts,

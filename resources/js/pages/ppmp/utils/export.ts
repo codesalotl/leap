@@ -1,6 +1,11 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
+import * as XLSX from 'xlsx';
+
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+// import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
 
 interface ExportToExcelProps {
     ppmpItems: Ppmp[];
@@ -8,7 +13,7 @@ interface ExportToExcelProps {
     chartOfAccounts: ChartOfAccount[];
 }
 
-export default async function exportToExcel({
+export async function exportToExcel({
     ppmpItems,
     ppmpCategories,
     chartOfAccounts,
@@ -68,24 +73,33 @@ export default async function exportToExcel({
     let currentRow = firstRowCount;
 
     // processing data
-    const groupedByCategory = ppmpItems.reduce((acc, item) => {
-        const key = item.ppmp_price_list?.category?.id?.toString() || 'undefined';
-        if (!acc[key]) {
-            acc[key] = [];
-        }
-        acc[key].push(item);
-        return acc;
-    }, {} as Record<string, typeof ppmpItems>);
+    const groupedByCategory = ppmpItems.reduce(
+        (acc, item) => {
+            const key =
+                item.ppmp_price_list?.category?.id?.toString() || 'undefined';
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(item);
+            return acc;
+        },
+        {} as Record<string, typeof ppmpItems>,
+    );
     const groupedByExpenseAccount = Object.fromEntries(
         Object.entries(groupedByCategory).map(([key, value]) => {
-            const subGrouped = value.reduce((acc, item) => {
-                const subKey = item.ppmp_price_list?.chart_of_account_id?.toString() || 'undefined';
-                if (!acc[subKey]) {
-                    acc[subKey] = [];
-                }
-                acc[subKey].push(item);
-                return acc;
-            }, {} as Record<string, typeof value>);
+            const subGrouped = value.reduce(
+                (acc, item) => {
+                    const subKey =
+                        item.ppmp_price_list?.chart_of_account_id?.toString() ||
+                        'undefined';
+                    if (!acc[subKey]) {
+                        acc[subKey] = [];
+                    }
+                    acc[subKey].push(item);
+                    return acc;
+                },
+                {} as Record<string, typeof value>,
+            );
 
             return [key, subGrouped];
         }),
@@ -396,14 +410,643 @@ export default async function exportToExcel({
     };
     headerSubTitle.font = { bold: true, size: 20, name: 'Century Gothic' };
 
-    console.log(worksheet.getRow(1));
-    console.log(worksheet.getCell('A1'));
-    console.log(worksheet.getCell('A2'));
-    console.log(worksheet.getCell('A3'));
-    console.log(worksheet.getCell('A4'));
-    console.log(worksheet.getCell('A5'));
+    // console.log(worksheet.getRow(1));
+    // console.log(worksheet.getCell('A1'));
+    // console.log(worksheet.getCell('A2'));
+    // console.log(worksheet.getCell('A3'));
+    // console.log(worksheet.getCell('A4'));
+    // console.log(worksheet.getCell('A5'));
 
     const buf = await workbook.xlsx.writeBuffer();
 
-    saveAs(new Blob([buf]), 'PPMP_Export.xlsx');
+    // saveAs(new Blob([buf]), 'PPMP_Export.xlsx');
+
+    // // 2. Convert to HTML via SheetJS
+    // // Use type: 'array' for the buffer compatibility
+    // const readWorkbook = XLSX.read(buf, { type: 'array' });
+    // const firstSheet = readWorkbook.Sheets[readWorkbook.SheetNames[0]];
+    // const worksheetHtml = XLSX.utils.sheet_to_html(firstSheet);
+
+    // // 3. Open Print Window
+    // const printWindow = window.open('', '_blank');
+
+    // if (printWindow) {
+    //     printWindow.document.write(`
+    //             <html>
+    //                 <head>
+    //                     <title>PPMP Print Preview</title>
+    //                     <style>
+    //                         @media print {
+    //                             @page {
+    //                                 size: legal landscape;
+    //                                 margin: 0.5in;
+    //                             }
+    //                             body { margin: 0; }
+    //                         }
+    //                         body {
+    //                             font-family: 'Century Gothic', sans-serif;
+    //                             padding: 20px;
+    //                         }
+    //                         table {
+    //                             border-collapse: collapse;
+    //                             width: 100%;
+    //                             font-size: 8px; /* PPMP needs tiny text to fit */
+    //                             table-layout: auto;
+    //                         }
+    //                         td {
+    //                             border: 1px solid #000;
+    //                             padding: 2px;
+    //                             text-align: center;
+    //                             word-wrap: break-word;
+    //                         }
+    //                         /* Ensure background colors actually print */
+    //                         tr td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    //                     </style>
+    //                 </head>
+    //                 <body>
+    //                     <div id="print-content">
+    //                         ${worksheetHtml}
+    //                     </div>
+    //                     <script>
+    //                         window.onload = function() {
+    //                             setTimeout(() => {
+    //                                 window.print();
+    //                                 // window.close(); // Optional: closes tab after print dialog
+    //                             }, 500);
+    //                         };
+    //                     </script>
+    //                 </body>
+    //             </html>
+    //         `);
+    //     printWindow.document.close();
+    // }
+
+    const readWorkbook = XLSX.read(buf, { type: 'array' });
+    const worksheet1 = readWorkbook.Sheets[readWorkbook.SheetNames[0]];
+    const htmlContent = XLSX.utils.sheet_to_html(worksheet1);
+
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (iframeDoc) {
+        iframeDoc.open();
+        iframeDoc.write(`
+                <html>
+                    <head>
+                        <style>
+                            @media print {
+                                @page { size: legal landscape; margin: 5mm; }
+                                body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                            }
+                            body { font-family: 'Century Gothic', sans-serif; }
+                            table { border-collapse: collapse; width: 100%; font-size: 7pt; }
+                            td { border: 1px solid #000; padding: 2px; text-align: center; }
+
+                            /* 1. Header Row (Row 6 in your logic) */
+                            tr:nth-child(6) td {
+                                background-color: #deeaf6 !important;
+                                font-weight: bold;
+                            }
+
+                            /* 2. Target Category/Account rows based on content or position */
+                            /* Since we can't easily know the exact row number for every group,
+                               we target cells that span across the whole table (Merged Cells) */
+                            tr td[colspan] {
+                                background-color: #fbe4d5 !important; /* Your Account Color */
+                                text-align: left !important;
+                                font-weight: bold;
+                            }
+
+                            /* 3. Monthly Quantity Columns (The Green ones) */
+                            /* In your code: 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 */
+                            td:nth-child(8), td:nth-child(10), td:nth-child(12),
+                            td:nth-child(14), td:nth-child(16), td:nth-child(18),
+                            td:nth-child(20), td:nth-child(22), td:nth-child(24),
+                            td:nth-child(26), td:nth-child(28), td:nth-child(30) {
+                                background-color: #92d050 !important;
+                            }
+
+                            /* 4. Total Rows (The yellow ones) */
+                            /* Target rows where the second cell is "TOTAL" */
+                            tr:has(td:nth-child(3):contains("TOTAL")) {
+                                background-color: #fef2cb !important;
+                            }
+                        </style>
+                    </head>
+                    <body>${htmlContent}</body>
+                </html>
+            `);
+        iframeDoc.close();
+
+        setTimeout(() => {
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+            document.body.removeChild(iframe);
+        }, 500);
+    }
+}
+
+export async function exportToPDF({
+    ppmpItems,
+    ppmpCategories,
+    chartOfAccounts,
+}) {
+    const longBondPaper = [8.5, 13];
+
+    function convertInchToMm(inch: number[]) {
+        return inch.map((value) => value * 25.4);
+    }
+
+    const doc = new jsPDF('l', 'mm', convertInchToMm(longBondPaper)); // Landscape, Legal size for wide PPMP
+
+    // 1. Static Headers (The top section of your Excel)
+    // doc.setFont('Helvetica', 'bold');
+    // doc.setFontSize(22);
+    // doc.text('PROVINCIAL GOVERNMENT OF LA UNION', 175, 15, { align: 'center' });
+    // doc.setFontSize(14);
+    // doc.text('PROJECT PROCUREMENT MANAGEMENT PLAN (PPMP) CY 2026', 175, 25, {
+    //     align: 'center',
+    // });
+
+    // 2. Data Preparation (Grouping logic remains the same)
+    const tableBody = [];
+
+    // Grouping Logic...
+    const groupedByCategory = ppmpItems.reduce((acc, item) => {
+        const key =
+            item.ppmp_price_list?.category?.id?.toString() || 'undefined';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+    }, {});
+
+    // Iterate through groups to build rows
+    Object.entries(groupedByCategory).forEach(([categoryId, items]) => {
+        const categoryName =
+            ppmpCategories.find((c) => c.id === Number(categoryId))?.name ||
+            'Unknown';
+
+        // Category Row (Gray)
+        tableBody.push({
+            isCategory: true,
+            data: [
+                '',
+                '',
+                categoryName,
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+            ],
+        });
+
+        // Group by Account
+        const accounts = items.reduce((acc, item) => {
+            const key =
+                item.ppmp_price_list?.chart_of_account_id?.toString() ||
+                'undefined';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(item);
+            return acc;
+        }, {});
+
+        Object.entries(accounts).forEach(([accountId, accountItems]) => {
+            const accountTitle =
+                chartOfAccounts.find((a) => a.id === Number(accountId))
+                    ?.account_title || 'Unknown';
+
+            // Account Row (Peach/Orange)
+            tableBody.push({
+                isAccount: true,
+                data: [
+                    '',
+                    '',
+                    accountTitle,
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                ],
+            });
+
+            let groupTotalAmount = 0;
+
+            // Item Rows
+            accountItems.forEach((item) => {
+                const price = Number(item.ppmp_price_list?.price || 0);
+                const totalQty = [
+                    item.jan_qty,
+                    item.feb_qty,
+                    item.mar_qty,
+                    item.apr_qty,
+                    item.may_qty,
+                    item.jun_qty,
+                    item.jul_qty,
+                    item.aug_qty,
+                    item.sep_qty,
+                    item.oct_qty,
+                    item.nov_qty,
+                    item.dec_qty,
+                ].reduce((a, b) => a + Number(b || 0), 0);
+                const totalAmt = price * totalQty;
+                groupTotalAmount += totalAmt;
+
+                tableBody.push({
+                    isItem: true,
+                    data: [
+                        accountTitle,
+                        item.ppmp_price_list?.item_number,
+                        item.ppmp_price_list?.description,
+                        item.ppmp_price_list?.unit_of_measurement,
+                        price.toLocaleString(),
+                        totalQty,
+                        totalAmt.toLocaleString(),
+                        item.jan_qty,
+                        item.jan_amount,
+                        item.feb_qty,
+                        item.feb_amount,
+                        item.mar_qty,
+                        item.mar_amount,
+                        item.apr_qty,
+                        item.apr_amount,
+                        item.may_qty,
+                        item.may_amount,
+                        item.jun_qty,
+                        item.jun_amount,
+                        item.jul_qty,
+                        item.jul_amount,
+                        item.aug_qty,
+                        item.aug_amount,
+                        item.sep_qty,
+                        item.sep_amount,
+                        item.oct_qty,
+                        item.oct_amount,
+                        item.nov_qty,
+                        item.nov_amount,
+                        item.dec_qty,
+                        item.dec_amount,
+                    ],
+                });
+            });
+
+            // Total Row (Yellow)
+            tableBody.push({
+                isTotal: true,
+                data: [
+                    '',
+                    '',
+                    'TOTAL',
+                    '',
+                    '',
+                    '',
+                    groupTotalAmount.toLocaleString(),
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                    '',
+                ],
+            });
+        });
+    });
+
+    autoTable(doc, {
+        startY: 20,
+        head: [
+            [
+                {
+                    content: '',
+                    styles: { fillColor: [255, 255, 255] },
+                },
+                {
+                    content: 'NAME OF OFFICE',
+                    colSpan: 6,
+                    rowSpan: 2,
+                    styles: {
+                        valign: 'middle',
+                        fillColor: [255, 255, 0],
+                        fontSize: 12,
+                    },
+                },
+                {
+                    content: 'PROVINCIAL GOVERNMENT OF LA UNION',
+                    colSpan: 24,
+                    rowSpan: 3,
+                    styles: {
+                        halign: 'center',
+                        valign: 'bottom',
+                        fillColor: [255, 255, 255],
+                        fontSize: 30,
+                    },
+                },
+            ],
+            [
+                {
+                    content: '',
+                    styles: { fillColor: [255, 255, 255] },
+                },
+            ],
+            [
+                {
+                    content: '',
+                    styles: { fillColor: [0, 255, 0] },
+                },
+                {
+                    content: 'FUNDING SOURCE',
+                    colSpan: 6,
+                    styles: {
+                        valign: 'middle',
+                        fillColor: [0, 255, 0],
+                        fontSize: 8,
+                    },
+                },
+            ],
+            [
+                {
+                    content: '',
+                    styles: { fillColor: [0, 255, 0] },
+                },
+                {
+                    content: 'AIP REF. CODE',
+                    colSpan: 6,
+                    styles: {
+                        valign: 'middle',
+                        fillColor: [0, 255, 0],
+                        fontSize: 8,
+                    },
+                },
+                {
+                    content:
+                        'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026',
+                    colSpan: 24,
+                    rowSpan: 2,
+                    styles: {
+                        halign: 'center',
+                        valign: 'top',
+                        fillColor: [255, 255, 255],
+                        fontSize: 15,
+                    },
+                },
+            ],
+            [
+                {
+                    content: '',
+                    styles: { fillColor: [0, 255, 0] },
+                },
+                {
+                    content: 'PPA DESCRIPTION',
+                    colSpan: 6,
+                    styles: {
+                        valign: 'middle',
+                        fillColor: [0, 255, 0],
+                        fontSize: 8,
+                    },
+                },
+            ],
+            [
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+            ],
+        ],
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0] },
+    });
+
+    // 3. Generate Table
+    autoTable(doc, {
+        startY: 80,
+        // head: [
+        //     [
+        //         {
+        //             content: '',
+        //             styles: { fillColor: [255, 255, 255] },
+        //         },
+        //         {
+        //             content: 'NAME OF OFFICE',
+        //             colSpan: 6,
+        //             rowSpan: 2,
+        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
+        //         },
+        //         {
+        //             content: 'PROVINCIAL GOVERNMENT OF LA UNION',
+        //             colSpan: 24,
+        //             rowSpan: 3,
+        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
+        //         },
+        //     ],
+        //     [
+        //         {
+        //             content: '',
+        //             styles: { fillColor: [255, 255, 255] },
+        //         },
+        //     ],
+        //     [
+        //         {
+        //             content: '',
+        //             styles: { fillColor: [255, 255, 255] },
+        //         },
+        //         {
+        //             content: 'FUNDING SOURCE',
+        //             colSpan: 6,
+        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
+        //         },
+        //     ],
+        //     [
+        //         {
+        //             content: '',
+        //             styles: { fillColor: [255, 255, 255] },
+        //         },
+        //         {
+        //             content: 'AIP REF. CODE',
+        //             colSpan: 6,
+        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
+        //         },
+        //         {
+        //             content:
+        //                 'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026',
+        //             colSpan: 24,
+        //             rowSpan: 2,
+        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
+        //         },
+        //     ],
+        //     [
+        //         {
+        //             content: '',
+        //             styles: { fillColor: [255, 255, 255] },
+        //         },
+        //         {
+        //             content: 'PPA DESCRIPTION',
+        //             colSpan: 6,
+        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
+        //         },
+        //     ],
+
+        //     [
+        //         'EXPENSE ACCOUNT',
+        //         'Item No.',
+        //         'Description',
+        //         'Unit',
+        //         'Price',
+        //         'QTY',
+        //         'TOTAL',
+        //         'JAN-Q',
+        //         'JAN',
+        //         'FEB-Q',
+        //         'FEB',
+        //         'MAR-Q',
+        //         'MAR',
+        //         'APR-Q',
+        //         'APR',
+        //         'MAY-Q',
+        //         'MAY',
+        //         'JUN-Q',
+        //         'JUN',
+        //         'JUL-Q',
+        //         'JUL',
+        //         'AUG-Q',
+        //         'AUG',
+        //         'SEP-Q',
+        //         'SEP',
+        //         'OCT-Q',
+        //         'OCT',
+        //         'NOV-Q',
+        //         'NOV',
+        //         'DEC-Q',
+        //         'DEC',
+        //     ],
+        // ],
+        body: tableBody.map((row) => row.data),
+        styles: {
+            fontSize: 5,
+            lineWidth: 0.1,
+            lineColor: [0, 0, 0],
+            halign: 'center',
+        },
+        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0] },
+        didParseCell: (data) => {
+            const rowIndex = data.row.index;
+            const rowMeta = tableBody[rowIndex];
+
+            // Re-apply Excel logic: Green Columns for Quantities
+            const greenCols = [5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29];
+            if (greenCols.includes(data.column.index)) {
+                data.cell.styles.fillColor = [146, 208, 80];
+            }
+
+            // Apply Row Colors
+            if (rowMeta?.isCategory)
+                data.cell.styles.fillColor = [208, 206, 206];
+            if (rowMeta?.isAccount)
+                data.cell.styles.fillColor = [251, 228, 213];
+            if (rowMeta?.isTotal) data.cell.styles.fillColor = [254, 242, 203];
+        },
+    });
+
+    // 4. Print via Hidden Iframe
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+        iframe.contentWindow.print();
+    };
 }
