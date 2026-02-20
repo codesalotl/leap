@@ -102,6 +102,16 @@ export const columns: ColumnDef<Ppmp>[] = [
     {
         accessorKey: 'ppmp_price_list.chart_of_account_id',
         header: 'Expense Account',
+        size: 300,
+        cell: ({ cell }) => {
+            const accountTitle =
+                cell.row.original.ppmp_price_list?.chart_of_account
+                    ?.account_title;
+
+            console.log(accountTitle);
+
+            return accountTitle;
+        },
     },
     {
         accessorKey: 'ppmp_price_list.item_number',

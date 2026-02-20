@@ -110,7 +110,12 @@ export function DataTable<TData, TValue>({
     return (
         // <div className="overflow-hidden rounded-md border">
         <div className="border">
-            <Table className="table-fixed">
+            <Table
+                style={{
+                    //     width: table.getTotalSize(),
+                    tableLayout: 'fixed',
+                }}
+            >
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id}>

@@ -548,32 +548,31 @@ export async function exportToExcel({
     }
 }
 
+import { centuryGothicBase64 } from '@/fonts/CenturyGothic';
+import { centuryGothicBoldBase64 } from '@/fonts/CenturyGothicBold';
+
 export async function exportToPDF({
     ppmpItems,
     ppmpCategories,
     chartOfAccounts,
 }) {
     const longBondPaper = [8.5, 13];
+    const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
 
-    function convertInchToMm(inch: number[]) {
-        return inch.map((value) => value * 25.4);
-    }
+    // 1. Setup Document (Landscape, Long Bond Paper / 13 inches wide)
+    const doc = new jsPDF('l', 'mm', convertInchToMm(longBondPaper));
 
-    const doc = new jsPDF('l', 'mm', convertInchToMm(longBondPaper)); // Landscape, Legal size for wide PPMP
+    // 2. Register Custom Fonts (Regular and Bold)
+    doc.addFileToVFS('CenturyGothic.ttf', centuryGothicBase64);
+    doc.addFont('CenturyGothic.ttf', 'CenturyGothic', 'normal');
+    doc.addFileToVFS('CenturyGothic-Bold.ttf', centuryGothicBoldBase64);
+    doc.addFont('CenturyGothic-Bold.ttf', 'CenturyGothic', 'bold');
 
-    // 1. Static Headers (The top section of your Excel)
-    // doc.setFont('Helvetica', 'bold');
-    // doc.setFontSize(22);
-    // doc.text('PROVINCIAL GOVERNMENT OF LA UNION', 175, 15, { align: 'center' });
-    // doc.setFontSize(14);
-    // doc.text('PROJECT PROCUREMENT MANAGEMENT PLAN (PPMP) CY 2026', 175, 25, {
-    //     align: 'center',
-    // });
+    doc.setFont('CenturyGothic');
 
-    // 2. Data Preparation (Grouping logic remains the same)
     const tableBody = [];
 
-    // Grouping Logic...
+    // --- DATA PREPARATION ---
     const groupedByCategory = ppmpItems.reduce((acc, item) => {
         const key =
             item.ppmp_price_list?.category?.id?.toString() || 'undefined';
@@ -582,7 +581,6 @@ export async function exportToPDF({
         return acc;
     }, {});
 
-    // Iterate through groups to build rows
     Object.entries(groupedByCategory).forEach(([categoryId, items]) => {
         const categoryName =
             ppmpCategories.find((c) => c.id === Number(categoryId))?.name ||
@@ -591,42 +589,11 @@ export async function exportToPDF({
         // Category Row (Gray)
         tableBody.push({
             isCategory: true,
-            data: [
-                '',
-                '',
-                categoryName,
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-            ],
+            data: Array(31)
+                .fill('')
+                .map((_, i) => (i === 2 ? categoryName : '')),
         });
 
-        // Group by Account
         const accounts = items.reduce((acc, item) => {
             const key =
                 item.ppmp_price_list?.chart_of_account_id?.toString() ||
@@ -641,49 +608,37 @@ export async function exportToPDF({
                 chartOfAccounts.find((a) => a.id === Number(accountId))
                     ?.account_title || 'Unknown';
 
-            // Account Row (Peach/Orange)
+            // Account Row (Peach)
             tableBody.push({
                 isAccount: true,
-                data: [
-                    '',
-                    '',
-                    accountTitle,
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                ],
+                data: Array(31)
+                    .fill('')
+                    .map((_, i) => (i === 2 ? accountTitle : '')),
             });
 
             let groupTotalAmount = 0;
+            // Initialize totals for the 12 month amount columns
+            const monthlyTotals = Array(12).fill(0);
 
-            // Item Rows
             accountItems.forEach((item) => {
                 const price = Number(item.ppmp_price_list?.price || 0);
+
+                // Array of monthly amounts to accumulate
+                const monthlyAmts = [
+                    item.jan_amount,
+                    item.feb_amount,
+                    item.mar_amount,
+                    item.apr_amount,
+                    item.may_amount,
+                    item.jun_amount,
+                    item.jul_amount,
+                    item.aug_amount,
+                    item.sep_amount,
+                    item.oct_amount,
+                    item.nov_amount,
+                    item.dec_amount,
+                ];
+
                 const totalQty = [
                     item.jan_qty,
                     item.feb_qty,
@@ -698,8 +653,14 @@ export async function exportToPDF({
                     item.nov_qty,
                     item.dec_qty,
                 ].reduce((a, b) => a + Number(b || 0), 0);
+
                 const totalAmt = price * totalQty;
                 groupTotalAmount += totalAmt;
+
+                // Sum up monthly amounts
+                monthlyAmts.forEach((amt, idx) => {
+                    monthlyTotals[idx] += Number(amt || 0);
+                });
 
                 tableBody.push({
                     isItem: true,
@@ -712,81 +673,66 @@ export async function exportToPDF({
                         totalQty,
                         totalAmt.toLocaleString(),
                         item.jan_qty,
-                        item.jan_amount,
+                        item.jan_amount?.toLocaleString(),
                         item.feb_qty,
-                        item.feb_amount,
+                        item.feb_amount?.toLocaleString(),
                         item.mar_qty,
-                        item.mar_amount,
+                        item.mar_amount?.toLocaleString(),
                         item.apr_qty,
-                        item.apr_amount,
+                        item.apr_amount?.toLocaleString(),
                         item.may_qty,
-                        item.may_amount,
+                        item.may_amount?.toLocaleString(),
                         item.jun_qty,
-                        item.jun_amount,
+                        item.jun_amount?.toLocaleString(),
                         item.jul_qty,
-                        item.jul_amount,
+                        item.jul_amount?.toLocaleString(),
                         item.aug_qty,
-                        item.aug_amount,
+                        item.aug_amount?.toLocaleString(),
                         item.sep_qty,
-                        item.sep_amount,
+                        item.sep_amount?.toLocaleString(),
                         item.oct_qty,
-                        item.oct_amount,
+                        item.oct_amount?.toLocaleString(),
                         item.nov_qty,
-                        item.nov_amount,
+                        item.nov_amount?.toLocaleString(),
                         item.dec_qty,
-                        item.dec_amount,
+                        item.dec_amount?.toLocaleString(),
                     ],
                 });
             });
 
-            // Total Row (Yellow)
+            // Total Row (Yellow) - Includes Monthly Column Totals
             tableBody.push({
                 isTotal: true,
-                data: [
-                    '',
-                    '',
-                    'TOTAL',
-                    '',
-                    '',
-                    '',
-                    groupTotalAmount.toLocaleString(),
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                    '',
-                ],
+                data: Array(31)
+                    .fill('')
+                    .map((_, i) => {
+                        if (i === 2) return 'TOTAL';
+                        if (i === 6) return groupTotalAmount.toLocaleString();
+
+                        // Monthly Amount Columns are 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+                        const monthAmtCols = [
+                            8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
+                        ];
+                        if (monthAmtCols.includes(i)) {
+                            const monthIdx = (i - 8) / 2;
+                            return monthlyTotals[monthIdx] > 0
+                                ? monthlyTotals[monthIdx].toLocaleString()
+                                : '';
+                        }
+                        return '';
+                    }),
             });
         });
     });
 
+    // --- TABLE GENERATION ---
     autoTable(doc, {
-        startY: 20,
+        startY: 5,
+        margin: { left: 5, right: 5, top: 5, bottom: 5 },
+        showHead: 'firstPage' as any, // TypeScript bypass
         head: [
             [
-                {
-                    content: '',
-                    styles: { fillColor: [255, 255, 255] },
-                },
+                { content: '', styles: { fillColor: [255, 255, 255] } },
                 {
                     content: 'NAME OF OFFICE',
                     colSpan: 6,
@@ -794,7 +740,9 @@ export async function exportToPDF({
                     styles: {
                         valign: 'middle',
                         fillColor: [255, 255, 0],
-                        fontSize: 12,
+                        fontSize: 9,
+                        halign: 'left',
+                        fontStyle: 'bold',
                     },
                 },
                 {
@@ -804,44 +752,35 @@ export async function exportToPDF({
                     styles: {
                         halign: 'center',
                         valign: 'bottom',
-                        fillColor: [255, 255, 255],
-                        fontSize: 30,
+                        fontSize: 28,
+                        fontStyle: 'bold',
                     },
                 },
             ],
+            [{ content: '', styles: { fillColor: [255, 255, 255] } }],
             [
-                {
-                    content: '',
-                    styles: { fillColor: [255, 255, 255] },
-                },
-            ],
-            [
-                {
-                    content: '',
-                    styles: { fillColor: [0, 255, 0] },
-                },
+                { content: '', styles: { fillColor: [146, 208, 80] } },
                 {
                     content: 'FUNDING SOURCE',
                     colSpan: 6,
                     styles: {
-                        valign: 'middle',
-                        fillColor: [0, 255, 0],
-                        fontSize: 8,
+                        fillColor: [146, 208, 80],
+                        fontSize: 5,
+                        halign: 'left',
+                        fontStyle: 'bold',
                     },
                 },
             ],
             [
-                {
-                    content: '',
-                    styles: { fillColor: [0, 255, 0] },
-                },
+                { content: '', styles: { fillColor: [146, 208, 80] } },
                 {
                     content: 'AIP REF. CODE',
                     colSpan: 6,
                     styles: {
-                        valign: 'middle',
-                        fillColor: [0, 255, 0],
-                        fontSize: 8,
+                        fillColor: [146, 208, 80],
+                        fontSize: 5,
+                        halign: 'left',
+                        fontStyle: 'bold',
                     },
                 },
                 {
@@ -852,194 +791,123 @@ export async function exportToPDF({
                     styles: {
                         halign: 'center',
                         valign: 'top',
-                        fillColor: [255, 255, 255],
-                        fontSize: 15,
+                        fontSize: 16,
+                        fontStyle: 'bold',
                     },
                 },
             ],
             [
-                {
-                    content: '',
-                    styles: { fillColor: [0, 255, 0] },
-                },
+                { content: '', styles: { fillColor: [146, 208, 80] } },
                 {
                     content: 'PPA DESCRIPTION',
                     colSpan: 6,
                     styles: {
-                        valign: 'middle',
-                        fillColor: [0, 255, 0],
-                        fontSize: 8,
+                        fillColor: [146, 208, 80],
+                        fontSize: 5,
+                        halign: 'left',
+                        fontStyle: 'bold',
                     },
                 },
             ],
             [
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
-                '',
+                'EXPENSE ACCOUNT',
+                'Item No.',
+                'Description',
+                'Unit',
+                'Price',
+                'QTY',
+                'TOTAL',
+                'JAN-Q',
+                'JAN',
+                'FEB-Q',
+                'FEB',
+                'MAR-Q',
+                'MAR',
+                'APR-Q',
+                'APR',
+                'MAY-Q',
+                'MAY',
+                'JUN-Q',
+                'JUN',
+                'JUL-Q',
+                'JUL',
+                'AUG-Q',
+                'AUG',
+                'SEP-Q',
+                'SEP',
+                'OCT-Q',
+                'OCT',
+                'NOV-Q',
+                'NOV',
+                'DEC-Q',
+                'DEC',
             ],
         ],
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0] },
-    });
-
-    // 3. Generate Table
-    autoTable(doc, {
-        startY: 80,
-        // head: [
-        //     [
-        //         {
-        //             content: '',
-        //             styles: { fillColor: [255, 255, 255] },
-        //         },
-        //         {
-        //             content: 'NAME OF OFFICE',
-        //             colSpan: 6,
-        //             rowSpan: 2,
-        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
-        //         },
-        //         {
-        //             content: 'PROVINCIAL GOVERNMENT OF LA UNION',
-        //             colSpan: 24,
-        //             rowSpan: 3,
-        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
-        //         },
-        //     ],
-        //     [
-        //         {
-        //             content: '',
-        //             styles: { fillColor: [255, 255, 255] },
-        //         },
-        //     ],
-        //     [
-        //         {
-        //             content: '',
-        //             styles: { fillColor: [255, 255, 255] },
-        //         },
-        //         {
-        //             content: 'FUNDING SOURCE',
-        //             colSpan: 6,
-        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
-        //         },
-        //     ],
-        //     [
-        //         {
-        //             content: '',
-        //             styles: { fillColor: [255, 255, 255] },
-        //         },
-        //         {
-        //             content: 'AIP REF. CODE',
-        //             colSpan: 6,
-        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
-        //         },
-        //         {
-        //             content:
-        //                 'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026',
-        //             colSpan: 24,
-        //             rowSpan: 2,
-        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
-        //         },
-        //     ],
-        //     [
-        //         {
-        //             content: '',
-        //             styles: { fillColor: [255, 255, 255] },
-        //         },
-        //         {
-        //             content: 'PPA DESCRIPTION',
-        //             colSpan: 6,
-        //             styles: { halign: 'center', fillColor: [255, 255, 255] },
-        //         },
-        //     ],
-
-        //     [
-        //         'EXPENSE ACCOUNT',
-        //         'Item No.',
-        //         'Description',
-        //         'Unit',
-        //         'Price',
-        //         'QTY',
-        //         'TOTAL',
-        //         'JAN-Q',
-        //         'JAN',
-        //         'FEB-Q',
-        //         'FEB',
-        //         'MAR-Q',
-        //         'MAR',
-        //         'APR-Q',
-        //         'APR',
-        //         'MAY-Q',
-        //         'MAY',
-        //         'JUN-Q',
-        //         'JUN',
-        //         'JUL-Q',
-        //         'JUL',
-        //         'AUG-Q',
-        //         'AUG',
-        //         'SEP-Q',
-        //         'SEP',
-        //         'OCT-Q',
-        //         'OCT',
-        //         'NOV-Q',
-        //         'NOV',
-        //         'DEC-Q',
-        //         'DEC',
-        //     ],
-        // ],
         body: tableBody.map((row) => row.data),
+        theme: 'grid',
         styles: {
-            fontSize: 5,
+            font: 'CenturyGothic',
+            fontStyle: 'normal',
+            fontSize: 4.5,
             lineWidth: 0.1,
             lineColor: [0, 0, 0],
             halign: 'center',
+            cellPadding: 0.5,
+            textColor: [0, 0, 0],
         },
-        headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0] },
+        headStyles: {
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+            fontStyle: 'normal',
+        },
+        columnStyles: {
+            0: { cellWidth: 17 },
+            1: { cellWidth: 7 },
+            2: { cellWidth: 'auto', halign: 'left' },
+            3: { cellWidth: 10 },
+        },
         didParseCell: (data) => {
-            const rowIndex = data.row.index;
-            const rowMeta = tableBody[rowIndex];
-
-            // Re-apply Excel logic: Green Columns for Quantities
-            const greenCols = [5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29];
-            if (greenCols.includes(data.column.index)) {
-                data.cell.styles.fillColor = [146, 208, 80];
+            // Hide Borders for Top Header rows
+            if (data.section === 'head' && data.row.index <= 4) {
+                data.cell.styles.lineWidth = 0;
             }
 
-            // Apply Row Colors
-            if (rowMeta?.isCategory)
-                data.cell.styles.fillColor = [208, 206, 206];
-            if (rowMeta?.isAccount)
-                data.cell.styles.fillColor = [251, 228, 213];
-            if (rowMeta?.isTotal) data.cell.styles.fillColor = [254, 242, 203];
+            // Row 5 Header (Bold Column names)
+            if (data.section === 'head' && data.row.index === 5) {
+                data.cell.styles.fontSize = 5;
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [222, 234, 246];
+            }
+
+            if (data.section === 'body') {
+                const rowMeta = tableBody[data.row.index];
+
+                // Highlight Quantity Columns (Green)
+                const greenCols = [
+                    5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29,
+                ];
+                if (greenCols.includes(data.column.index)) {
+                    data.cell.styles.fillColor = [146, 208, 80];
+                }
+
+                // Metadata Styling (Bold Categorization)
+                if (rowMeta?.isCategory) {
+                    data.cell.styles.fillColor = [208, 206, 206];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+                if (rowMeta?.isAccount) {
+                    data.cell.styles.fillColor = [251, 228, 213];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+                if (rowMeta?.isTotal) {
+                    data.cell.styles.fillColor = [254, 242, 203];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
         },
     });
 
-    // 4. Print via Hidden Iframe
+    // 4. Final Output and Print
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     const iframe = document.createElement('iframe');
