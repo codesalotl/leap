@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PpmpPriceList;
 use App\Models\ChartOfAccount;
+use App\Models\PpmpCategory;
 use App\Http\Requests\StorePpmpPriceListRequest;
 use App\Http\Requests\UpdatePpmpPriceListRequest;
 use Illuminate\Http\Request;
@@ -18,10 +19,12 @@ class PpmpPriceListController extends Controller
     {
         $priceList = PpmpPriceList::all();
         $chartOfAccounts = ChartOfAccount::all();
+        $ppmpCategory = PpmpCategory::all();
 
-        return Inertia::render('ppmp/index', [
+        return Inertia::render('price-list/index', [
             'priceList' => $priceList,
             'chartOfAccounts' => $chartOfAccounts,
+            'ppmpCategory' => $ppmpCategory,
         ]);
     }
 
@@ -39,17 +42,19 @@ class PpmpPriceListController extends Controller
     public function store(StorePpmpPriceListRequest $request)
     {
         $validated = $request->validated();
-        
+
         $newPriceList = PpmpPriceList::create($validated);
-        
+
         // Check if this is an Inertia request (from our custom form)
         if ($request->header('X-Inertia')) {
             // For Inertia requests, we need to redirect back and include the data
             return back()->with('newPriceList', $newPriceList);
         }
-        
+
         // For regular web requests
-        return back()->with('success', 'Price list item created successfully!')->with('newPriceList', $newPriceList);
+        return back()
+            ->with('success', 'Price list item created successfully!')
+            ->with('newPriceList', $newPriceList);
     }
 
     /**
@@ -76,9 +81,9 @@ class PpmpPriceListController extends Controller
         PpmpPriceList $ppmpPriceList,
     ) {
         $validated = $request->validated();
-        
+
         $ppmpPriceList->update($validated);
-        
+
         // return back()->with('success', 'Price list item updated successfully!');
     }
 
@@ -88,7 +93,7 @@ class PpmpPriceListController extends Controller
     public function destroy(PpmpPriceList $ppmpPriceList)
     {
         $ppmpPriceList->delete();
-        
+
         // return back()->with('success', 'Price list item deleted successfully!');
     }
 }
