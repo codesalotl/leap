@@ -24,7 +24,11 @@ import {
     AipEntry,
     PpmpCategory,
 } from '@/pages/types/types';
-import { exportToExcel, exportToPDF } from '@/pages/ppmp/utils/export';
+import {
+    exportToExcel,
+    exportToPDF,
+    exportToPrint,
+} from '@/pages/ppmp/utils/export';
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
