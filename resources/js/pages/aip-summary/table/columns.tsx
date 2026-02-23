@@ -70,7 +70,7 @@ export const getColumns = ({
     onDelete,
     masterPpas,
 }: ColumnActions): ColumnDef<AipEntry, any>[] => [
-    columnHelper.accessor('aip_ref_code', {
+    columnHelper.accessor('full_code', {
         header: 'AIP Reference Code',
         size: 300,
         cell: (info) => (
@@ -79,11 +79,11 @@ export const getColumns = ({
             </code>
         ),
     }),
-    columnHelper.accessor('ppa_desc', {
+    columnHelper.accessor('title', {
         header: 'Program/Project/Activity Description',
         filterFn: (row, _columnId, value) => {
-            const description = row.getValue('ppa_desc') as string;
-            const refCode = row.getValue('aip_ref_code') as string;
+            const description = row.getValue('title') as string;
+            const refCode = row.getValue('full_code') as string;
             const searchValue = (value as string)?.toLowerCase() || '';
 
             return (
@@ -100,11 +100,13 @@ export const getColumns = ({
                 {row.depth > 0 && (
                     <span className="text-muted-foreground opacity-50">↳</span>
                 )}
-                <span className="break-words whitespace-normal">{getValue()}</span>
+                <span className="break-words whitespace-normal">
+                    {getValue()}
+                </span>
             </div>
         ),
     }),
-    columnHelper.accessor('implementing_office_department', {
+    columnHelper.accessor('office.name', {
         header: 'Implementing Office/Department',
         size: 500,
         cell: (info) => (
@@ -116,17 +118,17 @@ export const getColumns = ({
     columnHelper.group({
         header: 'Schedule of Implementation',
         columns: [
-            columnHelper.accessor('sched_implementation.start_date', {
+            columnHelper.accessor('aip_entry_for_year.start_date', {
                 header: 'Start Date',
                 cell: (info) => formatDate(info.getValue()),
             }),
-            columnHelper.accessor('sched_implementation.completion_date', {
+            columnHelper.accessor('aip_entry_for_year.end_date', {
                 header: 'Completion Date',
                 cell: (info) => formatDate(info.getValue()),
             }),
         ],
     }),
-    columnHelper.accessor('expected_outputs', {
+    columnHelper.accessor('aip_entry_for_year.expected_output', {
         header: 'Expected Outputs',
         size: 600,
         cell: (info) => (
@@ -142,7 +144,7 @@ export const getColumns = ({
     columnHelper.group({
         header: 'Amount (in thousand pesos)',
         columns: [
-            columnHelper.accessor('amount.ps', {
+            columnHelper.accessor('aip_entry_for_year.ps_amount', {
                 header: () => <div className="text-right">PS</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -150,7 +152,7 @@ export const getColumns = ({
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.mooe', {
+            columnHelper.accessor('aip_entry_for_year.mooe_amount', {
                 header: () => <div className="text-right">MOOE</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -158,7 +160,7 @@ export const getColumns = ({
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.fe', {
+            columnHelper.accessor('aip_entry_for_year.fe_amount', {
                 header: () => <div className="text-right">FE</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -166,7 +168,7 @@ export const getColumns = ({
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.co', {
+            columnHelper.accessor('aip_entry_for_year.co_amount', {
                 header: () => <div className="text-right">CO</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -178,12 +180,22 @@ export const getColumns = ({
                 id: 'amount.total',
                 header: () => <div className="text-right">Total</div>,
                 cell: ({ row }) => {
-                    const amount = row.original.amount;
+                    // console.log(row.original);
+
+                    // const amount = row.original;
                     const total =
-                        parseFloat(amount.ps || '0') +
-                        parseFloat(amount.mooe || '0') +
-                        parseFloat(amount.fe || '0') +
-                        parseFloat(amount.co || '0');
+                        parseFloat(
+                            row.original.aip_entry_for_year.ps_amount || '0',
+                        ) +
+                        parseFloat(
+                            row.original.aip_entry_for_year.mooe_amount || '0',
+                        ) +
+                        parseFloat(
+                            row.original.aip_entry_for_year.fe_amount || '0',
+                        ) +
+                        parseFloat(
+                            row.original.aip_entry_for_year.co_amount || '0',
+                        );
                     return (
                         <span className="block text-right font-bold">
                             {formatNumber(total.toString())}
@@ -196,7 +208,7 @@ export const getColumns = ({
     columnHelper.group({
         header: 'CC Expenditure',
         columns: [
-            columnHelper.accessor('cc_adaptation', {
+            columnHelper.accessor('aip_entry_for_year.ccet_adaptation', {
                 header: () => <div className="text-right">Adaptation</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -204,7 +216,7 @@ export const getColumns = ({
                     </span>
                 ),
             }),
-            columnHelper.accessor('cc_mitigation', {
+            columnHelper.accessor('aip_entry_for_year.ccet_mitigation', {
                 header: () => <div className="text-right">Mitigation</div>,
                 cell: (i) => (
                     <span className="block text-right">

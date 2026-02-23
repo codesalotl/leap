@@ -70,4 +70,10 @@ class Ppa extends Model
     {
         return $this->belongsTo(Ppa::class, 'parent_id');
     }
+
+    public function aipEntryForYear()
+    {
+        // We use hasOne because you confirmed there's only one per year
+        return $this->hasOne(AipEntry::class);
+    }
 }

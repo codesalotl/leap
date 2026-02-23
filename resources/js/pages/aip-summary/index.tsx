@@ -34,7 +34,10 @@ import DataTable from '@/pages/aip-summary/table/data-table';
 import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
 import { useAipColumns } from '@/pages/aip-summary/table/columns';
-import { exportToExcel, exportToPDF } from '@/pages/aip-summary/utils/export-utils';
+import {
+    exportToExcel,
+    exportToPDF,
+} from '@/pages/aip-summary/utils/export-utils';
 
 import { type AipEntry, FiscalYear, Ppa } from '@/pages/types/types';
 import { type BreadcrumbItem } from '@/types';
@@ -75,7 +78,7 @@ export default function AipSummaryTable({
     aipEntries,
     masterPpas,
 }: AipSummaryTableProp) {
-    // console.log(masterPpas);
+    console.log(aipEntries);
 
     const [searchValue, setSearchValue] = useState('');
     const [selectorState, setSelectorState] = useState({
@@ -234,7 +237,6 @@ export default function AipSummaryTable({
                 </div>
             </div>
 
-            {/* for importing and adding of ppa */}
             <PpaSelectorDialog
                 isOpen={selectorState.isOpen}
                 onClose={() =>
@@ -247,7 +249,6 @@ export default function AipSummaryTable({
                 existingPpaIds={Array.from(existingPpaIds)}
             />
 
-            {/* for editing ppa */}
             <AipEntryFormDialog
                 open={isEditOpen}
                 onOpenChange={setIsEditOpen}
@@ -255,7 +256,6 @@ export default function AipSummaryTable({
                 fiscalYear={fiscalYear}
             />
 
-            {/* for delete ppa */}
             <AlertDialog
                 open={isDeleteAlertOpen}
                 onOpenChange={setIsDeleteAlertOpen}
