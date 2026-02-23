@@ -49,6 +49,10 @@ Route::prefix('aip/{fiscalYear}')->group(function () {
     );
 });
 
+Route::get('price-lists', [PpmpPriceListController::class, 'index'])->name(
+    'price-lists.index',
+);
+
 // ---
 
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);

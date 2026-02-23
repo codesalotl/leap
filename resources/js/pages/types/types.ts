@@ -113,6 +113,7 @@ export interface PriceList {
     created_at: string | null;
     updated_at: string | null;
     category?: PpmpCategory;
+    chart_of_account?: ChartOfAccount;
 }
 
 export interface PpmpCategory {

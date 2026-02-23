@@ -10,7 +10,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, FileDown, Sheet } from 'lucide-react';
+import { Plus, FileDown, Sheet, FileText, Printer } from 'lucide-react';
 
 import AppLayout from '@/layouts/app-layout';
 import DataTable from '@/pages/ppmp/ppmp-table/data-table';
@@ -24,7 +24,11 @@ import {
     AipEntry,
     PpmpCategory,
 } from '@/pages/types/types';
-import exportToExcel from '@/pages/ppmp/utils/export';
+import {
+    exportToExcel,
+    exportToPDF,
+    exportToPrint,
+} from '@/pages/ppmp/utils/export';
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
@@ -70,6 +74,28 @@ export default function PpmpPage({
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem
                                         onClick={() =>
+                                            exportToPrint({
+                                                ppmpItems,
+                                                ppmpCategories,
+                                                chartOfAccounts,
+                                            })
+                                        }
+                                    >
+                                        <Printer /> Print
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            exportToPDF({
+                                                ppmpItems,
+                                                ppmpCategories,
+                                                chartOfAccounts,
+                                            })
+                                        }
+                                    >
+                                        <FileText /> To PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() =>
                                             exportToExcel({
                                                 ppmpItems,
                                                 ppmpCategories,
@@ -77,7 +103,7 @@ export default function PpmpPage({
                                             })
                                         }
                                     >
-                                        <Sheet /> Excel
+                                        <Sheet /> To Excel
                                     </DropdownMenuItem>
                                     {/* <DropdownMenuItem>PDF</DropdownMenuItem> */}
                                 </DropdownMenuGroup>

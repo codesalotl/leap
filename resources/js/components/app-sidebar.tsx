@@ -13,12 +13,7 @@ import { dashboard } from '@/routes';
 import { index } from '@/routes/aip';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import {
-    LayoutGrid,
-    FileText,
-    Users,
-    FolderTree,
-} from 'lucide-react';
+import { LayoutGrid, FileText, Users, FolderTree } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -60,6 +55,11 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Offices',
         href: '/offices',
+        icon: Users,
+    },
+    {
+        title: 'Price Lists',
+        href: '/price-lists',
         icon: Users,
     },
 ];

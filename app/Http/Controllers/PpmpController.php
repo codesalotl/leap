@@ -23,6 +23,7 @@ class PpmpController extends Controller
     {
         $ppmpItems = Ppmp::where('aip_entry_id', $aipEntry->id)
             ->with(['ppmpPriceList.category'])
+            ->with(['ppmpPriceList.chartOfAccount'])
             ->get();
 
         $chartOfAccounts = ChartOfAccount::where('expense_class', 'MOOE')

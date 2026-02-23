@@ -274,14 +274,20 @@ class AipEntryController extends Controller
             );
 
             // 3. Get the AIP entry IDs that will be deleted to handle PPMP constraints
-            $aipEntryIdsToDelete = AipEntry::where('fiscal_year_id', $fiscalYearId)
+            $aipEntryIdsToDelete = AipEntry::where(
+                'fiscal_year_id',
+                $fiscalYearId,
+            )
                 ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
                 ->pluck('id')
                 ->toArray();
 
             // 4. Delete PPMP records that reference these AIP entries first
             if (!empty($aipEntryIdsToDelete)) {
-                \App\Models\Ppmp::whereIn('aip_entry_id', $aipEntryIdsToDelete)->delete();
+                \App\Models\Ppmp::whereIn(
+                    'aip_entry_id',
+                    $aipEntryIdsToDelete,
+                )->delete();
             }
 
             // 5. Now delete the AIP entries
