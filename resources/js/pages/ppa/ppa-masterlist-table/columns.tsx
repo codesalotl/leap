@@ -1,38 +1,23 @@
-// resources\js\pages\ppa\ppa-masterlist-table\columns.tsx
-
 import { ColumnDef } from '@tanstack/react-table';
-import { CheckCircle2, MoreHorizontal, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Pencil, Trash, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
-// --- Interfaces ---
-export interface Ppa {
-    id: number;
-    office_id: number;
-    parent_id: number | null;
-    title: string;
-    type: 'Program' | 'Project' | 'Activity';
-    code_suffix: string;
-    is_active: boolean;
-    full_code: string;
-    created_at: string;
-    updated_at: string;
-    children?: Ppa[];
-}
+import { Ppa } from '@/pages/types/types';
 
 // --- Column Definitions ---
 export const columns: ColumnDef<Ppa>[] = [
     {
+        accessorKey: 'full_code',
+        header: 'AIP Reference Code',
+        cell: ({ getValue }) => (
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-sm">
+                {getValue<string>()}
+            </code>
+        ),
+    },
+    {
         accessorKey: 'title',
-        header: 'Type & Title',
+        header: 'Program/Project/Activity Description',
         cell: ({ row }) => {
             const ppa = row.original;
             return (
@@ -62,15 +47,6 @@ export const columns: ColumnDef<Ppa>[] = [
         },
     },
     {
-        accessorKey: 'full_code',
-        header: 'Aip Reference Code',
-        cell: ({ getValue }) => (
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-sm">
-                {getValue<string>()}
-            </code>
-        ),
-    },
-    {
         accessorKey: 'is_active',
         header: 'Status',
         cell: ({ getValue }) => {
@@ -93,56 +69,68 @@ export const columns: ColumnDef<Ppa>[] = [
             const ppa = row.original;
             const meta = table.options.meta as any;
 
+            console.log(ppa);
+
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <>
+                    {/*<DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button size="icon">
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {ppa.type === 'Program' && (
+                                <DropdownMenuItem
+                                    onClick={() => meta.onAdd(ppa, 'Project')}
+                                >
+                                    Add Project
+                                </DropdownMenuItem>
+                            )}
 
-                        {/* 1. Edit is always available */}
-                        <DropdownMenuItem onClick={() => meta.onEdit(ppa)}>
-                            Edit Details
-                        </DropdownMenuItem>
+                            {ppa.type === 'Project' && (
+                                <DropdownMenuItem
+                                    onClick={() => meta.onAdd(ppa, 'Activity')}
+                                >
+                                    Add Activity
+                                </DropdownMenuItem>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>*/}
 
-                        <DropdownMenuSeparator />
+                    <Button
+                        onClick={() => {
+                            // Logic to determine what the next child level should be
+                            let nextType:
+                                | 'Project'
+                                | 'Activity'
+                                | 'Sub-Activity';
 
-                        {/* 2. Strict Hierarchy Logic */}
+                            if (ppa.type === 'Program') nextType = 'Project';
+                            else if (ppa.type === 'Project')
+                                nextType = 'Activity';
+                            else nextType = 'Sub-Activity'; // If it's an Activity, add a Sub-Activity
 
-                        {/* If it's a Program, it can ONLY have a Project */}
-                        {ppa.type === 'Program' && (
-                            <DropdownMenuItem
-                                onClick={() => meta.onAdd(ppa, 'Project')}
-                            >
-                                Add Project
-                            </DropdownMenuItem>
-                        )}
+                            meta.onAdd(ppa, nextType);
+                        }}
+                        size="icon"
+                        disabled={ppa.type === 'Sub-Activity'}
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
 
-                        {/* If it's a Project, it can ONLY have an Activity */}
-                        {ppa.type === 'Project' && (
-                            <DropdownMenuItem
-                                onClick={() => meta.onAdd(ppa, 'Activity')}
-                            >
-                                Add Activity
-                            </DropdownMenuItem>
-                        )}
+                    <Button onClick={() => meta.onEdit(ppa)} size="icon">
+                        <Pencil />
+                    </Button>
 
-                        {/* Note: If it's an Activity, no "Add" options will appear */}
-
-                        <DropdownMenuSeparator />
-
-                        {/* 3. Delete Logic */}
-                        <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => meta.onDelete(ppa)}
-                        >
-                            Delete {ppa.type}
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                    <Button
+                        onClick={() => meta.onDelete(ppa)}
+                        size="icon"
+                        variant="destructive"
+                    >
+                        <Trash />
+                    </Button>
+                </>
             );
         },
     },

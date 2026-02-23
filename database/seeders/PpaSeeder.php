@@ -149,7 +149,7 @@ class PpaSeeder extends Seeder
                     'type' => $projectData['type'],
                     'code_suffix' => str_pad(
                         $projectCounter,
-                        3,
+                        2,
                         '0',
                         STR_PAD_LEFT,
                     ),
@@ -184,7 +184,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -208,7 +208,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -239,7 +239,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -268,7 +268,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -293,7 +293,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -318,7 +318,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -342,7 +342,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -369,7 +369,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -391,7 +391,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -419,7 +419,7 @@ class PpaSeeder extends Seeder
                             'type' => 'Activity',
                             'code_suffix' => str_pad(
                                 $index + 1,
-                                3,
+                                2,
                                 '0',
                                 STR_PAD_LEFT,
                             ),
@@ -437,7 +437,7 @@ class PpaSeeder extends Seeder
                                 substr($projectData['title'], 0, 30) .
                                 '...',
                             'type' => 'Activity',
-                            'code_suffix' => str_pad($k, 3, '0', STR_PAD_LEFT),
+                            'code_suffix' => str_pad($k, 2, '0', STR_PAD_LEFT),
                             'is_active' => true,
                         ]);
                     }

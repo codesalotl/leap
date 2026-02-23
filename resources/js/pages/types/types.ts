@@ -123,23 +123,6 @@ export interface PpmpCategory {
     updated_at: string | null;
 }
 
-export interface Office {
-    id: number;
-    sector_id: number | null;
-    lgu_level_id: number;
-    office_type_id: number;
-    code: string;
-    name: string;
-    acronym: string | null;
-    is_lee: boolean;
-    full_code: string;
-    lgu_level?: LguLevel;
-    office_type?: OfficeType;
-    sector?: Sector;
-    created_at: string | null;
-    updated_at: string | null;
-}
-
 export interface Sector {
     id: number;
     code: string;
@@ -153,12 +136,29 @@ export interface Ppa {
     office_id: number;
     parent_id: number | null;
     title: string;
-    type: 'Program' | 'Project' | 'Activity';
+    type: 'Program' | 'Project' | 'Activity' | 'Sub-Activity';
     code_suffix: string;
-    full_code: string;
     is_active: boolean;
     created_at: string | null;
     updated_at: string | null;
-    children?: Ppa[];
+    // full_code: string;
     office?: Office;
+    children?: Ppa[];
+}
+
+export interface Office {
+    id: number;
+    sector_id: number | null;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    acronym: string | null;
+    is_lee: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    // full_code: string;
+    sector?: Sector;
+    lgu_level?: LguLevel;
+    office_type?: OfficeType;
 }

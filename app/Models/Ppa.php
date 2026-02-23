@@ -15,55 +15,59 @@ class Ppa extends Model
     protected $fillable = [
         'office_id',
         'parent_id',
-        'type',
         'title',
+        'type',
         'code_suffix',
         'is_active',
-        // 'reference_code',
     ];
 
     protected $appends = ['full_code'];
+
     protected function fullCode(): Attribute
     {
         return Attribute::make(
             get: function () {
-                // Use 'code_suffix' instead of 'code'
-                $currentSuffix = $this->code_suffix ?? '000';
+                $suffix = $this->code_suffix ?? '000';
 
-                if ($this->parent) {
-                    return $this->parent->full_code . '-' . $currentSuffix;
+                // 1. Check for Parent FIRST
+                if ($this->parent_id) {
+                    // Use relationLoaded to ensure we aren't triggering new queries
+                    // and use the actual parent object
+                    $parent = $this->parent;
+
+                    if ($parent) {
+                        return $parent->full_code . '-' . $suffix;
+                    }
                 }
 
-                $officePrefix =
-                    $this->office?->full_code ?? '0000-000-0-00-000';
+                // 2. If no parent_id, then it's a Top-Level Program
+                // Get the Office prefix (Sector-LGU-Type-Office)
+                $officePrefix = $this->office?->full_code ?? '0000-0-00-000';
 
-                return $officePrefix . '-' . $currentSuffix;
+                return $officePrefix . '-' . $suffix;
             },
         );
     }
 
-    // Casting ensures boolean values are handled correctly
-    // protected $casts = [
-    //     'is_active' => 'boolean',
-    // ];
-
     public function office()
     {
-        return $this->belongsTo(Office::class);
+        return $this->belongsTo(Office::class)->with(
+            'sector',
+            'lguLevel',
+            'officeType',
+        );
     }
 
     public function children()
     {
-        return $this->hasMany(Ppa::class, 'parent_id')->with('children');
+        return $this->hasMany(Ppa::class, 'parent_id')->with(
+            'children',
+            'office',
+        );
     }
 
     public function parent()
     {
         return $this->belongsTo(Ppa::class, 'parent_id');
     }
-
-    // public function sector(): BelongsTo
-    // {
-    //     return $this->belongsTo(Sector::class);
-    // }
 }

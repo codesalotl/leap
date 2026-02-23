@@ -120,6 +120,7 @@ Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
     'ppmp.destroy',
 );
 
+// ppa
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
 Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
 Route::patch('ppas/{ppa}', [PpaController::class, 'update'])->name(

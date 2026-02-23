@@ -25,6 +25,9 @@ export default function PpaPage({
     ppaTree: Ppa[];
     offices: any[];
 }) {
+    console.log(ppaTree);
+    // console.log(offices);
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
