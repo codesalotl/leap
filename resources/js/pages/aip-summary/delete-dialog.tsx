@@ -19,18 +19,6 @@ interface DeleteDialogProps {
     // handleDelete: (selectedEntry: Ppa) => void;
 }
 
-const handleDelete = (entry) => {
-    console.log('Deleting entry');
-
-    router.delete(`/aip-entries/${entry.id}`, {
-        preserveScroll: true,
-        onFinish: () => {
-            setIsDeleteAlertOpen(false);
-            setSelectedEntryId(null);
-        },
-    });
-};
-
 export default function DeleteDialog({
     isDeleteAlertOpen,
     setIsDeleteAlertOpen,
@@ -38,6 +26,18 @@ export default function DeleteDialog({
     setSelectedEntryId,
     // handleDelete,
 }: DeleteDialogProps) {
+    const handleDelete = (entry) => {
+        console.log('Deleting entry');
+
+        router.delete(`/aip-entries/${entry.aip_entry.id}`, {
+            preserveScroll: true,
+            onFinish: () => {
+                setIsDeleteAlertOpen(false);
+                setSelectedEntryId(null);
+            },
+        });
+    };
+
     return (
         <AlertDialog
             open={isDeleteAlertOpen}
