@@ -149,13 +149,13 @@ export default function AipSummaryTable({
         });
     };
 
-    const handleEdit = useCallback((entry: AipEntry) => {
-        setSelectedEntryId(entry.id);
+    const handleEdit = useCallback((entry) => {
+        setSelectedEntryId(entry.aip_entry.id);
         setIsEditOpen(true);
     }, []);
 
-    const handleOpenDeleteDialog = useCallback((entry: AipEntry) => {
-        setSelectedEntryId(entry.id);
+    const handleOpenDeleteDialog = useCallback((entry) => {
+        setSelectedEntryId(entry.aip_entry.id);
         setIsDeleteAlertOpen(true);
     }, []);
 
