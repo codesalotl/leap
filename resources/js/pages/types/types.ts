@@ -1,30 +1,48 @@
 export interface AipEntry {
     id: number;
     ppa_id: number;
-    parent_ppa_id: number | null;
-    aip_ref_code: string;
-    ppa_desc: string;
-    implementing_office_department: string;
-    sched_implementation: {
-        start_date: string;
-        completion_date: string;
-    };
-    expected_outputs: string;
-    funding_source: string;
-    amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
-    };
-    cc_adaptation: string;
-    cc_mitigation: string;
-    cc_typology_code: string;
-    children?: AipEntry[];
+    parent_ppa_id: number;
+    start_date: string;
+    end_date: string;
+    expected_output: string;
+    ps_amount: string;
+    mooe_amount: string;
+    fe_amount: string;
+    co_amount: string;
+    total_amount: string;
+    ccet_adaptation: string;
+    ccet_mitigation: string;
     created_at: string;
     updated_at: string;
 }
+
+// export interface AipEntry {
+//     id: number;
+//     ppa_id: number;
+//     parent_ppa_id: number | null;
+//     aip_ref_code: string;
+//     ppa_desc: string;
+//     implementing_office_department: string;
+//     sched_implementation: {
+//         start_date: string;
+//         completion_date: string;
+//     };
+//     expected_outputs: string;
+//     funding_source: string;
+//     amount: {
+//         ps: string;
+//         mooe: string;
+//         fe: string;
+//         co: string;
+//         total: string;
+//     };
+//     cc_adaptation: string;
+//     cc_mitigation: string;
+//     cc_typology_code: string;
+//     children?: AipEntry[];
+//     created_at: string;
+//     updated_at: string;
+// }
 
 export interface LguLevel {
     code: string;
@@ -141,9 +159,10 @@ export interface Ppa {
     is_active: boolean;
     created_at: string | null;
     updated_at: string | null;
-    // full_code: string;
+    full_code: string;
     office?: Office;
     children?: Ppa[];
+    aip_entry?: AipEntry;
 }
 
 export interface Office {
@@ -161,4 +180,28 @@ export interface Office {
     sector?: Sector;
     lgu_level?: LguLevel;
     office_type?: OfficeType;
+}
+
+export interface AipSummary {
+    id: string | number;
+    full_code: string;
+    title: string;
+    ppa_id: number;
+    funding_source?: string;
+    cc_typology_code?: string;
+    office: {
+        id?: string | number;
+        name: string;
+    };
+    aip_entry_for_year: {
+        start_date: string; // or Date
+        end_date: string; // or Date
+        expected_output: string;
+        ps_amount: string | null;
+        mooe_amount: string | null;
+        fe_amount: string | null;
+        co_amount: string | null;
+        ccet_adaptation: string | null;
+        ccet_mitigation: string | null;
+    };
 }

@@ -5,7 +5,7 @@ import { AipEntry } from '@/pages/types/types';
 import { formatNumber } from '@/pages/aip-summary/table/columns';
 import { FiscalYear } from '@/pages/types/types';
 
-export const flattenForExport = (entries: AipEntry[], depth = 0): any[] => {
+export const flattenForExport = (entries: Ppa[], depth = 0): any[] => {
     let flat: any[] = [];
     entries.forEach((entry) => {
         const indent = '    '.repeat(depth);
@@ -24,7 +24,7 @@ export const flattenForExport = (entries: AipEntry[], depth = 0): any[] => {
     return flat;
 };
 
-export const exportToExcel = (aipEntries: AipEntry[], fiscalYear: FiscalYear) => {
+export const exportToExcel = (aipEntries: Ppa[], fiscalYear: FiscalYear) => {
     const flatData = flattenForExport(aipEntries);
     const data = flatData.map((e) => ({
         'AIP Ref Code': e.aip_ref_code ?? '',
@@ -50,7 +50,7 @@ export const exportToExcel = (aipEntries: AipEntry[], fiscalYear: FiscalYear) =>
     XLSX.writeFile(wb, `AIP_Summary_${fiscalYear.year}.xlsx`);
 };
 
-export const exportToPDF = (aipEntries: AipEntry[], fiscalYear: FiscalYear) => {
+export const exportToPDF = (aipEntries: Ppa[], fiscalYear: FiscalYear) => {
     const doc = new jsPDF('l', 'mm', 'a4');
     const flatData = flattenForExport(aipEntries);
 

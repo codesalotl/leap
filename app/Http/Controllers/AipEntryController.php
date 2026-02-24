@@ -22,95 +22,36 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
-        // $ppaMasterList = Ppa::whereNull('parent_id')
-        //     ->with([
-        //         // 'office',
-        //         'office.sector',
-        //         'office.lguLevel',
-        //         'office.officeType',
-        //         'children.office',
-        //         'children.children.office',
-        //         'children.children',
-        //     ])
-        //     ->get();
-
         $ppaMasterList = Ppa::whereNull('parent_id')
             ->with(['office', 'children', 'parent'])
             ->get();
 
-        // $aipEntries = $fiscalYear
-        //     ->aipEntries()
-        //     ->with([
-        //         'ppa',
-        //         'ppa.children',
-        //         // 'ppa.office.sector',
-        //         // 'ppa.office.lguLevel',
-        //         // 'ppa.office.officeType',
-        //         // 'ppa.children', // Projects under Programs
-        //         // 'ppa.children.children', // Activities under Projects
-        //         'ppa.parent',
-        //     ])
-        //     ->get();
-
         $yearId = $fiscalYear->id;
 
-        // 1. Define the reusable recursive loader
         $loadAipTree = function ($query) use ($yearId, &$loadAipTree) {
             $query
                 ->whereHas(
-                    'aipEntryForYear',
+                    'aipEntry',
                     fn($q) => $q->where('fiscal_year_id', $yearId),
                 )
                 ->with([
                     'office',
                     'parent',
-                    'aipEntryForYear' => fn($q) => $q->where(
+                    'aipEntry' => fn($q) => $q->where(
                         'fiscal_year_id',
                         $yearId,
                     ),
-                    'children' => $loadAipTree, // Recurse into children
+                    'children' => $loadAipTree,
                 ]);
         };
-
-        // 2. Execute the query starting from the top level
         $aipEntries = Ppa::whereNull('parent_id')->where($loadAipTree)->get();
-
-        // $mappedEntries = $aipEntries->map(
-        //     fn($entry) => [
-        //         'id' => $entry->id,
-        //         'ppa_id' => $entry->ppa_id,
-        //         'parent_ppa_id' => $entry->ppa->parent_id,
-        //         'aip_ref_code' => $entry->ppa->full_code,
-        //         'ppa_desc' => $entry->ppa->title,
-        //         'implementing_office_department' =>
-        //             $entry->ppa->office->name ?? 'N/A',
-        //         'sched_implementation' => [
-        //             'start_date' => $entry->start_date,
-        //             'completion_date' => $entry->end_date,
-        //         ],
-        //         'expected_outputs' => $entry->expected_output,
-        //         'funding_source' => '',
-        //         'amount' => [
-        //             'ps' => (string) $entry->ps_amount,
-        //             'mooe' => (string) $entry->mooe_amount,
-        //             'fe' => (string) $entry->fe_amount,
-        //             'co' => (string) $entry->co_amount,
-        //             'total' => (string) $entry->total_amount,
-        //         ],
-        //         'cc_adaptation' => (string) $entry->ccet_adaptation,
-        //         'cc_mitigation' => (string) $entry->ccet_mitigation,
-        //         'cc_typology_code' => $entry->typology_code ?? '',
-        //         'children' => [],
-        //     ],
-        // );
-
-        // $aipTree = $this->buildAipTree($mappedEntries);
 
         $offices = Office::all();
 
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipEntries,
+            
             'masterPpas' => $ppaMasterList,
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
@@ -118,23 +59,6 @@ class AipEntryController extends Controller
             'ppmpItems' => Ppmp::with(['ppmpPriceList'])->get(),
         ]);
     }
-
-    // private function buildAipTree($entries, $parentId = null)
-    // {
-    //     $branch = [];
-
-    //     foreach ($entries as $entry) {
-    //         if ($entry['parent_ppa_id'] == $parentId) {
-    //             $children = $this->buildAipTree($entries, $entry['ppa_id']);
-    //             if ($children) {
-    //                 $entry['children'] = $children;
-    //             }
-    //             $branch[] = $entry;
-    //         }
-    //     }
-
-    //     return $branch;
-    // }
 
     /**
      * Show the form for creating a new resource.

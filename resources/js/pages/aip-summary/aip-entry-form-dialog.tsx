@@ -26,12 +26,12 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { FiscalYear, AipEntry } from '@/pages/types/types';
+import { FiscalYear, AipEntry, Ppa } from '@/pages/types/types';
 
 interface AipFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    data: AipEntry | null;
+    data: Ppa;
     fiscalYear: FiscalYear;
 }
 
@@ -138,33 +138,32 @@ export default function AipEntryFormDialog({
     data,
     fiscalYear,
 }: AipFormProps) {
+    console.log(data);
+
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
-    const getInitialValues = (
-        d: AipEntry | null,
-    ): z.infer<typeof formSchema> => ({
-        ppa_id: d?.ppa_id || 0,
-        aipRefCode: d?.aip_ref_code || '',
-        ppaDescription: d?.ppa_desc || '',
-        implementingOfficeDepartmentLocation:
-            d?.implementing_office_department || '',
+    const getInitialValues = (d: Ppa | null): z.infer<typeof formSchema> => ({
+        ppa_id: d?.aip_entry?.ppa_id || 0,
+        aipRefCode: d?.full_code || '',
+        ppaDescription: d?.title || '',
+        implementingOfficeDepartmentLocation: d?.office?.name || '',
         scheduleOfImplementation: {
-            startingDate: d?.sched_implementation?.start_date || '',
-            completionDate: d?.sched_implementation?.completion_date || '',
+            startingDate: d?.aip_entry?.start_date || '',
+            completionDate: d?.aip_entry?.end_date || '',
         },
-        expectedOutputs: d?.expected_outputs || '',
-        fundingSource: d?.funding_source || '',
+        expectedOutputs: d?.aip_entry?.expected_output || '',
+        fundingSource: d?.aip_entry?.funding_source || '',
         amount: {
-            ps: d?.amount?.ps || '0.00',
-            mooe: d?.amount?.mooe || '0.00',
-            fe: d?.amount?.fe || '0.00',
-            co: d?.amount?.co || '0.00',
-            total: d?.amount?.total || '0.00',
+            ps: d?.aip_entry?.ps_amount || '0.00',
+            mooe: d?.aip_entry?.mooe_amount || '0.00',
+            fe: d?.aip_entry?.fe_amount || '0.00',
+            co: d?.aip_entry?.co_amount || '0.00',
+            total: d?.aip_entry?.total_amount || '0.00',
         },
         amountOfCcExpenditure: {
-            ccAdaptation: d?.cc_adaptation || '0.00',
-            ccMitigation: d?.cc_mitigation || '0.00',
+            ccAdaptation: d?.aip_entry?.ccet_adaptation || '0.00',
+            ccMitigation: d?.aip_entry?.ccet_adaptation || '0.00',
         },
-        ccTypologyCode: d?.cc_typology_code || '',
+        ccTypologyCode: d?.aip_entry?.cc_typology_code || '',
     });
 
     const form = useForm<z.infer<typeof formSchema>>({
