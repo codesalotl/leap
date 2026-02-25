@@ -208,7 +208,10 @@ export default function AipEntryFormDialog({
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (!data?.id) return;
 
-        router.put(`/aip-entries/${data.id}`, values, {
+        console.log(data.aip_entry.id);
+
+        // router.put(`/aip-entries/${data.id}`, values, {
+        router.put(`/aip-entries/${data.aip_entry.id}`, values, {
             onSuccess: () => {
                 onOpenChange(false);
             },
@@ -742,7 +745,7 @@ export default function AipEntryFormDialog({
                                                             onClick={() => {
                                                                 if (data?.id) {
                                                                     router.visit(
-                                                                        `/aip/${fiscalYear.id}/summary/${data.id}/ppmp`,
+                                                                        `/aip/${fiscalYear.id}/summary/${data.aip_entry.id}/ppmp`,
                                                                     );
                                                                 }
                                                             }}
