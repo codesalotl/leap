@@ -47,31 +47,10 @@ export default function ExportToPdfDialog({
 
     const styles = StyleSheet.create({
         page: { padding: 36 },
-        table: {
-            display: 'table',
-            width: '100%',
-            // borderTopWidth: 1,
-            // borderRightWidth: 1,
-            // borderColor: '#000',
-        },
-        headerContainer: {
-            // borderTopWidth: 1, // This will now repeat on every page
-            // borderLeftWidth: 1,
-            borderColor: '#000',
-        },
-        fixedHeader: {
-            borderTopWidth: 1,
-            borderColor: '#000',
-        },
-        tableRow: {
-            flexDirection: 'row',
-            // borderBottomWidth: 1,
-            borderColor: '#000',
-        },
         tableCol: {
-            borderLeftWidth: 1,
-            borderBottomWidth: 1,
-            borderColor: '#000',
+            // borderRightWidth: 1,
+            // borderBottomWidth: 1,
+            // borderColor: '#000',
         },
         tableCell: { margin: 2, fontSize: 6, textAlign: 'center' },
         headerGroup: { flexDirection: 'column', padding: 0 },
@@ -118,10 +97,8 @@ export default function ExportToPdfDialog({
                     <View
                         key={`${item.id}-${level}`}
                         style={[
-                            styles.tableRow,
                             {
-                                borderRightWidth: 1,
-                                borderColor: '#000',
+                                flexDirection: 'row',
                             },
                         ]}
                         wrap={false} // <--- Add this property here
@@ -131,7 +108,11 @@ export default function ExportToPdfDialog({
                                 key={colIndex}
                                 style={[
                                     styles.tableCol,
-                                    { width: `${width}%`, borderLeftWidth: 1 },
+                                    {
+                                        width: `${width}%`,
+                                        borderRightWidth: 1,
+                                        borderLeftWidth: colIndex === 0 ? 1 : 0,
+                                    },
                                 ]}
                             >
                                 <Text
@@ -181,9 +162,15 @@ export default function ExportToPdfDialog({
                     orientation="landscape"
                     style={styles.page}
                 >
-                    <View style={styles.table}>
+                    <View
+                        style={{
+                            display: 'table',
+                            width: '100%',
+                            borderBottomWidth: 1,
+                        }}
+                    >
                         {/* HEADER ROW 0 */}
-                        <View fixed style={styles.headerContainer}>
+                        <View fixed>
                             {/* TOP MIDDLE TITLE */}
                             <View
                                 style={{
@@ -218,11 +205,11 @@ export default function ExportToPdfDialog({
 
                             <View
                                 style={[
-                                    styles.tableRow,
                                     {
+                                        flexDirection: 'row',
                                         borderTopWidth: 1,
-                                        borderRightWidth: 1,
-                                        borderColor: '#000',
+                                        borderBottomWidth: 1,
+                                        // borderColor: '#000',
                                     },
                                 ]}
                             >
@@ -231,18 +218,22 @@ export default function ExportToPdfDialog({
                                         styles.tableCol,
                                         {
                                             width: `${COLUMN_WIDTHS[0]}%`,
-                                            borderLeftWidth: 1,
+                                            // borderLeftWidth: 1,
+                                            borderRightWidth: 1,
                                         },
                                     ]}
                                 >
-                                    <Text style={styles.tableCell}>
+                                    <Text style={[styles.tableCell]}>
                                         AIP REF. CODE
                                     </Text>
                                 </View>
                                 <View
                                     style={[
                                         styles.tableCol,
-                                        { width: `${COLUMN_WIDTHS[1]}%` },
+                                        {
+                                            width: `${COLUMN_WIDTHS[1]}%`,
+                                            borderRightWidth: 1,
+                                        },
                                     ]}
                                 >
                                     <Text style={styles.tableCell}>
@@ -253,10 +244,13 @@ export default function ExportToPdfDialog({
                                 <View
                                     style={[
                                         styles.tableCol,
-                                        { width: `${COLUMN_WIDTHS[2]}%` },
+                                        {
+                                            width: `${COLUMN_WIDTHS[2]}%`,
+                                            borderRightWidth: 1,
+                                        },
                                     ]}
                                 >
-                                    <Text style={styles.tableCell}>
+                                    <Text style={[styles.tableCell]}>
                                         IMPLEMENTING OFFICE / DEPARTMENT /
                                         LOCATION
                                     </Text>
@@ -274,10 +268,11 @@ export default function ExportToPdfDialog({
                                     <View
                                         style={{
                                             borderBottomWidth: 1,
+                                            borderRightWidth: 1,
                                             flex: 1,
                                         }}
                                     >
-                                        <Text style={styles.tableCell}>
+                                        <Text style={[styles.tableCell]}>
                                             SCHEDULE OF IMPLEMENTATION
                                         </Text>
                                     </View>
@@ -292,12 +287,13 @@ export default function ExportToPdfDialog({
                                                 styles.tableCol,
                                                 {
                                                     width: '50%',
-                                                    borderLeftWidth: 0,
-                                                    borderBottomWidth: 0,
+                                                    borderRightWidth: 1,
+                                                    // borderLeftWidth: 0,
+                                                    // borderBottomWidth: 0,
                                                 },
                                             ]}
                                         >
-                                            <Text style={styles.tableCell}>
+                                            <Text style={[styles.tableCell]}>
                                                 STARTING DATE
                                             </Text>
                                         </View>
@@ -306,7 +302,9 @@ export default function ExportToPdfDialog({
                                                 styles.tableCol,
                                                 {
                                                     width: '50%',
-                                                    borderBottomWidth: 0,
+                                                    borderRightWidth: 1,
+
+                                                    // borderBottomWidth: 0,
                                                 },
                                             ]}
                                         >
@@ -320,7 +318,10 @@ export default function ExportToPdfDialog({
                                 <View
                                     style={[
                                         styles.tableCol,
-                                        { width: `${COLUMN_WIDTHS[5]}%` },
+                                        {
+                                            width: `${COLUMN_WIDTHS[5]}%`,
+                                            borderRightWidth: 1,
+                                        },
                                     ]}
                                 >
                                     <Text style={styles.tableCell}>
@@ -330,7 +331,10 @@ export default function ExportToPdfDialog({
                                 <View
                                     style={[
                                         styles.tableCol,
-                                        { width: `${COLUMN_WIDTHS[6]}%` },
+                                        {
+                                            width: `${COLUMN_WIDTHS[6]}%`,
+                                            borderRightWidth: 1,
+                                        },
                                     ]}
                                 >
                                     <Text style={styles.tableCell}>
@@ -344,10 +348,15 @@ export default function ExportToPdfDialog({
                                         styles.headerGroup,
                                         {
                                             width: `${COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)}%`,
+                                            borderRightWidth: 1,
                                         },
                                     ]}
                                 >
-                                    <View style={{ borderBottomWidth: 1 }}>
+                                    <View
+                                        style={{
+                                            borderBottomWidth: 1,
+                                        }}
+                                    >
                                         <Text style={styles.tableCell}>
                                             AMOUNT (In thousand pesos)
                                         </Text>
@@ -371,9 +380,10 @@ export default function ExportToPdfDialog({
                                                     styles.tableCol,
                                                     {
                                                         width: `${(COLUMN_WIDTHS[7 + i] / COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)) * 100}%`,
-                                                        borderLeftWidth:
-                                                            i === 0 ? 0 : 1,
-                                                        borderBottomWidth: 0,
+                                                        // borderRightWidth:
+                                                        //     i === 4 ? 0 : 1,
+                                                        // i === 0 ? 0 : 1,
+                                                        // borderBottomWidth: 0,
                                                     },
                                                 ]}
                                             >
@@ -391,10 +401,15 @@ export default function ExportToPdfDialog({
                                         styles.headerGroup,
                                         {
                                             width: `${COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)}%`,
+                                            borderRightWidth: 1,
                                         },
                                     ]}
                                 >
-                                    <View style={{ borderBottomWidth: 1 }}>
+                                    <View
+                                        style={{
+                                            borderBottomWidth: 1,
+                                        }}
+                                    >
                                         <Text style={styles.tableCell}>
                                             Climate Change Expenditure (In
                                             thousand pesos)
@@ -411,9 +426,9 @@ export default function ExportToPdfDialog({
                                                     styles.tableCol,
                                                     {
                                                         width: `${(COLUMN_WIDTHS[12 + i] / COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)) * 100}%`,
-                                                        borderLeftWidth:
-                                                            i === 0 ? 0 : 1,
-                                                        borderBottomWidth: 0,
+                                                        // borderLeftWidth:
+                                                        //     i === 0 ? 0 : 1,
+                                                        // borderBottomWidth: 0,
                                                     },
                                                 ]}
                                             >
@@ -427,7 +442,10 @@ export default function ExportToPdfDialog({
                                 <View
                                     style={[
                                         styles.tableCol,
-                                        { width: `${COLUMN_WIDTHS[14]}%` },
+                                        {
+                                            width: `${COLUMN_WIDTHS[14]}%`,
+                                            borderRightWidth: 1,
+                                        },
                                     ]}
                                 >
                                     <Text style={styles.tableCell}>
@@ -439,10 +457,10 @@ export default function ExportToPdfDialog({
                             {/* HEADER ROW 1 (Numbers) */}
                             <View
                                 style={[
-                                    styles.tableRow,
                                     {
-                                        borderRightWidth: 1,
-                                        borderColor: '#000',
+                                        flexDirection: 'row',
+                                        // borderRightWidth: 1,
+                                        // borderColor: '#000',
                                     },
                                 ]}
                             >
@@ -453,7 +471,7 @@ export default function ExportToPdfDialog({
                                             styles.tableCol,
                                             {
                                                 width: `${width}%`,
-                                                borderLeftWidth: 1,
+                                                borderRightWidth: 1,
                                             },
                                         ]}
                                     >
@@ -475,9 +493,6 @@ export default function ExportToPdfDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            {/*<DialogTrigger className="rounded bg-blue-600 px-4 py-2 text-white">
-                Open PDF Preview
-            </DialogTrigger>*/}
             <DialogContent className="m-0 h-full rounded-none p-0 pt-11 sm:max-w-full">
                 <DialogTitle className="sr-only">PDF Viewer</DialogTitle>
                 <DialogDescription className="sr-only">
