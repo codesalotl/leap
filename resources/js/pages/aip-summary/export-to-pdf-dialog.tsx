@@ -7,6 +7,7 @@ import {
 import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import { PDFViewer } from '@react-pdf/renderer';
 import { FiscalYear, Ppa } from '@/pages/types/types';
+import { Font } from '@react-pdf/renderer';
 
 interface ExportToPdfDialogProps {
     open: boolean;
@@ -15,13 +16,30 @@ interface ExportToPdfDialogProps {
     fiscalYear: FiscalYear;
 }
 
+// This disables hyphenation globally
+Font.registerHyphenationCallback((word) => [word]);
+
 export default function ExportToPdfDialog({
     open,
     onOpenChange,
     aipEntries,
     fiscalYear,
 }: ExportToPdfDialogProps) {
-    const COLUMN_WIDTHS = [6, 12, 7, 5, 5, 7, 7, 7, 10, 6, 6, 8, 5, 5, 4];
+    console.log(aipEntries);
+
+    const COLUMN_WIDTHS = [
+        7.14, 17.86, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 5.36,
+        5.36, 5.36, 5.34,
+    ];
+
+    // // width checker, COLUMN_WIDTHS should equal to 100
+    // const COLUMN_WIDTHS_TOTAL = COLUMN_WIDTHS.reduce(
+    //     (acc, current) => acc + current,
+    //     0,
+    // );
+    // if (COLUMN_WIDTHS_TOTAL !== 100)
+    //     return console.log('total width:' + ' ' + COLUMN_WIDTHS_TOTAL);
+
     const keys = [
         'full_code',
         'title',
@@ -44,19 +62,80 @@ export default function ExportToPdfDialog({
 
     const styles = StyleSheet.create({
         page: { padding: 36 },
-        tableCol: {},
-        tableCell: {
+        tableHeaderCell: {
             margin: 2,
             fontSize: 6,
+            textAlign: 'center',
+        },
+        tableCell: {
+            margin: 2,
+            fontSize: 7,
             textAlign: 'center',
         },
         headerGroup: { flexDirection: 'column', padding: 0 },
     });
 
     const getNestedValue = (obj, path) => {
-        return (
-            path.split('.').reduce((acc, part) => acc && acc[part], obj) ?? ''
-        );
+        const value = path
+            .split('.')
+            .reduce((acc, part) => acc && acc[part], obj);
+
+        // 1. Handle Dates
+        if (
+            (path.includes('start_date') || path.includes('end_date')) &&
+            value
+        ) {
+            const parts = value.split('-');
+            if (parts.length === 3) {
+                const shortMonths = [
+                    'Jan',
+                    'Feb',
+                    'Mar',
+                    'Apr',
+                    'May',
+                    'Jun',
+                    'Jul',
+                    'Aug',
+                    'Sep',
+                    'Oct',
+                    'Nov',
+                    'Dec',
+                ];
+                const monthName = shortMonths[parseInt(parts[1]) - 1];
+                const day = parseInt(parts[2]);
+                return `${monthName}-${day}`;
+            }
+        }
+
+        // 2. Handle Amounts (Columns 7 through 11)
+        const amountFields = [
+            'ps_amount',
+            'mooe_amount',
+            'fe_amount',
+            'co_amount',
+            'total_amount',
+            'ccet_adaptation',
+            'ccet_mitigation',
+        ];
+        if (amountFields.some((field) => path.includes(field))) {
+            return formatNumber(value);
+        }
+
+        // 3. Fallback for any other null/undefined/empty string values
+        return value === null || value === undefined || value === ''
+            ? '-'
+            : value;
+    };
+
+    const formatNumber = (value) => {
+        const num = parseFloat(value);
+        // If it's null, undefined, NaN, or exactly 0, return "-"
+        if (!value || isNaN(num) || num === 0) return '-';
+
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(num);
     };
 
     const renderOrderedRows = (initialEntries) => {
@@ -94,55 +173,43 @@ export default function ExportToPdfDialog({
             result.push(
                 <View
                     key={`${item.id}-${level}`}
-                    style={[
-                        {
-                            flexDirection: 'row',
-                        },
-                    ]}
+                    style={{
+                        flexDirection: 'row',
+                    }}
                     wrap={false}
                 >
                     {COLUMN_WIDTHS.map((width, colIndex) => (
                         <View
                             key={colIndex}
-                            style={[
-                                styles.tableCol,
-                                {
-                                    width: `${width}%`,
-                                    borderRightWidth: 1,
-                                    borderLeftWidth: colIndex === 0 ? 1 : 0,
-                                    alignItems:
-                                        colIndex >= 7 && colIndex <= 11
-                                            ? 'flex-end'
-                                            : colIndex === 2 ||
-                                                colIndex === 3 ||
-                                                colIndex === 4
-                                              ? 'center'
-                                              : 'baseline',
-                                },
-                            ]}
+                            style={{
+                                width: `${width}%`,
+                                borderRightWidth: 1,
+                                borderLeftWidth: colIndex === 0 ? 1 : 0,
+                                alignItems:
+                                    (colIndex >= 7 && colIndex <= 11) ||
+                                    colIndex === 12 ||
+                                    colIndex === 13
+                                        ? 'flex-end'
+                                        : colIndex === 2 ||
+                                            colIndex === 3 ||
+                                            colIndex === 4 ||
+                                            colIndex === 6 ||
+                                            colIndex === 14
+                                          ? 'center'
+                                          : 'baseline',
+                            }}
                         >
                             <Text
                                 style={[
                                     styles.tableCell,
-                                    colIndex === 0 ? { fontSize: 4 } : {},
-                                    colIndex === 0 ||
-                                    colIndex === 1 ||
-                                    colIndex === 2 ||
-                                    colIndex === 3 ||
-                                    colIndex === 4 ||
-                                    colIndex === 5 ||
-                                    colIndex === 6 ||
-                                    colIndex === 7 ||
-                                    colIndex === 8 ||
-                                    colIndex === 9 ||
-                                    colIndex === 10 ||
-                                    colIndex === 11 ||
-                                    colIndex === 12 ||
-                                    colIndex === 13 ||
-                                    colIndex === 14
+                                    colIndex === 0 ? { fontSize: 4.5 } : {},
+                                    colIndex === 1 || colIndex === 5
                                         ? {
                                               textAlign: 'left',
-                                              // paddingLeft: level * 8,
+                                          }
+                                        : {},
+                                    colIndex === 1
+                                        ? {
                                               fontWeight:
                                                   level === 0 || level === 1
                                                       ? 'bold'
@@ -183,13 +250,7 @@ export default function ExportToPdfDialog({
                     orientation="landscape"
                     style={[styles.page]}
                 >
-                    <View
-                        style={{
-                            display: 'table',
-                            width: '100%',
-                        }}
-                    >
-                        {/* header main row */}
+                    <View>
                         <View fixed>
                             <View
                                 style={{
@@ -201,7 +262,7 @@ export default function ExportToPdfDialog({
                                 <Text
                                     style={{ fontSize: 10, fontWeight: 'bold' }}
                                 >
-                                    CY ${fiscalYear.year} Annual Investment
+                                    CY {fiscalYear.year} Annual Investment
                                     Program (AIP)
                                 </Text>
                                 <Text
@@ -215,62 +276,58 @@ export default function ExportToPdfDialog({
                                 style={{ marginBottom: 5, textAlign: 'left' }}
                             >
                                 <Text
-                                    style={{ fontSize: 8, fontWeight: 'bold' }}
+                                    style={{
+                                        fontSize: 8,
+                                        fontWeight: 'bold',
+                                    }}
                                 >
-                                    {`OFFICE: ${office}`}
+                                    {`OFFICE: `}
+                                    <Text
+                                        style={{ textDecoration: 'underline' }}
+                                    >{`${office}`}</Text>
                                 </Text>
                             </View>
 
+                            {/* header main row */}
                             <View
-                                style={[
-                                    {
-                                        flexDirection: 'row',
-                                        borderTopWidth: 1,
-                                        borderBottomWidth: 1,
-                                    },
-                                ]}
+                                style={{
+                                    flexDirection: 'row',
+                                    borderTopWidth: 1,
+                                    borderBottomWidth: 1,
+                                }}
                             >
                                 <View
-                                    style={[
-                                        styles.tableCol,
-                                        {
-                                            width: `${COLUMN_WIDTHS[0]}%`,
-                                            borderLeftWidth: 1,
-                                            borderRightWidth: 1,
-                                            justifyContent: 'center',
-                                        },
-                                    ]}
+                                    style={{
+                                        width: `${COLUMN_WIDTHS[0]}%`,
+                                        borderLeftWidth: 1,
+                                        borderRightWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
                                 >
-                                    <Text style={[styles.tableCell]}>
+                                    <Text style={[styles.tableHeaderCell]}>
                                         AIP REF. CODE
                                     </Text>
                                 </View>
                                 <View
-                                    style={[
-                                        styles.tableCol,
-                                        {
-                                            width: `${COLUMN_WIDTHS[1]}%`,
-                                            borderRightWidth: 1,
-                                            justifyContent: 'center',
-                                        },
-                                    ]}
+                                    style={{
+                                        width: `${COLUMN_WIDTHS[1]}%`,
+                                        borderRightWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
                                 >
-                                    <Text style={styles.tableCell}>
+                                    <Text style={styles.tableHeaderCell}>
                                         PROGRAM / PROJECT / ACTITIVTY
                                         DESCRIPTION
                                     </Text>
                                 </View>
                                 <View
-                                    style={[
-                                        styles.tableCol,
-                                        {
-                                            width: `${COLUMN_WIDTHS[2]}%`,
-                                            borderRightWidth: 1,
-                                            justifyContent: 'center',
-                                        },
-                                    ]}
+                                    style={{
+                                        width: `${COLUMN_WIDTHS[2]}%`,
+                                        borderRightWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
                                 >
-                                    <Text style={[styles.tableCell]}>
+                                    <Text style={[styles.tableHeaderCell]}>
                                         IMPLEMENTING OFFICE / DEPARTMENT /
                                         LOCATION
                                     </Text>
@@ -278,7 +335,6 @@ export default function ExportToPdfDialog({
 
                                 <View
                                     style={[
-                                        styles.tableCol,
                                         styles.headerGroup,
                                         {
                                             width: `${COLUMN_WIDTHS[3] + COLUMN_WIDTHS[4]}%`,
@@ -293,7 +349,7 @@ export default function ExportToPdfDialog({
                                             justifyContent: 'center',
                                         }}
                                     >
-                                        <Text style={[styles.tableCell]}>
+                                        <Text style={styles.tableHeaderCell}>
                                             SCHEDULE OF IMPLEMENTATION
                                         </Text>
                                     </View>
@@ -305,30 +361,28 @@ export default function ExportToPdfDialog({
                                         }}
                                     >
                                         <View
-                                            style={[
-                                                styles.tableCol,
-                                                {
-                                                    width: '50%',
-                                                    borderRightWidth: 1,
-                                                    justifyContent: 'center',
-                                                },
-                                            ]}
+                                            style={{
+                                                width: '50%',
+                                                borderRightWidth: 1,
+                                                justifyContent: 'center',
+                                            }}
                                         >
-                                            <Text style={[styles.tableCell]}>
+                                            <Text
+                                                style={styles.tableHeaderCell}
+                                            >
                                                 STARTING DATE
                                             </Text>
                                         </View>
                                         <View
-                                            style={[
-                                                styles.tableCol,
-                                                {
-                                                    width: '50%',
-                                                    borderRightWidth: 1,
-                                                    justifyContent: 'center',
-                                                },
-                                            ]}
+                                            style={{
+                                                width: '50%',
+                                                borderRightWidth: 1,
+                                                justifyContent: 'center',
+                                            }}
                                         >
-                                            <Text style={styles.tableCell}>
+                                            <Text
+                                                style={styles.tableHeaderCell}
+                                            >
                                                 COMPLETION DATE
                                             </Text>
                                         </View>
@@ -336,37 +390,30 @@ export default function ExportToPdfDialog({
                                 </View>
 
                                 <View
-                                    style={[
-                                        styles.tableCol,
-                                        {
-                                            width: `${COLUMN_WIDTHS[5]}%`,
-                                            borderRightWidth: 1,
-                                            justifyContent: 'center',
-                                        },
-                                    ]}
+                                    style={{
+                                        width: `${COLUMN_WIDTHS[5]}%`,
+                                        borderRightWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
                                 >
-                                    <Text style={[styles.tableCell]}>
+                                    <Text style={styles.tableHeaderCell}>
                                         EXPECTED OUTPUTS
                                     </Text>
                                 </View>
                                 <View
-                                    style={[
-                                        styles.tableCol,
-                                        {
-                                            width: `${COLUMN_WIDTHS[6]}%`,
-                                            borderRightWidth: 1,
-                                            justifyContent: 'center',
-                                        },
-                                    ]}
+                                    style={{
+                                        width: `${COLUMN_WIDTHS[6]}%`,
+                                        borderRightWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
                                 >
-                                    <Text style={styles.tableCell}>
+                                    <Text style={styles.tableHeaderCell}>
                                         FUNDING SOURCE
                                     </Text>
                                 </View>
 
                                 <View
                                     style={[
-                                        styles.tableCol,
                                         styles.headerGroup,
                                         {
                                             width: `${COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)}%`,
@@ -381,14 +428,13 @@ export default function ExportToPdfDialog({
                                             flex: 1,
                                         }}
                                     >
-                                        <Text style={styles.tableCell}>
+                                        <Text style={styles.tableHeaderCell}>
                                             AMOUNT (In thousand pesos)
                                         </Text>
                                     </View>
                                     <View
                                         style={{
                                             flexDirection: 'row',
-                                            flex: 1,
                                         }}
                                     >
                                         {[
@@ -400,17 +446,17 @@ export default function ExportToPdfDialog({
                                         ].map((label, i) => (
                                             <View
                                                 key={label}
-                                                style={[
-                                                    styles.tableCol,
-                                                    {
-                                                        width: `${(COLUMN_WIDTHS[7 + i] / COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)) * 100}%`,
-                                                        borderRightWidth: 1,
-                                                        justifyContent:
-                                                            'center',
-                                                    },
-                                                ]}
+                                                style={{
+                                                    width: `${(COLUMN_WIDTHS[7 + i] / COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)) * 100}%`,
+                                                    borderRightWidth: 1,
+                                                    justifyContent: 'center',
+                                                }}
                                             >
-                                                <Text style={styles.tableCell}>
+                                                <Text
+                                                    style={
+                                                        styles.tableHeaderCell
+                                                    }
+                                                >
                                                     {label}
                                                 </Text>
                                             </View>
@@ -420,7 +466,6 @@ export default function ExportToPdfDialog({
 
                                 <View
                                     style={[
-                                        styles.tableCol,
                                         styles.headerGroup,
                                         {
                                             width: `${COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)}%`,
@@ -434,7 +479,7 @@ export default function ExportToPdfDialog({
                                             justifyContent: 'center',
                                         }}
                                     >
-                                        <Text style={styles.tableCell}>
+                                        <Text style={styles.tableHeaderCell}>
                                             AMOUNT of Climate Change Expenditure
                                             (in thousand pesos)
                                         </Text>
@@ -450,17 +495,17 @@ export default function ExportToPdfDialog({
                                         ].map((label, i) => (
                                             <View
                                                 key={label}
-                                                style={[
-                                                    styles.tableCol,
-                                                    {
-                                                        width: `${(COLUMN_WIDTHS[12 + i] / COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)) * 100}%`,
-                                                        justifyContent:
-                                                            'center',
-                                                        borderRightWidth: 1,
-                                                    },
-                                                ]}
+                                                style={{
+                                                    width: `${(COLUMN_WIDTHS[12 + i] / COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)) * 100}%`,
+                                                    justifyContent: 'center',
+                                                    borderRightWidth: 1,
+                                                }}
                                             >
-                                                <Text style={styles.tableCell}>
+                                                <Text
+                                                    style={
+                                                        styles.tableHeaderCell
+                                                    }
+                                                >
                                                     {label}
                                                 </Text>
                                             </View>
@@ -468,16 +513,13 @@ export default function ExportToPdfDialog({
                                     </View>
                                 </View>
                                 <View
-                                    style={[
-                                        styles.tableCol,
-                                        {
-                                            width: `${COLUMN_WIDTHS[14]}%`,
-                                            borderRightWidth: 1,
-                                            justifyContent: 'center',
-                                        },
-                                    ]}
+                                    style={{
+                                        width: `${COLUMN_WIDTHS[14]}%`,
+                                        borderRightWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
                                 >
-                                    <Text style={styles.tableCell}>
+                                    <Text style={styles.tableHeaderCell}>
                                         CC Typology Code
                                     </Text>
                                 </View>
@@ -485,28 +527,23 @@ export default function ExportToPdfDialog({
 
                             {/* header number row */}
                             <View
-                                style={[
-                                    {
-                                        flexDirection: 'row',
-                                    },
-                                ]}
+                                style={{
+                                    flexDirection: 'row',
+                                }}
                             >
-                                {COLUMN_WIDTHS.map((width, i) => (
+                                {COLUMN_WIDTHS.map((width, index) => (
                                     <View
-                                        key={i}
-                                        style={[
-                                            styles.tableCol,
-                                            {
-                                                width: `${width}%`,
-                                                borderRightWidth: 1,
-                                                borderBottomWidth: 1,
-                                                borderLeftWidth:
-                                                    i === 0 ? 1 : 0,
-                                            },
-                                        ]}
+                                        key={index}
+                                        style={{
+                                            width: `${width}%`,
+                                            borderRightWidth: 1,
+                                            borderBottomWidth: 1,
+                                            borderLeftWidth:
+                                                index === 0 ? 1 : 0,
+                                        }}
                                     >
-                                        <Text style={styles.tableCell}>
-                                            {i + 1}
+                                        <Text style={styles.tableHeaderCell}>
+                                            {index + 1}
                                         </Text>
                                     </View>
                                 ))}
@@ -525,6 +562,22 @@ export default function ExportToPdfDialog({
                                 marginTop: -1,
                             }}
                         />
+
+                        <View
+                            fixed
+                            style={{
+                                textAlign: 'center',
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    fontSize: 10,
+                                    paddingTop: 10,
+                                    fontWeight: 'bold',
+                                }}
+                                render={({ pageNumber }) => `${pageNumber}`}
+                            ></Text>
+                        </View>
                     </View>
                 </Page>
             </Document>

@@ -27,7 +27,7 @@ import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
 import { useAipColumns } from '@/pages/aip-summary/table/columns';
 import { exportToPrint } from '@/pages/aip-summary/utils/export-utils';
 
-import ExportToPdfDialog from '@/pages/aip-summary/utils/export';
+import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
 
 import { FiscalYear, Ppa } from '@/pages/types/types';
 import { type BreadcrumbItem } from '@/types';
