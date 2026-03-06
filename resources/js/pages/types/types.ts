@@ -5,7 +5,8 @@ export interface AipEntry {
     start_date: string;
     end_date: string;
     expected_output: string;
-    funding_source?: FundingSource;
+    // funding_source?: FundingSource;
+    funding_source?: string[];
     ps_amount: string;
     mooe_amount: string;
     fe_amount: string;

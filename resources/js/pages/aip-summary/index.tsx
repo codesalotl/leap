@@ -29,13 +29,14 @@ import { useAipColumns } from '@/pages/aip-summary/table/columns';
 
 import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
 
-import { FiscalYear, Ppa } from '@/pages/types/types';
+import { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
 import { type BreadcrumbItem } from '@/types';
 
 interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
     aipEntries: Ppa[];
     masterPpas: Ppa[];
+    fundingSources: FundingSource[];
 }
 
 const existingPpaIds = (aipEntries: Ppa[]) => {
@@ -97,8 +98,10 @@ export default function AipSummaryTable({
     fiscalYear,
     aipEntries,
     masterPpas,
+    fundingSources,
 }: AipSummaryTableProp) {
-    console.log(aipEntries);
+    // console.log(aipEntries);
+    console.log(fundingSources);
 
     const [searchValue, setSearchValue] = useState('');
     const [selectorState, setSelectorState] = useState({
@@ -264,6 +267,7 @@ export default function AipSummaryTable({
                 onOpenChange={setIsEditOpen}
                 data={selectedEntry}
                 fiscalYear={fiscalYear}
+                fundingSources={fundingSources}
             />
 
             {/*alert dialog*/}

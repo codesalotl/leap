@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AipEntry;
+use App\Models\FundingSource;
 use App\Models\Aip;
 use App\Models\FiscalYear;
 use App\Models\Ppa;
@@ -50,8 +51,9 @@ class AipEntryController extends Controller
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipEntries,
-
             'masterPpas' => $ppaMasterList,
+            'fundingSources' => FundingSource::all(),
+
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
             'ppmpPriceList' => PpmpPriceList::all(),
