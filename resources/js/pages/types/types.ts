@@ -6,7 +6,7 @@ export interface AipEntry {
     end_date: string;
     expected_output: string;
     // funding_source?: FundingSource;
-    funding_source?: string[];
+    funding_source?: FundingSource[];
     ps_amount: string;
     mooe_amount: string;
     fe_amount: string;
@@ -217,4 +217,8 @@ export interface FundingSource {
     allow_typhoon: string;
     created_at: string | null;
     updated_at: string | null;
+    pivot: {
+        funding_source_id: number;
+        ppa_id: number;
+    }
 }

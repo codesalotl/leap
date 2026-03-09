@@ -16,12 +16,6 @@ export const formatNumber = (val: string) => {
 };
 
 export const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-
-    const date = new Date(dateString);
-
-    if (isNaN(date.getTime())) return dateString;
-
     const months = [
         'Jan',
         'Feb',
@@ -36,10 +30,10 @@ export const formatDate = (dateString: string) => {
         'Nov',
         'Dec',
     ];
-    const month = months[date.getMonth()];
-    const year = date.getFullYear().toString().slice(-2);
 
-    return `${month}-${year}`;
+    const dateSplit = dateString.split('-');
+
+    return `${months[Number(dateSplit[1]) - 1]}-${dateSplit[2]}`;
 };
 
 interface ColumnActions {
@@ -110,7 +104,7 @@ export const getColumns = ({
     }),
     columnHelper.accessor('office.acronym', {
         header: 'Implementing Office/Department',
-        size: 500,
+        size: 300,
         cell: (info) => (
             <div className="break-words whitespace-normal">
                 {info.getValue()}

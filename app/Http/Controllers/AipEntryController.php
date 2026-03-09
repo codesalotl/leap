@@ -74,11 +74,8 @@ class AipEntryController extends Controller
      */
     public function store(StoreAipEntryRequest $request, $fiscal_year_id)
     {
-        // dd($fiscal_year_id);
-
         $validated = $request->validated();
 
-        // 2. Prepare the data for bulk insertion
         $newEntries = collect($validated['ppa_ids'])
             ->map(function ($ppaId) use ($fiscal_year_id) {
                 return [
@@ -86,46 +83,13 @@ class AipEntryController extends Controller
                     'ppa_id' => $ppaId,
                     'created_at' => now(),
                     'updated_at' => now(),
-                    // Amounts will default to 0 via your migration
                 ];
             })
             ->toArray();
 
-        // 3. Insert into the database
         \DB::table('aip_entries')->insert($newEntries);
 
-        // 4. Return back to the frontend
         return back()->with('success', 'PPAs imported successfully!');
-
-        // return back()->with(
-        //     'success',
-        //     count($newEntries) . ' PPAs successfully imported to the AIP.',
-        // );
-
-        // $aip = FiscalYear::findOrFail($aip_id);
-
-        // $activePpaIds = Ppa::whereIn('id', $request->ppa_ids)
-        //     ->where('is_active', true)
-        //     ->pluck('id');
-
-        // if ($activePpaIds->isEmpty()) {
-        //     return back()->with(
-        //         'error',
-        //         'No active PPAs were found to import.',
-        //     );
-        // }
-
-        // DB::transaction(function () use ($activePpaIds, $aip) {
-        //     foreach ($activePpaIds as $ppaId) {
-        //         AipEntry::firstOrCreate(
-        //             [
-        //                 'fiscal_year_id' => $aip->id,
-        //                 'ppa_id' => $ppaId,
-        //             ],
-        //             [],
-        //         );
-        //     }
-        // });
     }
 
     /**
@@ -149,27 +113,10 @@ class AipEntryController extends Controller
      */
     public function update(UpdateAipEntryRequest $request, AipEntry $aipEntry)
     {
-        // 1. Validate the data
-        $validated = $request->validate([
-            'ppa_id' => 'required|integer',
-            'aipRefCode' => 'required|string',
-            'amount.ps' => 'required|numeric',
-            'amount.mooe' => 'required|numeric',
-            'amount.fe' => 'required|numeric',
-            'amount.co' => 'required|numeric',
-            'amount.total' => 'nullable|string',
-            'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
-            'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
-            'ccTypologyCode' => 'required|string',
-            'expectedOutputs' => 'required|string',
-            'fundingSource' => 'required|string',
-            'implementingOfficeDepartmentLocation' => 'required|string',
-            'ppaDescription' => 'required|string',
-            'scheduleOfImplementation.startingDate' => 'required|date',
-            'scheduleOfImplementation.completionDate' => 'required|date',
-        ]);
+        $validated = $request->validated();
 
-        // 2. Map and Update
+        $aipEntry->fundingSource()->sync($validated['fundingSource']);
+
         $aipEntry->update([
             'start_date' =>
                 $validated['scheduleOfImplementation']['startingDate'],
@@ -186,7 +133,7 @@ class AipEntryController extends Controller
                 $validated['amountOfCcExpenditure']['ccMitigation'],
         ]);
 
-        $affectedRows = PPA::where('id', $validated['ppa_id'])->update([
+        PPA::where('id', $validated['ppa_id'])->update([
             'title' => $validated['ppaDescription'],
         ]);
     }

@@ -1,16 +1,9 @@
-'use client';
-
 import React, { useState } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { ChevronsUpDown, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
 
 import {
     Command,
@@ -20,6 +13,7 @@ import {
     CommandItem,
     CommandDialog,
 } from '@/components/ui/command';
+
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
@@ -27,8 +21,8 @@ import { FundingSource } from '@/pages/types/types';
 
 interface MultiSelectProps {
     options: FundingSource[];
-    value: string[];
-    onChange: (value: string[]) => void;
+    value: FundingSource[];
+    onChange: (value: FundingSource[]) => void;
     placeholder?: string;
 }
 
@@ -38,20 +32,20 @@ export function MultiSelect({
     onChange,
     placeholder = 'Select items',
 }: MultiSelectProps) {
-    console.log(value);
-
     const [openDialog, setOpenDialog] = useState(false);
 
-    const toggle = (val: string) => {
-        if (value.includes(val)) {
-            onChange(value.filter((v) => v !== val));
+    const toggle = (option: FundingSource) => {
+        const exists = value.some((v) => v.id === option.id);
+
+        if (exists) {
+            onChange(value.filter((v) => v.id !== option.id));
         } else {
-            onChange([...value, val]);
+            onChange([...value, option]);
         }
     };
 
-    const remove = (val: string) => {
-        onChange(value.filter((v) => v !== val));
+    const remove = (option: FundingSource) => {
+        onChange(value.filter((v) => v.id !== option.id));
     };
 
     return (
@@ -70,41 +64,34 @@ export function MultiSelect({
                             </span>
                         )}
 
-                        {value.map((val) => {
-                            const option = options.find(
-                                (o) => String(o.id) === val,
-                            );
+                        {value.map((option) => (
+                            <Badge key={option.id} variant="secondary">
+                                {option.code}
 
-                            return (
-                                <Badge key={val} variant="secondary">
-                                    {option?.code}
-                                    <X
-                                        className="ml-1 h-3 w-3 cursor-pointer"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            remove(val);
-                                        }}
-                                    />
-                                </Badge>
-                            );
-                        })}
+                                <X
+                                    className="ml-1 h-3 w-3 cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        remove(option);
+                                    }}
+                                />
+                            </Badge>
+                        ))}
                     </div>
 
                     <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
                 </Button>
 
+                {/* Selected Items Display */}
                 <div className="flex flex-col gap-2">
-                    {value.map((val) => {
-                        const option = options.find(
-                            (o) => String(o.id) === val,
-                        );
-
-                        return (
-                            <div className="rounded-md border bg-muted p-2 text-white">
-                                {option?.code}
-                            </div>
-                        );
-                    })}
+                    {value.map((option) => (
+                        <div
+                            key={option.id}
+                            className="rounded-md border bg-muted p-2"
+                        >
+                            {option.code} - {option.title}
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -114,42 +101,48 @@ export function MultiSelect({
                 className="top-1/4 sm:max-w-[800px]"
             >
                 <Command>
-                    <CommandInput placeholder="Search..." />
+                    <CommandInput placeholder="Search funding source..." />
                     <CommandEmpty>No item found.</CommandEmpty>
 
                     <CommandGroup>
-                        <ScrollArea className="h-100">
-                            {options.map((option) => (
-                                <CommandItem
-                                    key={option.id}
-                                    onSelect={() => toggle(String(option.id))}
-                                    className="py-2"
-                                >
-                                    <Checkbox
-                                        checked={value.includes(
-                                            String(option.id),
-                                        )}
-                                        className="mr-2"
-                                    />
+                        <ScrollArea className="h-[400px]">
+                            {options.map((option) => {
+                                const selected = value.some(
+                                    (v) => v.id === option.id,
+                                );
 
-                                    <div>
-                                        <p className="text-xs opacity-50">
-                                            {option.fund_type}
-                                        </p>
-                                        <div className="flex items-center gap-2">
-                                            <p className="font-bold text-nowrap">
-                                                {option.code}
+                                return (
+                                    <CommandItem
+                                        key={option.id}
+                                        onSelect={() => toggle(option)}
+                                        className="py-2"
+                                    >
+                                        <Checkbox
+                                            checked={selected}
+                                            onCheckedChange={() =>
+                                                toggle(option)
+                                            }
+                                            className="mr-2"
+                                        />
+
+                                        <div>
+                                            <p className="text-xs opacity-50">
+                                                {option.fund_type}
                                             </p>
 
-                                            <Separator orientation="vertical" />
+                                            <div className="flex items-center gap-2">
+                                                <p className="font-bold whitespace-nowrap">
+                                                    {option.code}
+                                                </p>
 
-                                            <p className="bg-yellow">
-                                                {option.title}
-                                            </p>
+                                                <Separator orientation="vertical" />
+
+                                                <p>{option.title}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </CommandItem>
-                            ))}
+                                    </CommandItem>
+                                );
+                            })}
                         </ScrollArea>
                     </CommandGroup>
                 </Command>

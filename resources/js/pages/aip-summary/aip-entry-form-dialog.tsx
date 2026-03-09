@@ -29,27 +29,6 @@ import {
 import { FiscalYear, AipEntry, Ppa, FundingSource } from '@/pages/types/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import {
-    Combobox,
-    ComboboxChip,
-    ComboboxChips,
-    ComboboxChipsInput,
-    ComboboxContent,
-    ComboboxEmpty,
-    ComboboxItem,
-    ComboboxList,
-    ComboboxValue,
-    useComboboxAnchor,
-} from '@/components/ui/combobox';
-import {
-    Command,
-    CommandDialog,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
 import { useState } from 'react';
 import { MultiSelect } from './multiselect';
 import {
@@ -64,8 +43,7 @@ interface AipFormProps {
     onOpenChange: (open: boolean) => void;
     data: Ppa;
     fiscalYear: FiscalYear;
-    // fundingSources: FundingSource[];
-    funding_source: string[];
+    fundingSources: FundingSource[];
 }
 
 const amountSchema = z
@@ -86,8 +64,13 @@ const formSchema = z.object({
         completionDate: z.string().min(1, 'End date is required'),
     }),
     expectedOutputs: z.string().min(1, 'Outputs are required'),
-    // fundingSource: z.string().min(1, 'Funding source is required'),
-    fundingSource: z.array(z.string()),
+    fundingSource: z
+        .array(
+            z.object({
+                id: z.number(),
+            }),
+        )
+        .min(1, 'Select at least one funding source'),
     amount: z.object({
         ps: amountSchema,
         mooe: amountSchema,
@@ -141,6 +124,7 @@ const CurrencyInput = ({
     return (
         <Field data-invalid={fieldState.invalid} className="flex-1 pr-10">
             <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
+
             <Input
                 value={displayValue}
                 id={field.name}
@@ -160,19 +144,13 @@ const CurrencyInput = ({
                     field.onBlur();
                 }}
                 onChange={(e) => field.onChange(e.target.value)}
-                className="w-full text-right"
+                className="w-full text-right tabular-nums"
             />
+
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </Field>
     );
 };
-
-const fruits = [
-    { label: 'Apple', value: 'apple' },
-    { label: 'Banana', value: 'banana' },
-    { label: 'Orange', value: 'orange' },
-    { label: 'Mango', value: 'mango' },
-];
 
 export default function AipEntryFormDialog({
     open,
@@ -181,10 +159,7 @@ export default function AipEntryFormDialog({
     fiscalYear,
     fundingSources,
 }: AipFormProps) {
-    console.log(data);
-    console.log(fiscalYear);
-
-    const [value, setValue] = useState<string[]>([]);
+    // const [value, setValue] = useState<string[]>([]);
 
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
     const getInitialValues = (d: Ppa | null): z.infer<typeof formSchema> => ({
@@ -207,7 +182,7 @@ export default function AipEntryFormDialog({
         },
         amountOfCcExpenditure: {
             ccAdaptation: d?.aip_entry?.ccet_adaptation || '0.00',
-            ccMitigation: d?.aip_entry?.ccet_adaptation || '0.00',
+            ccMitigation: d?.aip_entry?.ccet_mitigation || '0.00',
         },
         ccTypologyCode: d?.aip_entry?.cc_typology_code || '',
     });
@@ -254,10 +229,14 @@ export default function AipEntryFormDialog({
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (!data?.id) return;
 
-        console.log(data.aip_entry.id);
+        const payload = {
+            ...values,
+            fundingSource: values.fundingSource.map((fund) => fund.id),
+        };
 
-        // router.put(`/aip-entries/${data.id}`, values, {
-        router.put(`/aip-entries/${data.aip_entry.id}`, values, {
+        console.log(payload);
+
+        router.put(`/aip-entries/${data.aip_entry?.id}`, payload, {
             onSuccess: () => {
                 onOpenChange(false);
             },
@@ -332,6 +311,7 @@ export default function AipEntryFormDialog({
                                                     Implementing Office /
                                                     Department / Location
                                                 </FieldLabel>
+
                                                 {/* Changed from Select to ReadOnly Input */}
                                                 <Input
                                                     {...field}
@@ -342,6 +322,7 @@ export default function AipEntryFormDialog({
                                                         fieldState.invalid
                                                     }
                                                 />
+
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -353,8 +334,6 @@ export default function AipEntryFormDialog({
                                         )}
                                     />
                                 </div>
-
-                                {/* <Separator /> */}
 
                                 <div className="grid grid-cols-2 gap-8">
                                     <div className="flex flex-col gap-8">
@@ -707,6 +686,7 @@ export default function AipEntryFormDialog({
                                                                 Other Operating
                                                                 Expenses (MOOE)
                                                             </FieldLabel>
+
                                                             <div className="flex gap-2">
                                                                 <Input
                                                                     {...field}
@@ -718,11 +698,13 @@ export default function AipEntryFormDialog({
                                                                     }
                                                                     placeholder="0.00"
                                                                     readOnly
-                                                                    className="cursor-not-allowed bg-muted text-right font-mono text-muted-foreground"
+                                                                    // className="cursor-not-allowed bg-muted text-right font-mono text-muted-foreground tabular-nums"
+                                                                    className="text-right tabular-nums"
                                                                     value={formatCurrency(
                                                                         field.value,
                                                                     )}
                                                                 />
+
                                                                 <Button
                                                                     type="button"
                                                                     variant="outline"
@@ -742,6 +724,7 @@ export default function AipEntryFormDialog({
                                                                     <ListPlus className="h-4 w-4" />
                                                                 </Button>
                                                             </div>
+
                                                             {fieldState.invalid && (
                                                                 <FieldError
                                                                     errors={[
@@ -911,14 +894,25 @@ export default function AipEntryFormDialog({
                                                             Funding Source
                                                         </FieldLabel>
 
-                                                        <div className="w-[500px]">
+                                                        <div
+                                                            className="w-[500px]"
+                                                            // data-invalid={
+                                                            //     fieldState.invalid
+                                                            // }
+                                                        >
                                                             <MultiSelect
                                                                 options={
                                                                     fundingSources
                                                                 }
-                                                                value={value}
-                                                                onChange={
-                                                                    setValue
+                                                                value={
+                                                                    field.value
+                                                                }
+                                                                onChange={(
+                                                                    selectedValues,
+                                                                ) =>
+                                                                    field.onChange(
+                                                                        selectedValues,
+                                                                    )
                                                                 }
                                                                 placeholder="Select funding source..."
                                                             />
