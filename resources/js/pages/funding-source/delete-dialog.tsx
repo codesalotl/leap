@@ -39,20 +39,29 @@ export default function DeleteDialog({
 
     return (
         <AlertDialog open={open} onOpenChange={setOpen}>
-            <AlertDialogContent>
+            <AlertDialogContent
+                onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
+            >
                 <AlertDialogHeader>
                     <AlertDialogTitle>
                         Are you absolutely sure?
                     </AlertDialogTitle>
+
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently
-                        delete {initialData?.title}.
+                        delete{' '}
+                        <span className="font-bold">
+                            "{initialData?.title}"
+                        </span>
+                        .
                     </AlertDialogDescription>
                 </AlertDialogHeader>
+
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={isLoading}>
                         Cancel
                     </AlertDialogCancel>
+
                     <Button
                         onClick={handleDelete}
                         variant={'destructive'}

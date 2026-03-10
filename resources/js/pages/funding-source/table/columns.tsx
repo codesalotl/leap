@@ -2,7 +2,7 @@ import { ColumnDef, createColumnHelper, RowData } from '@tanstack/react-table';
 import { FundingSource } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash } from 'lucide-react';
+import { Pencil, Trash, Check, X } from 'lucide-react';
 
 declare module '@tanstack/table-core' {
     interface TableMeta<TData extends RowData> {
@@ -39,13 +39,17 @@ export const columns: ColumnDef<FundingSource, any>[] = [
         cell: (value) => (
             <span className="text-wrap">
                 {value.getValue() ? (
-                    <span>
-                        <Badge>True</Badge>
-                    </span>
+                    <Badge className="flex items-center gap-1">
+                        <Check /> True
+                    </Badge>
                 ) : (
-                    <span>
-                        <Badge variant="secondary">False</Badge>
-                    </span>
+                    <Badge
+                        variant="secondary"
+                        className="flex items-center gap-1"
+                    >
+                        <X />
+                        False
+                    </Badge>
                 )}
             </span>
         ),

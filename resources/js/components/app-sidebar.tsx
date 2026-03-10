@@ -13,7 +13,14 @@ import { dashboard } from '@/routes';
 import { index } from '@/routes/aip';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { LayoutGrid, FileText, Users, FolderTree } from 'lucide-react';
+import {
+    LayoutGrid,
+    FileText,
+    Users,
+    FolderTree,
+    BanknoteArrowUp,
+    Gem,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -33,31 +40,6 @@ const mainNavItems: NavItem[] = [
         icon: FileText,
     },
     {
-        title: 'Funding Sources',
-        href: '/funding-sources',
-        icon: FileText,
-    },
-    // {
-    //     title: 'PPMP Management',
-    //     href: '/ppmp-headers',
-    //     icon: ShoppingCart,
-    // },
-    // {
-    //     title: 'PPMP Price List',
-    //     href: '/ppmp-price-list',
-    //     icon: DollarSign,
-    // },
-    // {
-    //     title: 'Chart of Accounts',
-    //     href: '/chart-of-accounts',
-    //     icon: BookOpen,
-    // },
-    // {
-    //     title: 'Sectors',
-    //     href: '/sectors',
-    //     icon: Building,
-    // },
-    {
         title: 'Offices',
         href: '/offices',
         icon: Users,
@@ -65,7 +47,12 @@ const mainNavItems: NavItem[] = [
     {
         title: 'Price Lists',
         href: '/price-lists',
-        icon: Users,
+        icon: Gem,
+    },
+    {
+        title: 'Funding Sources',
+        href: '/funding-sources',
+        icon: BanknoteArrowUp,
     },
 ];
 
