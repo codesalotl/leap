@@ -1,6 +1,5 @@
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -10,6 +9,9 @@ import {
 } from '@/components/ui/alert-dialog';
 import { FundingSource } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
+import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 interface DeleteDialogProps {
     open: boolean;
@@ -24,11 +26,14 @@ export default function DeleteDialog({
 }: DeleteDialogProps) {
     console.log(initialData);
 
-    function handleDelete() {
-        console.log('delete data');
+    const [isLoading, setIsLoading] = useState(false);
 
+    function handleDelete() {
         router.visit(`/funding-sources/${initialData?.id}`, {
             method: 'delete',
+            onStart: () => setIsLoading(true),
+            onFinish: () => setIsLoading(false),
+            onSuccess: () => setOpen(false),
         });
     }
 
@@ -45,10 +50,22 @@ export default function DeleteDialog({
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>
-                        Continue
-                    </AlertDialogAction>
+                    <AlertDialogCancel disabled={isLoading}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <Button
+                        onClick={handleDelete}
+                        variant={'destructive'}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <span className="flex items-center gap-1">
+                                <Spinner /> Deleting
+                            </span>
+                        ) : (
+                            'Delete'
+                        )}
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

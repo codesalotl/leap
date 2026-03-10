@@ -1,6 +1,7 @@
 import { ColumnDef, createColumnHelper, RowData } from '@tanstack/react-table';
 import { FundingSource } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash } from 'lucide-react';
 
 declare module '@tanstack/table-core' {
@@ -28,20 +29,32 @@ export const columns: ColumnDef<FundingSource, any>[] = [
     }),
     columnHelper.accessor('description', {
         header: 'Description',
-        cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
+        size: 300,
+        cell: (value) => (
+            <span className="text-wrap">{value.getValue() ?? '-'}</span>
+        ),
     }),
     columnHelper.accessor('allow_typhoon', {
         header: 'Allow Typhoon',
         cell: (value) => (
             <span className="text-wrap">
-                {value.getValue() ? 'True' : 'False'}
+                {value.getValue() ? (
+                    <span>
+                        <Badge>True</Badge>
+                    </span>
+                ) : (
+                    <span>
+                        <Badge variant="secondary">False</Badge>
+                    </span>
+                )}
             </span>
         ),
     }),
     columnHelper.display({
         id: 'action',
+        size: 87,
         cell: ({ row, table }) => (
-            <div className="flex">
+            <div className="flex gap-0.5">
                 <Button
                     size="icon"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}

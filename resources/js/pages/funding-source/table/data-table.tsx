@@ -1,10 +1,12 @@
+import { useState, CSSProperties, ReactElement } from 'react';
 import {
+    Column,
     ColumnDef,
     flexRender,
     getCoreRowModel,
     useReactTable,
+    getFilteredRowModel,
 } from '@tanstack/react-table';
-
 import {
     Table,
     TableBody,
@@ -13,82 +15,157 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     onEdit?: (record: TData) => void;
     onDelete?: (record: TData) => void;
+    children: ReactElement;
 }
+
+const getCommonPinningStyles = <TData,>(
+    column: Column<TData>,
+): CSSProperties => {
+    const isPinned = column.getIsPinned();
+    const isLastLeftPinnedColumn =
+        isPinned === 'left' && column.getIsLastColumn('left');
+    const isFirstRightPinnedColumn =
+        isPinned === 'right' && column.getIsFirstColumn('right');
+
+    return {
+        boxShadow: isLastLeftPinnedColumn
+            ? '-4px 0 4px -4px gray inset'
+            : isFirstRightPinnedColumn
+              ? '1px 0 0 0 var(--muted) inset'
+              : undefined,
+        left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+        right:
+            isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+        opacity: isPinned ? 0.95 : 1,
+        position: isPinned ? 'sticky' : 'relative',
+        width: column.getSize(),
+        backgroundColor: isFirstRightPinnedColumn ? 'var(--background)' : '',
+    };
+};
 
 export function DataTable<TData, TValue>({
     columns,
     data,
     onEdit,
     onDelete,
+    children,
 }: DataTableProps<TData, TValue>) {
+    const [globalFilter, setGlobalFilter] = useState<any>([]);
+
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
         meta: { onEdit, onDelete },
+        initialState: {
+            columnPinning: {
+                right: ['action'],
+            },
+        },
+        getFilteredRowModel: getFilteredRowModel(),
+        state: {
+            globalFilter,
+        },
+        onGlobalFilterChange: setGlobalFilter,
     });
 
     return (
-        <Table style={{ tableLayout: 'fixed' }}>
-            <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => {
-                            return (
-                                <TableHead
-                                    key={header.id}
-                                    style={{ width: header.getSize() }}
-                                >
-                                    {header.isPlaceholder
-                                        ? null
-                                        : flexRender(
-                                              header.column.columnDef.header,
-                                              header.getContext(),
-                                          )}
-                                </TableHead>
-                            );
-                        })}
-                    </TableRow>
-                ))}
-            </TableHeader>
+        <div className="flex flex-col gap-4">
+            <div className="flex justify-between">
+                <Input
+                    placeholder="Filter funding source..."
+                    value={table.getState().globalFilter ?? ''}
+                    onChange={(event) =>
+                        table.setGlobalFilter(event.target.value)
+                    }
+                    className="max-w-sm"
+                />
 
-            <TableBody>
-                {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row) => (
-                        <TableRow
-                            key={row.id}
-                            data-state={row.getIsSelected() && 'selected'}
-                        >
-                            {row.getVisibleCells().map((cell) => (
-                                <TableCell
-                                    key={cell.id}
-                                    style={{ width: cell.column.getSize() }}
+                {children}
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+                <Table style={{ tableLayout: 'fixed' }}>
+                    <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            style={{
+                                                width: header.getSize(),
+                                                ...getCommonPinningStyles(
+                                                    header.column,
+                                                ),
+                                                opacity: 1.0,
+                                                backgroundColor:
+                                                    'var(--primary)',
+                                            }}
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                      header.column.columnDef
+                                                          .header,
+                                                      header.getContext(),
+                                                  )}
+                                        </TableHead>
+                                    );
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+
+                    <TableBody>
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={
+                                        row.getIsSelected() && 'selected'
+                                    }
                                 >
-                                    {flexRender(
-                                        cell.column.columnDef.cell,
-                                        cell.getContext(),
-                                    )}
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            style={{
+                                                width: cell.column.getSize(),
+                                                ...getCommonPinningStyles(
+                                                    cell.column,
+                                                ),
+                                            }}
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext(),
+                                            )}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
+                                    No results.
                                 </TableCell>
-                            ))}
-                        </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell
-                            colSpan={columns.length}
-                            className="h-24 text-center"
-                        >
-                            No results.
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+        </div>
     );
 }

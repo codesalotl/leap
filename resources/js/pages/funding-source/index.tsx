@@ -49,15 +49,15 @@ export default function FundingSourcePage({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
-                <div className="flex justify-end">
-                    <Button onClick={handleAdd}>Add Funding Source</Button>
-                </div>
-
                 <FundingSourceTablePage
                     data={fundingSources}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
-                />
+                >
+                    <div className="flex justify-end">
+                        <Button onClick={handleAdd}>Add Funding Source</Button>
+                    </div>
+                </FundingSourceTablePage>
             </div>
 
             <FormDialog

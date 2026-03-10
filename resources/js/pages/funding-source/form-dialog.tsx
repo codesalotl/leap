@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { router } from '@inertiajs/react';
 
@@ -44,6 +45,8 @@ export default function FormDialog({
     initialData,
 }: FormDialogProps) {
     console.log(initialData);
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const isEditing = !!initialData;
 
@@ -73,17 +76,21 @@ export default function FormDialog({
     }, [initialData, open, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log('Submitting:', data);
-        console.log(initialData);
-
         isEditing
             ? router.visit(`/funding-sources/${initialData.id}`, {
                   method: 'patch',
                   data,
+                  onStart: () => setIsLoading(true),
+                  onFinish: () => setIsLoading(false),
+                  onSuccess: () => setOpen(false),
               })
-            : router.visit('/funding-sources', { method: 'post', data });
-
-        setOpen(false);
+            : router.visit('/funding-sources', {
+                  method: 'post',
+                  data,
+                  onStart: () => setIsLoading(true),
+                  onFinish: () => setIsLoading(false),
+                  onSuccess: () => setOpen(false),
+              });
     }
 
     return (
@@ -248,12 +255,32 @@ export default function FormDialog({
                 </form>
 
                 <DialogFooter>
-                    <DialogClose asChild>
+                    <DialogClose asChild disabled={isLoading}>
                         <Button variant="outline">Cancel</Button>
                     </DialogClose>
 
-                    <Button type="submit" form="funding-source-form">
-                        {isEditing ? 'Save Changes' : 'Create Source'}
+                    <Button
+                        type="submit"
+                        form="funding-source-form"
+                        disabled={isLoading}
+                    >
+                        {isEditing ? (
+                            isLoading ? (
+                                <span className="flex items-center gap-1">
+                                    <Spinner />
+                                    Saving Changes
+                                </span>
+                            ) : (
+                                'Save Changes'
+                            )
+                        ) : isLoading ? (
+                            <span className="flex items-center gap-1">
+                                <Spinner />
+                                Creating Source
+                            </span>
+                        ) : (
+                            'Create Source'
+                        )}
                     </Button>
                 </DialogFooter>
             </DialogContent>
