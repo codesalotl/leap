@@ -1,4 +1,4 @@
-// import { useState } from 'react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 // import DataTable from '@/pages/price-list/table/data-table';
@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button';
 // import ExcelJS from 'exceljs';
 import { PriceList, ChartOfAccount, PpmpCategory } from '@/pages/types/types';
 import PriceListTablePage from '@/pages/price-list/table/page';
+import FormDialog from '@/pages/price-list/form-dialog';
+import DeleteDialog from '@/pages/price-list/delete-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Price Lists', href: '#' }];
 
 interface PriceListPageProps {
     priceList: PriceList[];
-    chartOfAccounts: ChartOfAccount;
-    ppmpCategory: PpmpCategory;
+    chartOfAccounts: ChartOfAccount[];
+    ppmpCategory: PpmpCategory[];
 }
 
 export default function PriceListPage({
@@ -23,6 +25,9 @@ export default function PriceListPage({
     chartOfAccounts,
     ppmpCategory,
 }: PriceListPageProps) {
+    const [openEdit, setOpenEdit] = useState(false);
+    const [openDelete, setOpenDelete] = useState(false);
+
     // const [file, setFile] = useState(null);
 
     // async function handleFileUpload() {
@@ -88,10 +93,26 @@ export default function PriceListPage({
     //     };
     // }
 
+    function handleAdd() {
+        setOpenEdit(true);
+    }
+
+    function handleEdit() {
+        setOpenEdit(true);
+    }
+
+    function handleDelete() {
+        setOpenDelete(true);
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
-                <PriceListTablePage data={priceList}>
+                <PriceListTablePage
+                    data={priceList}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                >
                     <div className="flex gap-4">
                         {/* file import */}
                         <div className="flex gap-2">
@@ -109,10 +130,19 @@ export default function PriceListPage({
                             </Button>
                         </div>
 
-                        <Button>Add Price List</Button>
+                        <Button onClick={handleAdd}>Add Price List</Button>
                     </div>
                 </PriceListTablePage>
             </div>
+
+            <FormDialog
+                open={openEdit}
+                onOpenChange={setOpenEdit}
+                chartOfAccounts={chartOfAccounts}
+                ppmpCategories={ppmpCategory}
+            />
+
+            <DeleteDialog open={openDelete} onOpenChange={setOpenDelete} />
         </AppLayout>
     );
 }

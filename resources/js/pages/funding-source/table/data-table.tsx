@@ -92,7 +92,7 @@ export function DataTable<TData>({
                 {children}
             </div>
 
-            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+            <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                 <Table style={{ tableLayout: 'fixed' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -106,9 +106,9 @@ export function DataTable<TData>({
                                                 ...getCommonPinningStyles(
                                                     header.column,
                                                 ),
-                                                opacity: 1.0,
                                                 backgroundColor:
                                                     'var(--primary)',
+                                                color: 'var(--primary-foreground)',
                                             }}
                                         >
                                             {header.isPlaceholder

@@ -117,7 +117,7 @@ export default function PpmpPage({
                     </div>
                 </div>
 
-                <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+                <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                     <DataTable
                         ppmpItems={ppmpItems}
                         onDelete={(ppmp) => {

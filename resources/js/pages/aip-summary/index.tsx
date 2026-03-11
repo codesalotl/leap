@@ -236,7 +236,7 @@ export default function AipSummaryTable({
                         </div>
                     </div>
 
-                    <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+                    <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                         <DataTable
                             data={aipEntries}
                             columns={columns}

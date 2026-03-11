@@ -1,7 +1,14 @@
-import { createColumnHelper } from '@tanstack/react-table';
+import { createColumnHelper, RowData } from '@tanstack/react-table';
 import { PriceList } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash } from 'lucide-react';
+
+declare module '@tanstack/table-core' {
+    interface TableMeta<TData extends RowData> {
+        onEdit?: (record: TData) => void;
+        onDelete?: (record: TData) => void;
+    }
+}
 
 const columnHelper = createColumnHelper<PriceList>();
 
@@ -46,13 +53,21 @@ export const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 85,
-        cell: () => (
+        size: 72,
+        cell: ({ row, table }) => (
             <div className="flex gap-0.5">
-                <Button size="icon">
+                <Button
+                    size="icon"
+                    onClick={() => table.options.meta?.onEdit?.(row.original)}
+                >
                     <Pencil />
                 </Button>
-                <Button size="icon" variant="destructive">
+
+                <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => table.options.meta?.onDelete?.(row.original)}
+                >
                     <Trash />
                 </Button>
             </div>

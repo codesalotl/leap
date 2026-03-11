@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
     data: TData[];
+    onEdit?: (record: TData) => void;
+    onDelete?: (record: TData) => void;
     children: ReactElement;
 }
 
@@ -42,7 +44,6 @@ const getCommonPinningStyles = <TData,>(
         left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
         right:
             isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-        opacity: isPinned ? 0.95 : 1,
         position: isPinned ? 'sticky' : 'relative',
         width: column.getSize(),
         backgroundColor: isFirstRightPinnedColumn ? 'var(--background)' : '',
@@ -52,6 +53,8 @@ const getCommonPinningStyles = <TData,>(
 export default function DataTable<TData>({
     columns,
     data,
+    onEdit,
+    onDelete,
     children,
 }: DataTableProps<TData>) {
     const [globalFilter, setGlobalFilter] = useState<any>([]);
@@ -60,7 +63,7 @@ export default function DataTable<TData>({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
-        // meta: { onEdit, onDelete },
+        meta: { onEdit, onDelete },
         initialState: {
             columnPinning: {
                 right: ['action'],
@@ -88,7 +91,7 @@ export default function DataTable<TData>({
                 {children}
             </div>
 
-            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+            <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                 <Table style={{ tableLayout: 'fixed' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -102,6 +105,7 @@ export default function DataTable<TData>({
                                                 header.column,
                                             ),
                                             backgroundColor: 'var(--primary)',
+                                            color: 'var(--primary-foreground)',
                                         }}
                                     >
                                         {header.isPlaceholder

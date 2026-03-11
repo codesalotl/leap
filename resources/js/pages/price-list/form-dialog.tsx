@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -47,7 +47,7 @@ const formSchema = z
             .number()
             .refine((val) => val !== undefined && val !== null && val !== 0, {
                 message: 'Expense account is required',
-            }),
+            }), // expense account
         category: z.number().optional(),
         customCategory: z.string().optional(),
         itemNo: z.string().min(1, 'Item number is required.'),
@@ -79,6 +79,7 @@ export default function FormDialog({
     onOpenChange,
     chartOfAccounts,
     ppmpCategories,
+
     ppmpPriceList = [],
     selectedEntry = null,
     ppmpItems = [],
@@ -104,13 +105,11 @@ export default function FormDialog({
         },
     });
 
-    // Watch the custom item toggle
     const isCustomItem = form.watch('isCustomItem');
     const isCustomCategory = form.watch('isCustomCategory');
     const selectedExpenseAccount = form.watch('expenseAccount');
     const selectedCategory = form.watch('category');
 
-    // Flatten all price lists from all chart of accounts
     const allPriceLists = chartOfAccounts.flatMap(
         (account) =>
             account.ppmp_price_lists?.map((priceList) => ({
@@ -132,14 +131,10 @@ export default function FormDialog({
         return matchesAccount && matchesCategory;
     });
 
-    // Track if expense account change was triggered by description selection
-    const isExpenseAccountChangingFromDescription = React.useRef(false);
+    const isExpenseAccountChangingFromDescription = useRef(false);
 
-    // Clear description and related fields when expense account changes manually (only in price list mode)
-    React.useEffect(() => {
-        // This runs whenever selectedExpenseAccount or selectedCategory changes
+    useEffect(() => {
         if (!isExpenseAccountChangingFromDescription.current && !isCustomItem) {
-            // Clearing the fields
             form.setValue('description', '');
             form.setValue('itemNo', '');
             form.setValue('unitOfMeasurement', '');
@@ -147,14 +142,10 @@ export default function FormDialog({
             form.setValue('ppmp_price_list_id', 0);
         }
 
-        // Reset the guard for the next selection
         isExpenseAccountChangingFromDescription.current = false;
-
-        // Added selectedCategory here so manual category changes trigger this block
     }, [selectedExpenseAccount, selectedCategory, form, isCustomItem]);
 
-    // Clear fields when switching between modes
-    React.useEffect(() => {
+    useEffect(() => {
         form.setValue('description', '');
         form.setValue('itemNo', '');
         form.setValue('unitOfMeasurement', '');
@@ -164,70 +155,44 @@ export default function FormDialog({
         form.setValue('customCategory', '');
     }, [isCustomItem, form]);
 
-    // Clear category fields when switching between custom and predefined categories
-    React.useEffect(() => {
+    useEffect(() => {
         form.setValue('category', undefined);
         form.setValue('customCategory', '');
     }, [isCustomCategory, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        // console.log(data);
+        const itemNumber = parseInt(data.itemNo);
 
-        if (isCustomItem) {
-            // console.log('yes custom item');
-
-            const itemNumber = parseInt(data.itemNo);
-
-            if (isNaN(itemNumber) || itemNumber <= 0) {
-                alert('Please enter a valid item number (positive integer)');
-                return;
-            }
-
-            const price = parseFloat(data.price);
-            if (isNaN(price) || price < 0) {
-                alert('Please enter a valid price (positive number)');
-                return;
-            }
-
-            const customItemData = {
-                aip_entry_id: data.aip_entry_id,
-                item_number: itemNumber,
-                description: data.description,
-                unit_of_measurement: data.unitOfMeasurement,
-                price: price,
-                chart_of_account_id: data.expenseAccount,
-                ppmp_category_id: isCustomCategory ? null : data.category,
-                custom_category: isCustomCategory ? data.customCategory : null,
-            };
-
-            console.log(customItemData);
-
-            router.post('/ppmp/custom', customItemData, {
-                onSuccess: () => onOpenChange(false),
-                onError: (errors) =>
-                    console.error('Error creating custom PPMP item:', errors),
-                preserveState: false,
-            });
-        } else {
-            // console.log('no custom item');
-
-            if (!data.ppmp_price_list_id) {
-                alert('Please select an item from the price list');
-                return;
-            }
-
-            const submitData = {
-                aip_entry_id: data.aip_entry_id,
-                ppmp_price_list_id: data.ppmp_price_list_id,
-            };
-
-            router.post('/ppmp', submitData, {
-                onSuccess: () => onOpenChange(false),
-                onError: (errors) =>
-                    console.error('Error creating PPMP item:', errors),
-                preserveState: false,
-            });
+        if (isNaN(itemNumber) || itemNumber <= 0) {
+            alert('Please enter a valid item number (positive integer)');
+            return;
         }
+
+        const price = parseFloat(data.price);
+        if (isNaN(price) || price < 0) {
+            alert('Please enter a valid price (positive number)');
+            return;
+        }
+
+        const customItemData = {
+            aip_entry_id: data.aip_entry_id,
+            item_number: itemNumber,
+            description: data.description,
+            unit_of_measurement: data.unitOfMeasurement,
+            price: price,
+            chart_of_account_id: data.expenseAccount,
+            ppmp_category_id: isCustomCategory ? null : data.category,
+            custom_category: isCustomCategory ? data.customCategory : null,
+        };
+
+        console.log(customItemData);
+
+        router.post('/ppmp/custom', customItemData, {
+            onSuccess: () => onOpenChange(false),
+            onError: (errors) =>
+                console.error('Error creating custom PPMP item:', errors),
+            preserveState: false,
+        });
     }
 
     const handleReset = () => {
@@ -248,7 +213,6 @@ export default function FormDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            {/* Increased width to max-w-2xl for better side-by-side layout */}
             <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>Add PPMP Item</DialogTitle>
@@ -257,27 +221,8 @@ export default function FormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                {/* Toggle for Price List vs Custom Item */}
-                <div className="flex items-center space-x-2 py-2">
-                    <Switch
-                        id="custom-item-toggle"
-                        checked={isCustomItem}
-                        onCheckedChange={(checked) =>
-                            form.setValue('isCustomItem', checked)
-                        }
-                    />
-                    <label
-                        htmlFor="custom-item-toggle"
-                        className="text-sm font-medium"
-                    >
-                        {isCustomItem ? 'Custom Item' : 'Price List Item'}
-                    </label>
-                </div>
-
                 <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
-                    {/* Replaced FieldGroup with CSS Grid */}
                     <div className="grid gap-4 md:grid-cols-2">
-                        {/* Row 1: Expense Account (Full Width) */}
                         <div className="md:col-span-2">
                             <Controller
                                 name="expenseAccount"
@@ -291,7 +236,6 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            {/*<FieldContent>*/}
                                             <FieldLabel htmlFor="expense-select">
                                                 Expense Account
                                             </FieldLabel>
@@ -340,10 +284,12 @@ export default function FormDialog({
                                             >
                                                 <Command>
                                                     <CommandInput placeholder="Search account number or title..." />
+
                                                     <CommandList>
                                                         <CommandEmpty>
                                                             No account found.
                                                         </CommandEmpty>
+
                                                         <CommandGroup heading="Chart of Accounts">
                                                             {chartOfAccounts.map(
                                                                 (account) => (
@@ -372,6 +318,7 @@ export default function FormDialog({
                                                                                     account.account_title
                                                                                 }
                                                                             </div>
+
                                                                             {field.value ===
                                                                                 account.id && (
                                                                                 <Check className="ml-2 h-4 w-4 opacity-100" />
@@ -390,14 +337,12 @@ export default function FormDialog({
                                                     errors={[fieldState.error]}
                                                 />
                                             )}
-                                            {/*</FieldContent>*/}
                                         </Field>
                                     );
                                 }}
                             />
                         </div>
 
-                        {/* Row 2: Category (Left) */}
                         <div className="">
                             <Field>
                                 <FieldLabel htmlFor="category-select">
@@ -461,6 +406,7 @@ export default function FormDialog({
                                                         {selectedCat
                                                             ? selectedCat.name
                                                             : 'Select category'}
+
                                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                     </Button>
 
@@ -475,11 +421,13 @@ export default function FormDialog({
                                                     >
                                                         <Command>
                                                             <CommandInput placeholder="Search category..." />
+
                                                             <CommandList>
                                                                 <CommandEmpty>
                                                                     No category
                                                                     found.
                                                                 </CommandEmpty>
+
                                                                 <CommandGroup heading="Categories">
                                                                     {ppmpCategories.map(
                                                                         (
@@ -505,6 +453,7 @@ export default function FormDialog({
                                                                                     {
                                                                                         category.name
                                                                                     }
+
                                                                                     {field.value ===
                                                                                         category.id && (
                                                                                         <Check className="ml-2 h-4 w-4 opacity-100" />
@@ -558,7 +507,6 @@ export default function FormDialog({
                             </Field>
                         </div>
 
-                        {/* Row 2: Item No (Right) */}
                         <div className="md:col-span-1">
                             <Controller
                                 name="itemNo"
@@ -568,15 +516,15 @@ export default function FormDialog({
                                         <FieldLabel htmlFor="form-rhf-demo-item-no">
                                             Item No.
                                         </FieldLabel>
+
                                         <Input
                                             {...field}
                                             id="form-rhf-demo-item-no"
                                             aria-invalid={fieldState.invalid}
                                             placeholder="Enter item number"
                                             autoComplete="off"
-                                            readOnly={!isCustomItem}
-                                            disabled={!isCustomItem}
                                         />
+
                                         {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
@@ -587,7 +535,6 @@ export default function FormDialog({
                             />
                         </div>
 
-                        {/* Row 3: Description (Full Width) */}
                         <div className="md:col-span-2">
                             <Controller
                                 name="description"
@@ -598,165 +545,18 @@ export default function FormDialog({
                                             Procurement Item
                                         </FieldLabel>
 
-                                        {isCustomItem ? (
-                                            <InputGroup>
-                                                <InputGroupTextarea
-                                                    {...field}
-                                                    id="form-rhf-demo-description"
-                                                    placeholder="Enter item description"
-                                                    rows={3}
-                                                    className="min-h-24 resize-none"
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                />
-                                            </InputGroup>
-                                        ) : (
-                                            <>
-                                                <Button
-                                                    type="button"
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={
-                                                        openDescriptionCommand
-                                                    }
-                                                    className={cn(
-                                                        'h-auto min-h-[30px] w-full justify-between px-3 text-left font-normal whitespace-normal',
-                                                        !field.value &&
-                                                            'text-muted-foreground',
-                                                        fieldState.invalid &&
-                                                            'border-destructive ring-destructive',
-                                                    )}
-                                                    disabled={
-                                                        !filteredPriceLists.length
-                                                    }
-                                                    onClick={() =>
-                                                        setOpenDescriptionCommand(
-                                                            true,
-                                                        )
-                                                    }
-                                                >
-                                                    {field.value ? (
-                                                        <span className="line-clamp-2">
-                                                            {field.value}
-                                                        </span>
-                                                    ) : (
-                                                        <span>
-                                                            {!filteredPriceLists.length
-                                                                ? 'No items found (Select Expense/Category)'
-                                                                : 'Search item...'}
-                                                        </span>
-                                                    )}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-
-                                                <CommandDialog
-                                                    open={
-                                                        openDescriptionCommand
-                                                    }
-                                                    onOpenChange={
-                                                        setOpenDescriptionCommand
-                                                    }
-                                                    className="sm:max-w-[600px]"
-                                                >
-                                                    <Command>
-                                                        <CommandInput placeholder="Search item description..." />
-                                                        <CommandList>
-                                                            <CommandEmpty>
-                                                                No item found.
-                                                            </CommandEmpty>
-                                                            <CommandGroup heading="Price List Items">
-                                                                {filteredPriceLists.map(
-                                                                    (
-                                                                        priceList,
-                                                                    ) => (
-                                                                        <CommandItem
-                                                                            key={
-                                                                                priceList.id
-                                                                            }
-                                                                            value={
-                                                                                priceList.description
-                                                                            }
-                                                                            onSelect={() => {
-                                                                                field.onChange(
-                                                                                    priceList.description,
-                                                                                );
-                                                                                isExpenseAccountChangingFromDescription.current = true;
-
-                                                                                form.setValue(
-                                                                                    'itemNo',
-                                                                                    priceList.item_number.toString(),
-                                                                                );
-                                                                                form.setValue(
-                                                                                    'unitOfMeasurement',
-                                                                                    priceList.unit_of_measurement,
-                                                                                );
-                                                                                form.setValue(
-                                                                                    'price',
-                                                                                    priceList.price,
-                                                                                );
-                                                                                form.setValue(
-                                                                                    'expenseAccount',
-                                                                                    priceList.chart_of_account_id,
-                                                                                );
-                                                                                form.setValue(
-                                                                                    'ppmp_price_list_id',
-                                                                                    priceList.id,
-                                                                                );
-                                                                                form.setValue(
-                                                                                    'category',
-                                                                                    priceList
-                                                                                        .category
-                                                                                        ?.id ||
-                                                                                        0,
-                                                                                );
-
-                                                                                setOpenDescriptionCommand(
-                                                                                    false,
-                                                                                );
-                                                                            }}
-                                                                        >
-                                                                            <div className="flex w-full flex-col gap-1">
-                                                                                <div className="flex items-center justify-between">
-                                                                                    <span className="font-medium">
-                                                                                        {
-                                                                                            priceList.description
-                                                                                        }
-                                                                                    </span>
-                                                                                    {field.value ===
-                                                                                        priceList.description && (
-                                                                                        <Check className="ml-2 h-4 w-4" />
-                                                                                    )}
-                                                                                </div>
-                                                                                <span className="text-xs text-muted-foreground">
-                                                                                    <code className="mr-1 rounded bg-muted p-0.5">
-                                                                                        {
-                                                                                            priceList.account_number
-                                                                                        }
-                                                                                    </code>
-                                                                                    {
-                                                                                        priceList.unit_of_measurement
-                                                                                    }{' '}
-                                                                                    @{' '}
-                                                                                    {
-                                                                                        priceList.price
-                                                                                    }
-                                                                                </span>
-                                                                            </div>
-                                                                        </CommandItem>
-                                                                    ),
-                                                                )}
-                                                            </CommandGroup>
-                                                        </CommandList>
-                                                    </Command>
-                                                </CommandDialog>
-
-                                                {/*<FieldDescription>
-                                                    Click to search items from
-                                                    the price list.
-                                                </FieldDescription>*/}
-                                            </>
-                                        )}
+                                        <InputGroup>
+                                            <InputGroupTextarea
+                                                {...field}
+                                                id="form-rhf-demo-description"
+                                                placeholder="Enter item description"
+                                                rows={3}
+                                                className="min-h-24 resize-none"
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            />
+                                        </InputGroup>
 
                                         {fieldState.invalid && (
                                             <FieldError
@@ -768,7 +568,6 @@ export default function FormDialog({
                             />
                         </div>
 
-                        {/* Row 4: Unit (Left) */}
                         <div className="md:col-span-1">
                             <Controller
                                 name="unitOfMeasurement"
@@ -778,15 +577,15 @@ export default function FormDialog({
                                         <FieldLabel htmlFor="form-rhf-demo-unit">
                                             Unit of Measurement
                                         </FieldLabel>
+
                                         <Input
                                             {...field}
                                             id="form-rhf-demo-unit"
                                             aria-invalid={fieldState.invalid}
                                             placeholder="Enter unit of measurement"
                                             autoComplete="off"
-                                            readOnly={!isCustomItem}
-                                            disabled={!isCustomItem}
                                         />
+
                                         {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
@@ -797,7 +596,6 @@ export default function FormDialog({
                             />
                         </div>
 
-                        {/* Row 4: Price (Right) */}
                         <div className="md:col-span-1">
                             <Controller
                                 name="price"
@@ -807,6 +605,7 @@ export default function FormDialog({
                                         <FieldLabel htmlFor="form-rhf-demo-price">
                                             Price
                                         </FieldLabel>
+
                                         <Input
                                             {...field}
                                             id="form-rhf-demo-price"
@@ -815,9 +614,8 @@ export default function FormDialog({
                                             aria-invalid={fieldState.invalid}
                                             placeholder="0.00"
                                             autoComplete="off"
-                                            readOnly={!isCustomItem}
-                                            disabled={!isCustomItem}
                                         />
+
                                         {fieldState.invalid && (
                                             <FieldError
                                                 errors={[fieldState.error]}
@@ -838,6 +636,7 @@ export default function FormDialog({
                     >
                         Reset
                     </Button>
+
                     <Button
                         type="button"
                         variant="outline"
@@ -845,6 +644,7 @@ export default function FormDialog({
                     >
                         Cancel
                     </Button>
+
                     <Button type="submit" form="form-rhf-demo">
                         Add Item
                     </Button>

@@ -116,7 +116,7 @@ export function PpaDataTable<TData, TValue>({
                 <div>{children}</div>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+            <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

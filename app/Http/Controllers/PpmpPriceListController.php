@@ -83,8 +83,6 @@ class PpmpPriceListController extends Controller
         $validated = $request->validated();
 
         $ppmpPriceList->update($validated);
-
-        // return back()->with('success', 'Price list item updated successfully!');
     }
 
     /**
@@ -93,7 +91,5 @@ class PpmpPriceListController extends Controller
     public function destroy(PpmpPriceList $ppmpPriceList)
     {
         $ppmpPriceList->delete();
-
-        // return back()->with('success', 'Price list item deleted successfully!');
     }
 }
