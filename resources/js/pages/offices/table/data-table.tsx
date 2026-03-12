@@ -1,4 +1,4 @@
-import { useState, CSSProperties, ReactElement } from 'react';
+import { useState, CSSProperties, ReactElement, useMemo } from 'react';
 import {
     Column,
     ColumnDef,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { Office } from '@/pages/types/types';
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
@@ -25,6 +26,28 @@ interface DataTableProps<TData> {
     onDelete?: (record: TData) => void;
     children: ReactElement;
 }
+
+// Custom global filter function to include office account code
+const globalFilterFn = (row: any, _columnId: string, filterValue: string | any) => {
+    if (!filterValue || typeof filterValue !== 'string') return true;
+    
+    const office = row.original as Office;
+    const searchValue = filterValue.toLowerCase();
+    
+    // Generate the full account code
+    const sector = office.sector?.code ?? '0000';
+    const lgu = office.lgu_level?.code ?? '0';
+    const type = office.office_type?.code ?? '00';
+    const officeCode = office.code ?? '000';
+    const fullCode = `${sector}-${lgu}-${type}-${officeCode}`.toLowerCase();
+    
+    // Search in office name, acronym, and generated account code
+    return (
+        office.name?.toLowerCase().includes(searchValue) ||
+        office.acronym?.toLowerCase().includes(searchValue) ||
+        fullCode.includes(searchValue)
+    );
+};
 
 const getCommonPinningStyles = <TData,>(
     column: Column<TData>,
@@ -70,6 +93,7 @@ export default function DataTable<TData>({
             },
         },
         getFilteredRowModel: getFilteredRowModel(),
+        globalFilterFn: globalFilterFn,
         state: {
             globalFilter,
         },
@@ -80,7 +104,7 @@ export default function DataTable<TData>({
         <div className="flex flex-col gap-4">
             <div className="flex justify-between">
                 <Input
-                    placeholder="Filter price lists..."
+                    placeholder="Filter offices..."
                     value={table.getState().globalFilter ?? ''}
                     onChange={(event) =>
                         table.setGlobalFilter(event.target.value)

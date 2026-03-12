@@ -1,6 +1,7 @@
 import { createColumnHelper, RowData } from '@tanstack/react-table';
-import { PriceList } from '@/pages/types/types';
+import { Office } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash } from 'lucide-react';
 
 declare module '@tanstack/table-core' {
@@ -10,50 +11,54 @@ declare module '@tanstack/table-core' {
     }
 }
 
-const columnHelper = createColumnHelper<PriceList>();
+const columnHelper = createColumnHelper<Office>();
 
 export const columns = [
-    columnHelper.accessor('item_number', {
-        header: 'Item Number',
-        size: 100,
+    columnHelper.display({
+        id: 'full_code',
+        header: 'Office Account Code',
+        // size: 200,
+        cell: ({ row }) => {
+            const office = row.original;
+            const sector = office.sector?.code ?? '0000';
+            // const subsector = '000';
+            const lgu = office.lgu_level?.code ?? '0';
+            const type = office.office_type?.code ?? '00';
+            const officeCode = office.code ?? '000';
+            return (
+                // <code className="font-mono text-xs">{`${sector}-${subsector}-${lgu}-${type}-${officeCode}`}</code>
+                <code className="font-mono text-xs">{`${sector}-${lgu}-${type}-${officeCode}`}</code>
+            );
+        },
+    }),
+    columnHelper.accessor('name', {
+        header: 'Office Name',
+        // size: 200,
         cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
     }),
-    columnHelper.accessor('description', {
-        header: 'Description',
-        size: 200,
-        cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
-    }),
-    columnHelper.accessor('unit_of_measurement', {
-        header: 'Unit of Measurement',
-        cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
-    }),
-    columnHelper.accessor('price', {
-        header: () => (
-            <div className="pr-8 text-end">
-                <span>Price</span>
-            </div>
-        ),
+    columnHelper.accessor('acronym', {
+        header: 'Acronym',
+        // size: 200,
         cell: (value) => (
-            <div className="pr-8 text-end">
-                <span className="text-wrap tabular-nums">
-                    {value.getValue()}
-                </span>
-            </div>
+            <span className="text-wrap">{value.getValue() ?? '-'}</span>
         ),
     }),
-    columnHelper.accessor('category.name', {
-        header: 'PPMP Category',
-        size: 200,
-        cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
-    }),
-    columnHelper.accessor('chart_of_account.account_title', {
-        header: 'Expense Account',
-        size: 300,
-        cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
+    columnHelper.accessor('is_lee', {
+        header: 'LEE',
+        // size: 80,
+        cell: ({ row }) => (
+            <div className="flex items-center">
+                {row.getValue('is_lee') ? (
+                    <Badge>Yes</Badge>
+                ) : (
+                    <Badge variant="secondary">No</Badge>
+                )}
+            </div>
+        ),
     }),
     columnHelper.display({
         id: 'action',
-        size: 84,
+        size: 46,
         cell: ({ row, table }) => (
             <div className="flex gap-0.5">
                 <Button
