@@ -108,7 +108,8 @@ export default function PriceListPage({
         setOpenEdit(true);
     }
 
-    function handleDelete() {
+    function handleDelete(data: PriceList) {
+        setSelectedPriceList(data);
         setOpenDelete(true);
     }
 

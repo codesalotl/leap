@@ -1,6 +1,5 @@
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -10,11 +9,14 @@ import {
 } from '@/components/ui/alert-dialog';
 import { router } from '@inertiajs/react';
 import { PriceList } from '@/pages/types/types';
+import { useState } from 'react';
+import { Spinner } from '@/components/ui/spinner';
+import { Button } from '@/components/ui/button';
 
 interface DeleteDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    data: PriceList;
+    data: PriceList | null;
 }
 
 export default function DeleteDialog({
@@ -22,15 +24,24 @@ export default function DeleteDialog({
     onOpenChange,
     data,
 }: DeleteDialogProps) {
-    function handleDelete() {
-        console.log('delete');
+    const [isLoading, setIsLoading] = useState(false);
 
-        router.visit(`/price-lists/${data.id}`, { method: 'delete', data });
+    function handleDelete() {
+        if (!data) return;
+
+        router.visit(`/price-lists/${data.id}`, {
+            method: 'delete',
+            onStart: () => setIsLoading(true),
+            onFinish: () => setIsLoading(false),
+            onSuccess: () => onOpenChange(false),
+        });
     }
 
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent>
+            <AlertDialogContent
+                onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
+            >
                 <AlertDialogHeader>
                     <AlertDialogTitle>
                         Are you absolutely sure?
@@ -43,11 +54,20 @@ export default function DeleteDialog({
                 </AlertDialogHeader>
 
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={isLoading}>
+                        Cancel
+                    </AlertDialogCancel>
 
-                    <AlertDialogAction onClick={handleDelete}>
-                        Delete
-                    </AlertDialogAction>
+                    <Button onClick={handleDelete} disabled={isLoading}>
+                        {isLoading ? (
+                            <span className="flex items-center gap-1">
+                                <Spinner />
+                                Delete
+                            </span>
+                        ) : (
+                            'Delete'
+                        )}
+                    </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>

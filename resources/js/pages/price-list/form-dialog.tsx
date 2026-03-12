@@ -1,6 +1,5 @@
 import {
     useState,
-    // useRef,
     useEffect,
 } from 'react';
 import { Button } from '@/components/ui/button';
@@ -29,10 +28,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ChartOfAccount, PpmpCategory, PriceList } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
-// import { Switch } from '@/components/ui/switch';
+import { Spinner } from '@/components/ui/spinner';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-// import { update } from '@/routes/profile';
 
 interface FormDialogProps {
     open: boolean;
@@ -40,10 +38,6 @@ interface FormDialogProps {
     chartOfAccounts: ChartOfAccount[];
     ppmpCategories: PpmpCategory[];
     selectedPriceList: PriceList | null;
-
-    ppmpPriceList: unknown[];
-    selectedEntry: { id: number } | null;
-    ppmpItems: unknown[];
 }
 
 const formSchema = z
@@ -86,15 +80,14 @@ export default function FormDialog({
     chartOfAccounts,
     ppmpCategories,
     selectedPriceList,
-
-    // selectedEntry = null,
 }: FormDialogProps) {
     console.log(selectedPriceList);
 
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
     const [openCategoryCommand, setOpenCategoryCommand] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             expenseAccount: undefined,
@@ -109,29 +102,6 @@ export default function FormDialog({
     });
 
     const isCustomCategory = form.watch('isCustomCategory');
-    // const selectedExpenseAccount = form.watch('expenseAccount');
-    // const selectedCategory = form.watch('category');
-
-    // const allPriceLists = chartOfAccounts.flatMap(
-    //     (account) =>
-    //         account.ppmp_price_lists?.map((priceList) => ({
-    //             ...priceList,
-    //             account_title: account.account_title,
-    //             account_number: account.account_number,
-    //         })) || [],
-    // );
-
-    // const filteredPriceLists = allPriceLists.filter((priceList) => {
-    //     const matchesAccount = selectedExpenseAccount
-    //         ? priceList.chart_of_account_id === selectedExpenseAccount
-    //         : true;
-
-    //     const matchesCategory = selectedCategory
-    //         ? priceList.category?.id === selectedCategory
-    //         : true;
-
-    //     return matchesAccount && matchesCategory;
-    // });
 
     // for the category toggle
     useEffect(() => {
@@ -139,10 +109,7 @@ export default function FormDialog({
         form.setValue('customCategory', '');
     }, [isCustomCategory, form]);
 
-    // decided what initial values to put in the form
     useEffect(() => {
-        // console.log(selectedPriceList);
-
         if (selectedPriceList) {
             form.reset({
                 expenseAccount: selectedPriceList.chart_of_account?.id,
@@ -167,59 +134,32 @@ export default function FormDialog({
     }, [selectedPriceList]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        // console.log(data);
-
         if (selectedPriceList) {
-            // console.log('edit');
-
             router.visit(`/price-lists/${selectedPriceList.id}`, {
                 method: 'patch',
                 data,
+                onStart: () => setIsLoading(true),
+                onFinish: () => setIsLoading(false),
+                onSuccess: () => onOpenChange(false),
             });
         } else {
-            // console.log('add');
-
             router.visit('/price-lists', {
                 method: 'post',
                 data,
+                onStart: () => setIsLoading(true),
+                onFinish: () => setIsLoading(false),
+                onSuccess: () => onOpenChange(false),
             });
         }
-
-        // const itemNumber = data.itemNo;
-        // const price = parseFloat(data.price);
-
-        // if (isNaN(itemNumber) || itemNumber <= 0) {
-        //     alert('Please enter a valid item number (positive integer)');
-        //     return;
-        // }
-
-        // if (isNaN(price) || price < 0) {
-        //     alert('Please enter a valid price (positive number)');
-        //     return;
-        // }
-
-        // const customItemData = {
-        //     aip_entry_id: data.aip_entry_id,
-        //     item_number: data.itemNo,
-        //     description: data.description,
-        //     unit_of_measurement: data.unitOfMeasurement,
-        //     price: data.price,
-        //     chart_of_account_id: data.expenseAccount,
-        //     ppmp_category_id: isCustomCategory ? null : data.category,
-        //     custom_category: isCustomCategory ? data.customCategory : null,
-        // };
-
-        // router.post('/ppmp/custom', customItemData, {
-        //     onSuccess: () => onOpenChange(false),
-        //     onError: (errors) =>
-        //         console.error('Error creating custom PPMP item:', errors),
-        //     preserveState: false,
-        // });
     }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent
+                className="sm:max-w-2xl"
+                onPointerDownOutside={(e) => isLoading && e.preventDefault()}
+                onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
+            >
                 <DialogHeader>
                     <DialogTitle>
                         {selectedPriceList ? 'Edit PPMP Item' : 'Add PPMP Item'}
@@ -533,6 +473,8 @@ export default function FormDialog({
                                             aria-invalid={fieldState.invalid}
                                             placeholder="Enter item number"
                                             autoComplete="off"
+                                            type="number"
+                                            value={field.value?.toString() || ''}
                                         />
 
                                         {fieldState.invalid && (
@@ -643,12 +585,33 @@ export default function FormDialog({
                         type="button"
                         variant="outline"
                         onClick={() => onOpenChange(false)}
+                        disabled={isLoading}
                     >
                         Cancel
                     </Button>
 
-                    <Button type="submit" form="form-rhf-demo">
-                        {selectedPriceList ? 'Save Changes' : 'Add Item'}
+                    <Button
+                        type="submit"
+                        form="form-rhf-demo"
+                        disabled={isLoading}
+                    >
+                        {selectedPriceList ? (
+                            isLoading ? (
+                                <span className="flex items-center gap-1">
+                                    <Spinner />
+                                    Saving Changes
+                                </span>
+                            ) : (
+                                'Save Changes'
+                            )
+                        ) : isLoading ? (
+                            <span className="flex items-center gap-1">
+                                <Spinner />
+                                Adding Item
+                            </span>
+                        ) : (
+                            'Add Item'
+                        )}
                     </Button>
                 </DialogFooter>
             </DialogContent>
