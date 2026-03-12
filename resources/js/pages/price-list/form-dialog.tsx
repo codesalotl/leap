@@ -1,7 +1,4 @@
-import {
-    useState,
-    useEffect,
-} from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -81,7 +78,7 @@ export default function FormDialog({
     ppmpCategories,
     selectedPriceList,
 }: FormDialogProps) {
-    console.log(selectedPriceList);
+    // console.log(selectedPriceList);
 
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
     const [openCategoryCommand, setOpenCategoryCommand] = useState(false);
@@ -474,7 +471,9 @@ export default function FormDialog({
                                             placeholder="Enter item number"
                                             autoComplete="off"
                                             type="number"
-                                            value={field.value?.toString() || ''}
+                                            value={
+                                                field.value?.toString() || ''
+                                            }
                                         />
 
                                         {fieldState.invalid && (

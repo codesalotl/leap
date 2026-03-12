@@ -7,7 +7,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { router } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import { PriceList } from '@/pages/types/types';
 import { useState } from 'react';
 import { Spinner } from '@/components/ui/spinner';
@@ -25,16 +25,28 @@ export default function DeleteDialog({
     data,
 }: DeleteDialogProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const { errors } = usePage().props;
 
     function handleDelete() {
         if (!data) return;
 
         router.visit(`/price-lists/${data.id}`, {
             method: 'delete',
+            preserveState: true,
+            preserveScroll: true,
             onStart: () => setIsLoading(true),
             onFinish: () => setIsLoading(false),
-            onSuccess: () => onOpenChange(false),
+            onSuccess: () => {
+                if (Object.keys(errors).length === 0) {
+                    onOpenChange(false);
+                }
+            },
         });
+    }
+
+    function handleCancel() {
+        router.reload({ only: ['errors'] });
+        onOpenChange(false);
     }
 
     return (
@@ -47,14 +59,31 @@ export default function DeleteDialog({
                         Are you absolutely sure?
                     </AlertDialogTitle>
 
-                    <AlertDialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete your account from our servers.
+                    <AlertDialogDescription asChild>
+                        <div className="flex flex-col gap-4">
+                            <div>
+                                This action cannot be undone. This will
+                                permanently delete{' '}
+                                <span className="font-bold">
+                                    "{data?.description}"
+                                </span>
+                                .
+                            </div>
+
+                            {Object.keys(errors).length === 0 || (
+                                <span className="font-bold text-destructive">
+                                    Error: Other items have dependecy to this
+                                </span>
+                            )}
+                        </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
 
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isLoading}>
+                    <AlertDialogCancel
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                    >
                         Cancel
                     </AlertDialogCancel>
 
