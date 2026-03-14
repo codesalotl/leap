@@ -1,30 +1,50 @@
 export interface AipEntry {
     id: number;
     ppa_id: number;
-    parent_ppa_id: number | null;
-    aip_ref_code: string;
-    ppa_desc: string;
-    implementing_office_department: string;
-    sched_implementation: {
-        start_date: string;
-        completion_date: string;
-    };
-    expected_outputs: string;
-    funding_source: string;
-    amount: {
-        ps: string;
-        mooe: string;
-        fe: string;
-        co: string;
-        total: string;
-    };
-    cc_adaptation: string;
-    cc_mitigation: string;
-    cc_typology_code: string;
-    children?: AipEntry[];
+    parent_ppa_id: number;
+    start_date: string;
+    end_date: string;
+    expected_output: string;
+    // funding_source?: FundingSource;
+    funding_source?: FundingSource[];
+    ps_amount: string;
+    mooe_amount: string;
+    fe_amount: string;
+    co_amount: string;
+    total_amount: string;
+    ccet_adaptation: string;
+    ccet_mitigation: string;
     created_at: string;
     updated_at: string;
 }
+
+// export interface AipEntry {
+//     id: number;
+//     ppa_id: number;
+//     parent_ppa_id: number | null;
+//     aip_ref_code: string;
+//     ppa_desc: string;
+//     implementing_office_department: string;
+//     sched_implementation: {
+//         start_date: string;
+//         completion_date: string;
+//     };
+//     expected_outputs: string;
+//     funding_source: string;
+//     amount: {
+//         ps: string;
+//         mooe: string;
+//         fe: string;
+//         co: string;
+//         total: string;
+//     };
+//     cc_adaptation: string;
+//     cc_mitigation: string;
+//     cc_typology_code: string;
+//     children?: AipEntry[];
+//     created_at: string;
+//     updated_at: string;
+// }
 
 export interface LguLevel {
     code: string;
@@ -123,23 +143,6 @@ export interface PpmpCategory {
     updated_at: string | null;
 }
 
-export interface Office {
-    id: number;
-    sector_id: number | null;
-    lgu_level_id: number;
-    office_type_id: number;
-    code: string;
-    name: string;
-    acronym: string | null;
-    is_lee: boolean;
-    full_code: string;
-    lgu_level?: LguLevel;
-    office_type?: OfficeType;
-    sector?: Sector;
-    created_at: string | null;
-    updated_at: string | null;
-}
-
 export interface Sector {
     id: number;
     code: string;
@@ -153,12 +156,69 @@ export interface Ppa {
     office_id: number;
     parent_id: number | null;
     title: string;
-    type: 'Program' | 'Project' | 'Activity';
+    type: 'Program' | 'Project' | 'Activity' | 'Sub-Activity';
     code_suffix: string;
-    full_code: string;
     is_active: boolean;
     created_at: string | null;
     updated_at: string | null;
-    children?: Ppa[];
+    full_code: string;
     office?: Office;
+    children?: Ppa[];
+    aip_entry?: AipEntry;
+}
+
+export interface Office {
+    id: number;
+    sector_id: number | null;
+    lgu_level_id: number;
+    office_type_id: number;
+    code: string;
+    name: string;
+    acronym: string | null;
+    is_lee: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    // full_code: string;
+    sector?: Sector;
+    lgu_level?: LguLevel;
+    office_type?: OfficeType;
+}
+
+export interface AipSummary {
+    id: string | number;
+    full_code: string;
+    title: string;
+    ppa_id: number;
+    funding_source?: string;
+    cc_typology_code?: string;
+    office: {
+        id?: string | number;
+        name: string;
+    };
+    aip_entry_for_year: {
+        start_date: string; // or Date
+        end_date: string; // or Date
+        expected_output: string;
+        ps_amount: string | null;
+        mooe_amount: string | null;
+        fe_amount: string | null;
+        co_amount: string | null;
+        ccet_adaptation: string | null;
+        ccet_mitigation: string | null;
+    };
+}
+
+export interface FundingSource {
+    id: number;
+    fund_type: string;
+    code: string;
+    title: string;
+    description: string | null;
+    allow_typhoon: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    pivot: {
+        funding_source_id: number;
+        ppa_id: number;
+    }
 }

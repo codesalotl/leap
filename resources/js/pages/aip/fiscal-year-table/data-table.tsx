@@ -120,7 +120,7 @@ export function FiscalYearDataTable<TData, TValue>({
                 <div className="flex gap-2">{children}</div>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+            <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                 <Table
                 // className="fixed"
                 >
@@ -158,26 +158,29 @@ export function FiscalYearDataTable<TData, TValue>({
                         {table.getRowModel().rows?.length ? (
                             table.getRowModel().rows.map((row) => (
                                 <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell, index) => {
-                                        const { column } = cell;
-                                        return (
-                                            <TableCell
-                                                key={cell.id}
-                                                style={{
-                                                    ...getCommonPinningStyles(
-                                                        column,
-                                                        false,
-                                                        index % 2 === 1,
-                                                    ),
-                                                }}
-                                            >
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext(),
-                                                )}
-                                            </TableCell>
-                                        );
-                                    })}
+                                    {row
+                                        .getVisibleCells()
+                                        .map((cell, index) => {
+                                            const { column } = cell;
+                                            return (
+                                                <TableCell
+                                                    key={cell.id}
+                                                    style={{
+                                                        ...getCommonPinningStyles(
+                                                            column,
+                                                            false,
+                                                            index % 2 === 1,
+                                                        ),
+                                                    }}
+                                                >
+                                                    {flexRender(
+                                                        cell.column.columnDef
+                                                            .cell,
+                                                        cell.getContext(),
+                                                    )}
+                                                </TableCell>
+                                            );
+                                        })}
                                 </TableRow>
                             ))
                         ) : (

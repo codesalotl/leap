@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AipEntry;
+use App\Models\FundingSource;
 use App\Models\Aip;
 use App\Models\FiscalYear;
 use App\Models\Ppa;
@@ -22,103 +23,42 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
-        $masterPpaTree = Ppa::whereNull('parent_id')
-            ->with([
-                // 'office',
-                'office.sector',
-                'office.lguLevel',
-                'office.officeType',
-                'children.office',
-                'children.children.office',
-                'children.children',
-            ])
+        $ppaMasterList = Ppa::whereNull('parent_id')
+            ->with(['office', 'children', 'parent'])
             ->get();
 
-        $aipEntries = $fiscalYear
-            ->aipEntries()
-            ->with([
-                'ppa.office.sector',
-                'ppa.office.lguLevel',
-                'ppa.office.officeType',
-                'ppa.children', // Projects under Programs
-                'ppa.children.children', // Activities under Projects
-                'ppa.parent', // Parent PPA info
-            ])
-            ->get();
+        $yearId = $fiscalYear->id;
 
-        // dd($aipEntries);
-
-        // $aip_entries = AipEntry::with([
-        //     'ppa.office',
-        //     'ppa.parent',
-        //     'itemizedCosts.chartOfAccount',
-        // ])
-        //     ->where('fiscal_year_id', $fiscalYear->id)
-        //     ->get();
-
-        $mappedEntries = $aipEntries->map(
-            fn($entry) => [
-                'id' => $entry->id,
-                'ppa_id' => $entry->ppa_id,
-                'parent_ppa_id' => $entry->ppa->parent_id,
-                'aip_ref_code' => $entry->ppa->full_code,
-                'ppa_desc' => $entry->ppa->title,
-                'implementing_office_department' =>
-                    $entry->ppa->office->name ?? 'N/A',
-                'sched_implementation' => [
-                    'start_date' => $entry->start_date,
-                    'completion_date' => $entry->end_date,
-                ],
-                'expected_outputs' => $entry->expected_output,
-                'funding_source' => '',
-                'amount' => [
-                    'ps' => (string) $entry->ps_amount,
-                    'mooe' => (string) $entry->mooe_amount,
-                    'fe' => (string) $entry->fe_amount,
-                    'co' => (string) $entry->co_amount,
-                    'total' => (string) $entry->total_amount,
-                ],
-                'cc_adaptation' => (string) $entry->ccet_adaptation,
-                'cc_mitigation' => (string) $entry->ccet_mitigation,
-                'cc_typology_code' => $entry->typology_code ?? '',
-                'children' => [],
-            ],
-        );
-
-        // dd($mappedEntries);
-
-        $aipTree = $this->buildAipTree($mappedEntries);
-
-        // dd($aipTree);
+        $loadAipTree = function ($query) use ($yearId, &$loadAipTree) {
+            $query
+                ->whereHas(
+                    'aipEntry',
+                    fn($q) => $q->where('fiscal_year_id', $yearId),
+                )
+                ->with([
+                    'office',
+                    'parent',
+                    'aipEntry' => fn($q) => $q
+                        ->where('fiscal_year_id', $yearId)
+                        ->with('fundingSource'),
+                    'children' => $loadAipTree,
+                ]);
+        };
+        $aipEntries = Ppa::whereNull('parent_id')->where($loadAipTree)->get();
 
         $offices = Office::all();
 
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
-            'aipEntries' => $aipTree,
-            'masterPpas' => $masterPpaTree,
+            'aipEntries' => $aipEntries,
+            'masterPpas' => $ppaMasterList,
+            'fundingSources' => FundingSource::all(),
+
             'offices' => $offices,
             'chartOfAccounts' => ChartOfAccount::all(),
             'ppmpPriceList' => PpmpPriceList::all(),
             'ppmpItems' => Ppmp::with(['ppmpPriceList'])->get(),
         ]);
-    }
-
-    private function buildAipTree($entries, $parentId = null)
-    {
-        $branch = [];
-
-        foreach ($entries as $entry) {
-            if ($entry['parent_ppa_id'] == $parentId) {
-                $children = $this->buildAipTree($entries, $entry['ppa_id']);
-                if ($children) {
-                    $entry['children'] = $children;
-                }
-                $branch[] = $entry;
-            }
-        }
-
-        return $branch;
     }
 
     /**
@@ -134,11 +74,8 @@ class AipEntryController extends Controller
      */
     public function store(StoreAipEntryRequest $request, $fiscal_year_id)
     {
-        // dd($fiscal_year_id);
-
         $validated = $request->validated();
 
-        // 2. Prepare the data for bulk insertion
         $newEntries = collect($validated['ppa_ids'])
             ->map(function ($ppaId) use ($fiscal_year_id) {
                 return [
@@ -146,46 +83,13 @@ class AipEntryController extends Controller
                     'ppa_id' => $ppaId,
                     'created_at' => now(),
                     'updated_at' => now(),
-                    // Amounts will default to 0 via your migration
                 ];
             })
             ->toArray();
 
-        // 3. Insert into the database
         \DB::table('aip_entries')->insert($newEntries);
 
-        // 4. Return back to the frontend
         return back()->with('success', 'PPAs imported successfully!');
-
-        // return back()->with(
-        //     'success',
-        //     count($newEntries) . ' PPAs successfully imported to the AIP.',
-        // );
-
-        // $aip = FiscalYear::findOrFail($aip_id);
-
-        // $activePpaIds = Ppa::whereIn('id', $request->ppa_ids)
-        //     ->where('is_active', true)
-        //     ->pluck('id');
-
-        // if ($activePpaIds->isEmpty()) {
-        //     return back()->with(
-        //         'error',
-        //         'No active PPAs were found to import.',
-        //     );
-        // }
-
-        // DB::transaction(function () use ($activePpaIds, $aip) {
-        //     foreach ($activePpaIds as $ppaId) {
-        //         AipEntry::firstOrCreate(
-        //             [
-        //                 'fiscal_year_id' => $aip->id,
-        //                 'ppa_id' => $ppaId,
-        //             ],
-        //             [],
-        //         );
-        //     }
-        // });
     }
 
     /**
@@ -209,27 +113,10 @@ class AipEntryController extends Controller
      */
     public function update(UpdateAipEntryRequest $request, AipEntry $aipEntry)
     {
-        // 1. Validate the data
-        $validated = $request->validate([
-            'ppa_id' => 'required|integer',
-            'aipRefCode' => 'required|string',
-            'amount.ps' => 'required|numeric',
-            'amount.mooe' => 'required|numeric',
-            'amount.fe' => 'required|numeric',
-            'amount.co' => 'required|numeric',
-            'amount.total' => 'nullable|string',
-            'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
-            'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
-            'ccTypologyCode' => 'required|string',
-            'expectedOutputs' => 'required|string',
-            'fundingSource' => 'required|string',
-            'implementingOfficeDepartmentLocation' => 'required|string',
-            'ppaDescription' => 'required|string',
-            'scheduleOfImplementation.startingDate' => 'required|date',
-            'scheduleOfImplementation.completionDate' => 'required|date',
-        ]);
+        $validated = $request->validated();
 
-        // 2. Map and Update
+        $aipEntry->fundingSource()->sync($validated['fundingSource']);
+
         $aipEntry->update([
             'start_date' =>
                 $validated['scheduleOfImplementation']['startingDate'],
@@ -246,7 +133,7 @@ class AipEntryController extends Controller
                 $validated['amountOfCcExpenditure']['ccMitigation'],
         ]);
 
-        $affectedRows = PPA::where('id', $validated['ppa_id'])->update([
+        PPA::where('id', $validated['ppa_id'])->update([
             'title' => $validated['ppaDescription'],
         ]);
     }

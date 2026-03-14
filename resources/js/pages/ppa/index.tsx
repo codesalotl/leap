@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { columns, Ppa } from '@/pages/ppa/ppa-masterlist-table/columns';
-import { PpaDataTable } from '@/pages/ppa/ppa-masterlist-table/data-table';
+import PpaTablePage from '@/pages/ppa/ppa-masterlist-table/page';
 import PpaFormDialog from '@/pages/ppa/form';
 
 export default function PpaPage({
@@ -25,6 +25,9 @@ export default function PpaPage({
     ppaTree: Ppa[];
     offices: any[];
 }) {
+    console.log(ppaTree);
+    // console.log(offices);
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
@@ -44,8 +47,7 @@ export default function PpaPage({
             breadcrumbs={[{ title: 'PPA Master Library', href: '/offices' }]}
         >
             <div className="w-full px-4 pt-4">
-                <PpaDataTable
-                    columns={columns}
+                <PpaTablePage
                     data={ppaTree}
                     meta={{
                         onAdd: (parent: Ppa, childType: Ppa['type']) => {
@@ -76,7 +78,7 @@ export default function PpaPage({
                     >
                         New Program
                     </Button>
-                </PpaDataTable>
+                </PpaTablePage>
 
                 <PpaFormDialog
                     mode={dialogMode}

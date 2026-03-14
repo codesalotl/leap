@@ -22,8 +22,8 @@ return new class extends Migration {
             $table->text('expected_output')->nullable();
             // $table
             //     ->foreignId('funding_source_id')
-            //     ->nullable() // temporary null
-            //     ->constrained('ref_fund_sources');
+            //     ->nullable()
+            //     ->constrained('funding_sources');
 
             $table->decimal('ps_amount', 19, 2)->default(0);
             $table->decimal('mooe_amount', 19, 2)->default(0);

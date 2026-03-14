@@ -20,12 +20,7 @@ class PpaController extends Controller
     {
         // Load children and their parents recursively
         $ppaTree = Ppa::whereNull('parent_id')
-            ->with([
-                'office.sector',
-                'office.lguLevel',
-                'office.officeType',
-                'children.children', // Load deeper levels
-            ])
+            ->with(['office', 'children', 'parent'])
             ->get();
 
         $offices = Office::with(['sector', 'lguLevel', 'officeType'])->get();
@@ -35,6 +30,7 @@ class PpaController extends Controller
             'offices' => $offices,
         ]);
     }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -48,14 +44,7 @@ class PpaController extends Controller
      */
     public function store(StorePpaRequest $request)
     {
-        $validated = $request->validate([
-            'office_id' => 'required|exists:offices,id',
-            'parent_id' => 'nullable|exists:ppas,id',
-            'title' => 'required|string',
-            'type' => 'required|in:Program,Project,Activity',
-            'code_suffix' => 'required|string|max:3',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         Ppa::create($validated);
 

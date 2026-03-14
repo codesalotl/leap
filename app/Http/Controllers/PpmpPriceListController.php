@@ -9,6 +9,8 @@ use App\Http\Requests\StorePpmpPriceListRequest;
 use App\Http\Requests\UpdatePpmpPriceListRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Database\QueryException;
 
 class PpmpPriceListController extends Controller
 {
@@ -17,7 +19,7 @@ class PpmpPriceListController extends Controller
      */
     public function index()
     {
-        $priceList = PpmpPriceList::all();
+        $priceList = PpmpPriceList::with(['chartOfAccount', 'category'])->get();
         $chartOfAccounts = ChartOfAccount::all();
         $ppmpCategory = PpmpCategory::all();
 
@@ -43,18 +45,16 @@ class PpmpPriceListController extends Controller
     {
         $validated = $request->validated();
 
-        $newPriceList = PpmpPriceList::create($validated);
+        $validatedMapped = [
+            'chart_of_account_id' => $validated['expenseAccount'],
+            'ppmp_category_id' => $validated['category'],
+            'item_number' => $validated['itemNo'],
+            'description' => $validated['description'],
+            'unit_of_measurement' => $validated['unitOfMeasurement'],
+            'price' => $validated['price'],
+        ];
 
-        // Check if this is an Inertia request (from our custom form)
-        if ($request->header('X-Inertia')) {
-            // For Inertia requests, we need to redirect back and include the data
-            return back()->with('newPriceList', $newPriceList);
-        }
-
-        // For regular web requests
-        return back()
-            ->with('success', 'Price list item created successfully!')
-            ->with('newPriceList', $newPriceList);
+        PpmpPriceList::create($validatedMapped);
     }
 
     /**
@@ -82,9 +82,16 @@ class PpmpPriceListController extends Controller
     ) {
         $validated = $request->validated();
 
-        $ppmpPriceList->update($validated);
+        $validatedMapped = [
+            'chart_of_account_id' => $validated['expenseAccount'],
+            'ppmp_category_id' => $validated['category'],
+            'item_number' => $validated['itemNo'],
+            'description' => $validated['description'],
+            'unit_of_measurement' => $validated['unitOfMeasurement'],
+            'price' => $validated['price'],
+        ];
 
-        // return back()->with('success', 'Price list item updated successfully!');
+        $ppmpPriceList->update($validatedMapped);
     }
 
     /**
@@ -92,8 +99,25 @@ class PpmpPriceListController extends Controller
      */
     public function destroy(PpmpPriceList $ppmpPriceList)
     {
-        $ppmpPriceList->delete();
+        // $ppmpPriceList->delete();
 
-        // return back()->with('success', 'Price list item deleted successfully!');
+        try {
+            $ppmpPriceList->delete();
+            return Redirect::back()->with(
+                'success',
+                'Price list deleted successfully.',
+            );
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return Redirect::back()->withErrors([
+                    'database' =>
+                        'This record cannot be deleted because it is being used by another part of the system.',
+                ]);
+            }
+
+            return Redirect::back()->withErrors([
+                'database' => 'An unexpected database error occurred.',
+            ]);
+        }
     }
 }

@@ -80,7 +80,7 @@ const getCommonPinningStyles = <TData,>(
 export default function DataTable<TData, TValue>({
     columns,
     data,
-    searchKey = 'ppa_desc',
+    searchKey = 'title',
     searchValue,
     onSearchChange,
     getSubRows,
@@ -129,12 +129,10 @@ export default function DataTable<TData, TValue>({
     return (
         <div className="border">
             <Table
-                style={
-                    {
-                        //     width: table.getTotalSize(),
-                        tableLayout: 'fixed',
-                    }
-                }
+                style={{
+                    //     width: table.getTotalSize(),
+                    tableLayout: 'fixed',
+                }}
             >
                 <TableHeader>
                     {table.getHeaderGroups().map((headerGroup) => (

@@ -18,18 +18,17 @@ return new class extends Migration {
             $table
                 ->foreignId('parent_id')
                 ->nullable()
-                ->constrained('ppas') // Matches table name
+                ->constrained('ppas')
                 ->onDelete('cascade');
 
             $table->string('title');
-
-            // Use an enum or string for strict types
-            $table->enum('type', ['Program', 'Project', 'Activity']);
-
-            // The suffix (e.g., 001).
-            // We should probably ensure code_suffix is unique per office + parent_id
+            $table->enum('type', [
+                'Program',
+                'Project',
+                'Activity',
+                'Sub-Activity',
+            ]);
             $table->string('code_suffix', 4);
-
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 

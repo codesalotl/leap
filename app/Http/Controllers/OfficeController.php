@@ -43,28 +43,17 @@ class OfficeController extends Controller
      */
     public function store(StoreOfficeRequest $request)
     {
-        $validated = $request->validate([
-            'sector_id' => 'required|exists:sectors,id',
-            'lgu_level_id' => 'required|exists:lgu_levels,id',
-            'office_type_id' => 'required|exists:office_types,id',
-            'name' => 'required|string|max:100',
-            'is_lee' => 'boolean',
-            'code' => [
-                'required',
-                'string',
-                'max:3',
-                // Unique check: A suffix cannot be repeated for the same LGU Level + Office Type
-                Rule::unique('offices')->where(
-                    fn($q) => $q
-                        ->where('lgu_level_id', $request->lgu_level_id)
-                        ->where('office_type_id', $request->office_type_id),
-                ),
-            ],
-        ]);
+        try {
+            $validated = $request->validated();
+            $office = Office::create($validated);
 
-        Office::create($validated);
-
-        return redirect()->back();
+            return redirect()->back()->with('success', 'Office created successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation exceptions and return proper Inertia response
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        }
     }
 
     /**
@@ -88,30 +77,17 @@ class OfficeController extends Controller
      */
     public function update(UpdateOfficeRequest $request, Office $office)
     {
-        $validated = $request->validate([
-            'sector_id' => 'required|exists:sectors,id',
-            'lgu_level_id' => 'required|exists:lgu_levels,id',
-            'office_type_id' => 'required|exists:office_types,id',
-            'name' => 'required|string|max:100',
-            'is_lee' => 'boolean',
-            'code' => [
-                'required',
-                'string',
-                'max:3',
-                // Unique check while ignoring the current office record
-                Rule::unique('offices')
-                    ->ignore($office->id)
-                    ->where(
-                        fn($q) => $q
-                            ->where('lgu_level_id', $request->lgu_level_id)
-                            ->where('office_type_id', $request->office_type_id),
-                    ),
-            ],
-        ]);
+        try {
+            $validated = $request->validated();
+            $office->update($validated);
 
-        $office->update($validated);
-
-        return redirect()->back();
+            return redirect()->back()->with('success', 'Office updated successfully');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation exceptions and return proper Inertia response
+            return redirect()->back()
+                ->withErrors($e->errors())
+                ->withInput();
+        }
     }
 
     /**
@@ -121,6 +97,6 @@ class OfficeController extends Controller
     {
         $office->delete();
 
-        return redirect()->back();
+        return redirect()->back()->with('success', 'Office deleted successfully');
     }
 }

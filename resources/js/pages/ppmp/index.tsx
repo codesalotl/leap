@@ -83,6 +83,7 @@ export default function PpmpPage({
                                     >
                                         <Printer /> Print
                                     </DropdownMenuItem>
+
                                     <DropdownMenuItem
                                         onClick={() =>
                                             exportToPDF({
@@ -94,6 +95,7 @@ export default function PpmpPage({
                                     >
                                         <FileText /> To PDF
                                     </DropdownMenuItem>
+
                                     <DropdownMenuItem
                                         onClick={() =>
                                             exportToExcel({
@@ -105,7 +107,6 @@ export default function PpmpPage({
                                     >
                                         <Sheet /> To Excel
                                     </DropdownMenuItem>
-                                    {/* <DropdownMenuItem>PDF</DropdownMenuItem> */}
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -116,7 +117,7 @@ export default function PpmpPage({
                     </div>
                 </div>
 
-                <ScrollArea className="h-[calc(100vh-9rem)] rounded-md border">
+                <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                     <DataTable
                         ppmpItems={ppmpItems}
                         onDelete={(ppmp) => {

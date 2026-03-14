@@ -20,6 +20,7 @@ use App\Http\Controllers\PpmpPriceListController;
 use App\Http\Controllers\PpmpHeaderController;
 use App\Http\Controllers\PpmpItemController;
 use App\Http\Controllers\PpmpController;
+use App\Http\Controllers\FundingSourceController;
 
 Route::get(
     '/',
@@ -53,6 +54,52 @@ Route::get('price-lists', [PpmpPriceListController::class, 'index'])->name(
     'price-lists.index',
 );
 
+// funding-source
+Route::get('funding-sources', [FundingSourceController::class, 'index'])->name(
+    'funding-sources.index',
+);
+Route::post('funding-sources', [FundingSourceController::class, 'store'])->name(
+    'funding-sources.store',
+);
+Route::patch('funding-sources/{fundingSource}', [
+    FundingSourceController::class,
+    'update',
+])->name('funding-sources.update');
+Route::delete('funding-sources/{fundingSource}', [
+    FundingSourceController::class,
+    'destroy',
+])->name('funding-sources.destroy');
+
+// price-list
+Route::post('price-lists', [PpmpPriceListController::class, 'store'])->name(
+    'price-lists.store',
+);
+Route::patch('price-lists/{ppmpPriceList}', [
+    PpmpPriceListController::class,
+    'update',
+])->name('price-lists.update');
+Route::delete('price-lists/{ppmpPriceList}', [
+    PpmpPriceListController::class,
+    'destroy',
+])->name('price-lists.destroy');
+
+// offices
+Route::get('offices', [OfficeController::class, 'index'])->name(
+    'offices.index',
+);
+Route::post('offices', [OfficeController::class, 'store'])->name(
+    'offices.store',
+);
+Route::patch('offices/{office}', [OfficeController::class, 'update'])->name(
+    'offices.update',
+);
+// Route::put('offices/{office}', [OfficeController::class, 'update'])->name(
+//     'offices.update.put',
+// );
+Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
+    'offices.destroy',
+);
+
 // ---
 
 Route::get('aip-ref-code', [AipRefCodeController::class, 'index']);
@@ -84,17 +131,6 @@ Route::get('chart-of-accounts', [
 
 Route::get('sectors', [SectorController::class, 'index']);
 
-Route::get('offices', [OfficeController::class, 'index']);
-Route::post('offices', [OfficeController::class, 'store'])->name(
-    'offices.store',
-);
-Route::put('offices/{office}', [OfficeController::class, 'update'])->name(
-    'offices.update',
-);
-Route::delete('offices/{office}', [OfficeController::class, 'destroy'])->name(
-    'offices.destroy',
-);
-
 // aip summary
 Route::post('aip/{aip_id}/import', [AipEntryController::class, 'store']);
 Route::put('/aip-entries/{aipEntry}', [AipEntryController::class, 'update']);
@@ -120,6 +156,7 @@ Route::delete('/ppmp/{ppmp}', [PpmpController::class, 'destroy'])->name(
     'ppmp.destroy',
 );
 
+// ppa
 Route::get('ppa', [PpaController::class, 'index'])->name('ppa.index');
 Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
 Route::patch('ppas/{ppa}', [PpaController::class, 'update'])->name(

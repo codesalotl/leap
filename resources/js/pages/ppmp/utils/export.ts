@@ -1,11 +1,10 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
-import * as XLSX from 'xlsx';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-// import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
+
+import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
 
 interface ExportToExcelProps {
     ppmpItems: Ppmp[];
@@ -368,13 +367,7 @@ export async function exportToExcel({
     ppaDesc.value = 'PPA DESCRIPTION';
     headerTitle.value = 'PROVINCIAL GOVERNMENT OF LA UNION';
     headerSubTitle.value = 'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026';
-
-    // {
-    //             text: 'PROJECT PROCUREMENT PLAN(PPMP) CY 2026',
-    //             font: { bold: true, size: 15, name: 'Century Gothic' },
-    //         },
-    // 'PROVINCIAL GOVERNMENT OF LA UNION PROJECT PROCUREMENT PLAN(PPMP) CY 2026';
-
+    
     [
         fundingSource,
         aipRefCode,
@@ -410,142 +403,9 @@ export async function exportToExcel({
     };
     headerSubTitle.font = { bold: true, size: 20, name: 'Century Gothic' };
 
-    // console.log(worksheet.getRow(1));
-    // console.log(worksheet.getCell('A1'));
-    // console.log(worksheet.getCell('A2'));
-    // console.log(worksheet.getCell('A3'));
-    // console.log(worksheet.getCell('A4'));
-    // console.log(worksheet.getCell('A5'));
-
     const buf = await workbook.xlsx.writeBuffer();
 
     saveAs(new Blob([buf]), 'PPMP_Export.xlsx');
-
-    // // 2. Convert to HTML via SheetJS
-    // // Use type: 'array' for the buffer compatibility
-    // const readWorkbook = XLSX.read(buf, { type: 'array' });
-    // const firstSheet = readWorkbook.Sheets[readWorkbook.SheetNames[0]];
-    // const worksheetHtml = XLSX.utils.sheet_to_html(firstSheet);
-
-    // // 3. Open Print Window
-    // const printWindow = window.open('', '_blank');
-
-    // if (printWindow) {
-    //     printWindow.document.write(`
-    //             <html>
-    //                 <head>
-    //                     <title>PPMP Print Preview</title>
-    //                     <style>
-    //                         @media print {
-    //                             @page {
-    //                                 size: legal landscape;
-    //                                 margin: 0.5in;
-    //                             }
-    //                             body { margin: 0; }
-    //                         }
-    //                         body {
-    //                             font-family: 'Century Gothic', sans-serif;
-    //                             padding: 20px;
-    //                         }
-    //                         table {
-    //                             border-collapse: collapse;
-    //                             width: 100%;
-    //                             font-size: 8px; /* PPMP needs tiny text to fit */
-    //                             table-layout: auto;
-    //                         }
-    //                         td {
-    //                             border: 1px solid #000;
-    //                             padding: 2px;
-    //                             text-align: center;
-    //                             word-wrap: break-word;
-    //                         }
-    //                         /* Ensure background colors actually print */
-    //                         tr td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    //                     </style>
-    //                 </head>
-    //                 <body>
-    //                     <div id="print-content">
-    //                         ${worksheetHtml}
-    //                     </div>
-    //                     <script>
-    //                         window.onload = function() {
-    //                             setTimeout(() => {
-    //                                 window.print();
-    //                                 // window.close(); // Optional: closes tab after print dialog
-    //                             }, 500);
-    //                         };
-    //                     </script>
-    //                 </body>
-    //             </html>
-    //         `);
-    //     printWindow.document.close();
-    // }
-
-    // const readWorkbook = XLSX.read(buf, { type: 'array' });
-    // const worksheet1 = readWorkbook.Sheets[readWorkbook.SheetNames[0]];
-    // const htmlContent = XLSX.utils.sheet_to_html(worksheet1);
-
-    // const iframe = document.createElement('iframe');
-    // iframe.style.display = 'none';
-    // document.body.appendChild(iframe);
-
-    // const iframeDoc = iframe.contentWindow?.document;
-    // if (iframeDoc) {
-    //     iframeDoc.open();
-    //     iframeDoc.write(`
-    //             <html>
-    //                 <head>
-    //                     <style>
-    //                         @media print {
-    //                             @page { size: legal landscape; margin: 5mm; }
-    //                             body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    //                         }
-    //                         body { font-family: 'Century Gothic', sans-serif; }
-    //                         table { border-collapse: collapse; width: 100%; font-size: 7pt; }
-    //                         td { border: 1px solid #000; padding: 2px; text-align: center; }
-
-    //                         /* 1. Header Row (Row 6 in your logic) */
-    //                         tr:nth-child(6) td {
-    //                             background-color: #deeaf6 !important;
-    //                             font-weight: bold;
-    //                         }
-
-    //                         /* 2. Target Category/Account rows based on content or position */
-    //                         /* Since we can't easily know the exact row number for every group,
-    //                            we target cells that span across the whole table (Merged Cells) */
-    //                         tr td[colspan] {
-    //                             background-color: #fbe4d5 !important; /* Your Account Color */
-    //                             text-align: left !important;
-    //                             font-weight: bold;
-    //                         }
-
-    //                         /* 3. Monthly Quantity Columns (The Green ones) */
-    //                         /* In your code: 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30 */
-    //                         td:nth-child(8), td:nth-child(10), td:nth-child(12),
-    //                         td:nth-child(14), td:nth-child(16), td:nth-child(18),
-    //                         td:nth-child(20), td:nth-child(22), td:nth-child(24),
-    //                         td:nth-child(26), td:nth-child(28), td:nth-child(30) {
-    //                             background-color: #92d050 !important;
-    //                         }
-
-    //                         /* 4. Total Rows (The yellow ones) */
-    //                         /* Target rows where the second cell is "TOTAL" */
-    //                         tr:has(td:nth-child(3):contains("TOTAL")) {
-    //                             background-color: #fef2cb !important;
-    //                         }
-    //                     </style>
-    //                 </head>
-    //                 <body>${htmlContent}</body>
-    //             </html>
-    //         `);
-    //     iframeDoc.close();
-
-    //     setTimeout(() => {
-    //         iframe.contentWindow?.focus();
-    //         iframe.contentWindow?.print();
-    //         document.body.removeChild(iframe);
-    //     }, 500);
-    // }
 }
 
 import { centuryGothicBase64 } from '@/fonts/CenturyGothic';

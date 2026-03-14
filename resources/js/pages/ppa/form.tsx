@@ -45,7 +45,7 @@ const formSchema = z.object({
         .min(1, 'Suffix is required')
         .max(3, 'Suffix must be 3 digits (e.g., 001)')
         .regex(/^\d+$/, 'Suffix must be numeric'),
-    type: z.enum(['Program', 'Project', 'Activity']),
+    type: z.enum(['Program', 'Project', 'Activity', 'Sub-Activity']),
     is_active: z.boolean().default(true),
 });
 
@@ -71,7 +71,7 @@ interface Office {
 interface PpaFormDialogProps {
     data?: any;
     mode: 'add' | 'edit';
-    type?: 'Program' | 'Project' | 'Activity';
+    type?: 'Program' | 'Project' | 'Activity' | 'Sub-Activity';
     onSuccess?: () => void;
     offices: Office[];
     isDialogOpen: boolean;
@@ -120,14 +120,20 @@ export default function PpaFormDialog({
     )?.full_code;
 
     const getCodePreview = () => {
+        const suffix = codeSuffix || '000';
+
         if (currentType === 'Program') {
-            return `${officeFullCode || '0000-000-0-00-000'}-${codeSuffix || '000'}`;
+            return `${officeFullCode || '0000-000-0-00-000'}-${suffix}`;
         }
-        // For Projects/Activities, we use the parent's full_code
-        if (activePpa?.full_code) {
-            return `${activePpa.full_code}-${codeSuffix || '000'}`;
+
+        // For Projects, Activities, and Sub-Activities:
+        // We use the full_code of the 'data' (the parent) passed to the dialog
+        if (data?.full_code) {
+            return `${data.full_code}-${suffix}`;
         }
-        return `CODE-${codeSuffix || '000'}`;
+
+        // Fallback for UI during loading/missing parent context
+        return `...-${suffix}`;
     };
 
     // 3. Sync form with props when dialog opens
@@ -141,16 +147,16 @@ export default function PpaFormDialog({
                 is_active: !!data?.is_active,
             });
         } else if (mode === 'add') {
-            // Adding Mode
             form.reset({
-                office_id: data?.office_id?.toString() || '', // Inherit office from parent if exists
+                // Automatically inherit office_id from parent (data) if adding a child
+                office_id: data?.office_id?.toString() || '',
                 title: '',
                 code_suffix: '',
-                type: type || 'Program',
+                type: (targetType as any) || type || 'Program',
                 is_active: true,
             });
         }
-    }, [data, mode, type, form, isDialogOpen]);
+    }, [data, mode, type, targetType, isDialogOpen]);
 
     // 4. Submit Handler
     function onSubmit(values: FormValues) {
@@ -158,10 +164,13 @@ export default function PpaFormDialog({
 
         if (isEditing) {
             router.patch(`/ppas/${data.id}`, payload, {
-                onSuccess: () => onSuccess?.(),
+                onSuccess: () => {
+                    setIsDialogOpen(false);
+                    onSuccess?.();
+                },
             });
         } else {
-            // If adding a child, include the parent_id
+            // When adding Project, Activity, or Sub-Activity, data is the Parent
             if (isAddingChild) {
                 payload.parent_id = data.id;
             }
@@ -169,6 +178,7 @@ export default function PpaFormDialog({
             router.post('/ppas', payload, {
                 onSuccess: () => {
                     form.reset();
+                    setIsDialogOpen(false);
                     onSuccess?.();
                 },
             });

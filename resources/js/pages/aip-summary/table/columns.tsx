@@ -2,24 +2,20 @@ import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AipEntry } from '@/pages/types/types';
 import { Ppa } from '@/pages/types/types';
 
 export const formatNumber = (val: string) => {
     const num = parseFloat(val);
-    return isNaN(num)
-        ? '0.00'
-        : num.toLocaleString(undefined, {
+
+    return num
+        ? num.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-          });
+          })
+        : '-';
 };
 
 export const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-
     const months = [
         'Jan',
         'Feb',
@@ -34,20 +30,20 @@ export const formatDate = (dateString: string) => {
         'Nov',
         'Dec',
     ];
-    const month = months[date.getMonth()];
-    const year = date.getFullYear().toString().slice(-2);
 
-    return `${month}-${year}`;
+    const dateSplit = dateString.split('-');
+
+    return `${months[Number(dateSplit[1]) - 1]}-${dateSplit[2]}`;
 };
 
 interface ColumnActions {
-    onAddEntry: (entry: AipEntry) => void;
-    onEdit: (entry: AipEntry) => void;
-    onDelete: (entry: AipEntry) => void;
+    onAddEntry: (entry: Ppa) => void;
+    onEdit: (entry: Ppa) => void;
+    onDelete: (entry: Ppa) => void;
     masterPpas: Ppa[];
 }
 
-const columnHelper = createColumnHelper<AipEntry>();
+const columnHelper = createColumnHelper<Ppa>();
 
 const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
     for (const node of nodes) {
@@ -69,8 +65,8 @@ export const getColumns = ({
     onEdit,
     onDelete,
     masterPpas,
-}: ColumnActions): ColumnDef<AipEntry, any>[] => [
-    columnHelper.accessor('aip_ref_code', {
+}: ColumnActions): ColumnDef<Ppa, string>[] => [
+    columnHelper.accessor('full_code', {
         header: 'AIP Reference Code',
         size: 300,
         cell: (info) => (
@@ -79,11 +75,11 @@ export const getColumns = ({
             </code>
         ),
     }),
-    columnHelper.accessor('ppa_desc', {
+    columnHelper.accessor('title', {
         header: 'Program/Project/Activity Description',
         filterFn: (row, _columnId, value) => {
-            const description = row.getValue('ppa_desc') as string;
-            const refCode = row.getValue('aip_ref_code') as string;
+            const description = row.getValue('title') as string;
+            const refCode = row.getValue('full_code') as string;
             const searchValue = (value as string)?.toLowerCase() || '';
 
             return (
@@ -100,13 +96,15 @@ export const getColumns = ({
                 {row.depth > 0 && (
                     <span className="text-muted-foreground opacity-50">↳</span>
                 )}
-                <span className="break-words whitespace-normal">{getValue()}</span>
+                <span className="break-words whitespace-normal">
+                    {getValue()}
+                </span>
             </div>
         ),
     }),
-    columnHelper.accessor('implementing_office_department', {
+    columnHelper.accessor('office.acronym', {
         header: 'Implementing Office/Department',
-        size: 500,
+        size: 300,
         cell: (info) => (
             <div className="break-words whitespace-normal">
                 {info.getValue()}
@@ -116,17 +114,17 @@ export const getColumns = ({
     columnHelper.group({
         header: 'Schedule of Implementation',
         columns: [
-            columnHelper.accessor('sched_implementation.start_date', {
+            columnHelper.accessor('aip_entry.start_date', {
                 header: 'Start Date',
                 cell: (info) => formatDate(info.getValue()),
             }),
-            columnHelper.accessor('sched_implementation.completion_date', {
+            columnHelper.accessor('aip_entry.end_date', {
                 header: 'Completion Date',
                 cell: (info) => formatDate(info.getValue()),
             }),
         ],
     }),
-    columnHelper.accessor('expected_outputs', {
+    columnHelper.accessor('aip_entry.expected_output', {
         header: 'Expected Outputs',
         size: 600,
         cell: (info) => (
@@ -135,42 +133,49 @@ export const getColumns = ({
             </div>
         ),
     }),
-    columnHelper.accessor('funding_source', {
+    columnHelper.accessor('aip_entry.funding_source.title', {
         header: 'Funding Source',
-        cell: (info) => info.getValue() || '-',
+        cell: (info) => {
+            const value = info.getValue();
+
+            if (value === undefined)
+                return <span className="bg-yellow items-center">-</span>;
+
+            return value;
+        },
     }),
     columnHelper.group({
         header: 'Amount (in thousand pesos)',
         columns: [
-            columnHelper.accessor('amount.ps', {
+            columnHelper.accessor('aip_entry.ps_amount', {
                 header: () => <div className="text-right">PS</div>,
-                cell: (i) => (
+                cell: (info) => (
                     <span className="block text-right">
-                        {formatNumber(i.getValue())}
+                        {formatNumber(info.getValue())}
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.mooe', {
+            columnHelper.accessor('aip_entry.mooe_amount', {
                 header: () => <div className="text-right">MOOE</div>,
-                cell: (i) => (
+                cell: (info) => (
                     <span className="block text-right">
-                        {formatNumber(i.getValue())}
+                        {formatNumber(info.getValue())}
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.fe', {
+            columnHelper.accessor('aip_entry.fe_amount', {
                 header: () => <div className="text-right">FE</div>,
-                cell: (i) => (
+                cell: (info) => (
                     <span className="block text-right">
-                        {formatNumber(i.getValue())}
+                        {formatNumber(info.getValue())}
                     </span>
                 ),
             }),
-            columnHelper.accessor('amount.co', {
+            columnHelper.accessor('aip_entry.co_amount', {
                 header: () => <div className="text-right">CO</div>,
-                cell: (i) => (
+                cell: (info) => (
                     <span className="block text-right">
-                        {formatNumber(i.getValue())}
+                        {formatNumber(info.getValue())}
                     </span>
                 ),
             }),
@@ -178,12 +183,11 @@ export const getColumns = ({
                 id: 'amount.total',
                 header: () => <div className="text-right">Total</div>,
                 cell: ({ row }) => {
-                    const amount = row.original.amount;
                     const total =
-                        parseFloat(amount.ps || '0') +
-                        parseFloat(amount.mooe || '0') +
-                        parseFloat(amount.fe || '0') +
-                        parseFloat(amount.co || '0');
+                        parseFloat(row.original.aip_entry?.ps_amount || '0') +
+                        parseFloat(row.original.aip_entry?.mooe_amount || '0') +
+                        parseFloat(row.original.aip_entry?.fe_amount || '0') +
+                        parseFloat(row.original.aip_entry?.co_amount || '0');
                     return (
                         <span className="block text-right font-bold">
                             {formatNumber(total.toString())}
@@ -196,7 +200,7 @@ export const getColumns = ({
     columnHelper.group({
         header: 'CC Expenditure',
         columns: [
-            columnHelper.accessor('cc_adaptation', {
+            columnHelper.accessor('aip_entry.ccet_adaptation', {
                 header: () => <div className="text-right">Adaptation</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -204,7 +208,7 @@ export const getColumns = ({
                     </span>
                 ),
             }),
-            columnHelper.accessor('cc_mitigation', {
+            columnHelper.accessor('aip_entry.ccet_mitigation', {
                 header: () => <div className="text-right">Mitigation</div>,
                 cell: (i) => (
                     <span className="block text-right">
@@ -214,19 +218,14 @@ export const getColumns = ({
             }),
         ],
     }),
-    columnHelper.accessor('cc_typology_code', {
-        header: 'CC Typology Code',
-        cell: (info) => info.getValue() || '-',
-    }),
     columnHelper.display({
         id: 'actions',
-        // enableHiding: false,
-        // enablePinning: true,
         size: 116,
         cell: ({ row }) => {
             const entry = row.original;
-            const masterNode = findPpaInTree(masterPpas, entry.ppa_id);
-            const isActivity = masterNode?.type === 'Activity';
+            const ppaId = entry.aip_entry?.ppa_id;
+            const masterNode = ppaId ? findPpaInTree(masterPpas, ppaId) : null;
+            const isSubActivity = masterNode?.type === 'Sub-Activity';
 
             return (
                 <div className="flex justify-between">
@@ -234,7 +233,7 @@ export const getColumns = ({
                         title="Add PPA"
                         size="icon"
                         onClick={() => onAddEntry(entry)}
-                        disabled={isActivity}
+                        disabled={isSubActivity}
                     >
                         <Plus />
                     </Button>
