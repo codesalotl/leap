@@ -1,7 +1,7 @@
-import { ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import { columns } from '@/pages/price-list/table/columns';
 import DataTable from '@/pages/price-list/table/data-table';
-import { PriceList } from '@/pages/types/types';
+import type { PriceList } from '@/pages/types/types';
 
 interface PriceListTablePageProps {
     data: PriceList[];

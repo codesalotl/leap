@@ -1,5 +1,6 @@
-import { createColumnHelper, RowData } from '@tanstack/react-table';
-import { FundingSource } from '@/pages/types/types';
+import type { RowData } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
+import type { FundingSource } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
 // import { Badge } from '@/components/ui/badge';
 import {

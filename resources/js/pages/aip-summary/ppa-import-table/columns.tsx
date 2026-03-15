@@ -1,7 +1,8 @@
-import {
-    createColumnHelper,
+import type {
     RowSelectionState,
-    Row,
+    Row} from '@tanstack/react-table';
+import {
+    createColumnHelper
 } from '@tanstack/react-table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';

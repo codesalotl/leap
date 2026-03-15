@@ -1,14 +1,16 @@
-import { useState, useEffect, ReactNode } from 'react';
-import {
+import type { ReactNode } from 'react';
+import { useState, useEffect } from 'react';
+import type {
     ColumnDef,
     ColumnFiltersState,
+    Column} from '@tanstack/react-table';
+import {
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
-    useReactTable,
-    Column,
+    useReactTable
 } from '@tanstack/react-table';
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import {
     Table,
     TableBody,

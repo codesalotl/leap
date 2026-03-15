@@ -2,7 +2,7 @@ import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Ppa } from '@/pages/types/types';
+import type { Ppa } from '@/pages/types/types';
 
 export const formatNumber = (val: string) => {
     const num = parseFloat(val);
@@ -78,8 +78,8 @@ export const getColumns = ({
     columnHelper.accessor('title', {
         header: 'Program/Project/Activity Description',
         filterFn: (row, _columnId, value) => {
-            const description = row.getValue('title') as string;
-            const refCode = row.getValue('full_code') as string;
+            const description = row.getValue('title');
+            const refCode = row.getValue('full_code');
             const searchValue = (value as string)?.toLowerCase() || '';
 
             return (

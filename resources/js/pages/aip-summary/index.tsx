@@ -29,7 +29,7 @@ import { useAipColumns } from '@/pages/aip-summary/table/columns';
 
 import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
 
-import { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
+import type { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
 import { type BreadcrumbItem } from '@/types';
 
 interface AipSummaryTableProp {

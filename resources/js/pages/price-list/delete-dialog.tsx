@@ -8,7 +8,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { usePage, router } from '@inertiajs/react';
-import { PriceList } from '@/pages/types/types';
+import type { PriceList } from '@/pages/types/types';
 import { useState } from 'react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';

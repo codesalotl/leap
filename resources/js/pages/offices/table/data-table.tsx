@@ -1,7 +1,9 @@
-import { useState, CSSProperties, ReactElement, useMemo } from 'react';
-import {
+import type { CSSProperties, ReactElement} from 'react';
+import { useState, useMemo } from 'react';
+import type {
     Column,
-    ColumnDef,
+    ColumnDef} from '@tanstack/react-table';
+import {
     flexRender,
     getCoreRowModel,
     useReactTable,
@@ -17,7 +19,7 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Office } from '@/pages/types/types';
+import type { Office } from '@/pages/types/types';
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];

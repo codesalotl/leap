@@ -4,7 +4,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
+import type { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
 
 interface ExportToExcelProps {
     ppmpItems: Ppmp[];

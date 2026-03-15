@@ -8,7 +8,7 @@ import {
     DialogFooter,
     DialogClose,
 } from '@/components/ui/dialog';
-import { FundingSource } from '@/pages/types/types';
+import type { FundingSource } from '@/pages/types/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';

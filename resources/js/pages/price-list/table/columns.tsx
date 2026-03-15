@@ -1,5 +1,6 @@
-import { createColumnHelper, RowData } from '@tanstack/react-table';
-import { PriceList } from '@/pages/types/types';
+import type { RowData } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
+import type { PriceList } from '@/pages/types/types';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash } from 'lucide-react';
 

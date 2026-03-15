@@ -1,11 +1,12 @@
-import {
+import type {
     ColumnDef,
+    Column} from '@tanstack/react-table';
+import {
     flexRender,
     getCoreRowModel,
-    useReactTable,
-    Column,
+    useReactTable
 } from '@tanstack/react-table';
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import {
     Table,
     TableBody,
@@ -16,7 +17,7 @@ import {
     TableFooter,
 } from '@/components/ui/table';
 import { columns } from './columns';
-import { Ppmp } from '@/pages/types/types';
+import type { Ppmp } from '@/pages/types/types';
 
 interface PpmpTableProps {
     ppmpItems: Ppmp[];

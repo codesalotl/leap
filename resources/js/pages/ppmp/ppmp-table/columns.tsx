@@ -1,7 +1,7 @@
-import { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Ppmp } from '@/pages/types/types';
+import type { Ppmp } from '@/pages/types/types';
 import { Decimal } from 'decimal.js';
 import { Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -9,7 +9,7 @@ import { router } from '@inertiajs/react';
 
 export const formatNumber = (val: string | number) => {
     const num = typeof val === 'string' ? parseFloat(val) : val;
-    return isNaN(num as number) || num === null
+    return isNaN(num) || num === null
         ? '0.00'
         : num.toLocaleString(undefined, {
               minimumFractionDigits: 2,

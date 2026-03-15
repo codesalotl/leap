@@ -2,7 +2,7 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
-import { PriceList, ChartOfAccount, PpmpCategory } from '@/pages/types/types';
+import type { PriceList, ChartOfAccount, PpmpCategory } from '@/pages/types/types';
 import PriceListTablePage from '@/pages/price-list/table/page';
 import FormDialog from '@/pages/price-list/form-dialog';
 import DeleteDialog from '@/pages/price-list/delete-dialog';

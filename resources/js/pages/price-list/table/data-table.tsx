@@ -1,7 +1,9 @@
-import { useState, CSSProperties, ReactElement } from 'react';
-import {
+import type { CSSProperties, ReactElement } from 'react';
+import { useState } from 'react';
+import type {
     Column,
-    ColumnDef,
+    ColumnDef} from '@tanstack/react-table';
+import {
     flexRender,
     getCoreRowModel,
     useReactTable,

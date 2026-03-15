@@ -6,7 +6,7 @@ import { router } from '@inertiajs/react';
 import FormDialog from './form-dialog';
 import DeleteDialog from './delete-dialog';
 import OfficeTablePage from './table/page';
-import { Office, Sector, LguLevel, OfficeType } from '@/pages/types/types';
+import type { Office, Sector, LguLevel, OfficeType } from '@/pages/types/types';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Offices', href: '#' }];
 

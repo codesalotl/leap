@@ -8,7 +8,7 @@ import {
     AlertDialogTitle,
     AlertDialogDescription,
 } from '@/components/ui/alert-dialog';
-import { Ppa } from '@/pages/types/types';
+import type { Ppa } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 
 interface DeleteDialogProps {

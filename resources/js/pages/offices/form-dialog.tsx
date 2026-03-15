@@ -8,7 +8,7 @@ import {
     DialogTitle,
     DialogClose,
 } from '@/components/ui/dialog';
-import { Office } from '@/pages/types/types';
+import type { Office } from '@/pages/types/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -16,7 +16,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
-import { Sector, LguLevel, OfficeType } from '@/pages/types/types';
+import type { Sector, LguLevel, OfficeType } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {

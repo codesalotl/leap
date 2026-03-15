@@ -1,18 +1,19 @@
 import * as React from 'react';
-import {
+import type {
     ColumnDef,
     ColumnFiltersState,
     SortingState,
+    Column} from '@tanstack/react-table';
+import {
     // ExpandedState,
     flexRender,
     getCoreRowModel,
     getFilteredRowModel,
     getSortedRowModel,
     getExpandedRowModel,
-    useReactTable,
-    Column,
+    useReactTable
 } from '@tanstack/react-table';
-import { CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import {
     Table,
     TableBody,

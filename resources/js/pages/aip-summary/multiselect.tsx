@@ -17,7 +17,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
-import { FundingSource } from '@/pages/types/types';
+import type { FundingSource } from '@/pages/types/types';
 
 interface MultiSelectProps {
     options: FundingSource[];

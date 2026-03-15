@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/dialog';
 import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import { PDFViewer } from '@react-pdf/renderer';
-import { FiscalYear, Ppa } from '@/pages/types/types';
+import type { FiscalYear, Ppa } from '@/pages/types/types';
 import { Font } from '@react-pdf/renderer';
 
 interface ExportToPdfDialogProps {
@@ -147,7 +147,7 @@ export default function ExportToPdfDialog({
         let rootCounter = 0;
 
         // We use a stack for Depth-First Search (DFS)
-        const stack = [...initialEntries].reverse().map((item) => ({
+        const stack = [...initialEntries].toReversed().map((item) => ({
             item,
             level: 0,
             path: [],

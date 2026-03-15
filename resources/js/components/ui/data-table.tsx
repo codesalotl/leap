@@ -3,7 +3,7 @@ import {
   type Table,
   type Column, // Added this import
 } from "@tanstack/react-table"
-import { CSSProperties } from "react"
+import type { CSSProperties } from "react"
 
 import {
   Table as UITable,

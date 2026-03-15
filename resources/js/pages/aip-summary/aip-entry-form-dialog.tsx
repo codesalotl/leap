@@ -26,7 +26,8 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import { FiscalYear, AipEntry, Ppa, FundingSource } from '@/pages/types/types';
+import type { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
+import { AipEntry } from '@/pages/types/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { useState } from 'react';

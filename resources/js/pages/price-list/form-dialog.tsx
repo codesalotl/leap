@@ -23,7 +23,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChartOfAccount, PpmpCategory, PriceList } from '@/pages/types/types';
+import type { ChartOfAccount, PpmpCategory, PriceList } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
 import { Check, ChevronsUpDown } from 'lucide-react';

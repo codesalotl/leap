@@ -17,7 +17,7 @@ import DataTable from '@/pages/ppmp/ppmp-table/data-table';
 import PpmpFormDialog from '@/pages/ppmp/ppmp-form-dialog';
 
 import { type BreadcrumbItem } from '@/types';
-import {
+import type {
     FiscalYear,
     Ppmp,
     ChartOfAccount,

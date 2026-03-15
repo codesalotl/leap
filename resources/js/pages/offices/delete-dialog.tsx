@@ -7,7 +7,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Office } from '@/pages/types/types';
+import type { Office } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';

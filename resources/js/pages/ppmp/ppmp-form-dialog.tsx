@@ -30,7 +30,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChartOfAccount, PpmpCategory } from '@/pages/types/types';
+import type { ChartOfAccount, PpmpCategory } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 
 // Import toggle component

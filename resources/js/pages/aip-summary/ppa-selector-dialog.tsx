@@ -16,8 +16,8 @@ import {
     getPpaColumns,
     // Ppa,
 } from '@/pages/aip-summary/ppa-import-table/columns';
-import { RowSelectionState } from '@tanstack/react-table';
-import { Ppa } from '@/pages/types/types';
+import type { RowSelectionState } from '@tanstack/react-table';
+import type { Ppa } from '@/pages/types/types';
 
 interface PpaSelectorDialogProps {
     isOpen: boolean;

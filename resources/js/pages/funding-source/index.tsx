@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { FundingSource } from '@/pages/types/types';
+import type { FundingSource } from '@/pages/types/types';
 import FundingSourceTablePage from '@/pages/funding-source/table/page';
 import { Button } from '@/components/ui/button';
 import FormDialog from '@/pages/funding-source/form-dialog';

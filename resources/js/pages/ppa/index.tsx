@@ -14,7 +14,8 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { columns, Ppa } from '@/pages/ppa/ppa-masterlist-table/columns';
+import type { Ppa } from '@/pages/ppa/ppa-masterlist-table/columns';
+import { columns } from '@/pages/ppa/ppa-masterlist-table/columns';
 import PpaTablePage from '@/pages/ppa/ppa-masterlist-table/page';
 import PpaFormDialog from '@/pages/ppa/form';
 
