@@ -10,7 +10,8 @@
     ],
     "tailwindFunctions": [
         "clsx",
-        "cn"
+        "cn",
+        "cva"
     ],
     "tailwindStylesheet": "resources/css/app.css",
     "tabWidth": 4,
