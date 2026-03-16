@@ -30,13 +30,21 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import type { ChartOfAccount, PpmpCategory } from '@/pages/types/types';
+import type {
+    ChartOfAccount,
+    PpmpCategory,
+    FundingSource,
+} from '@/pages/types/types';
 import { router } from '@inertiajs/react';
 
 // Import toggle component
 import { Switch } from '@/components/ui/switch';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+interface FundingSourceWrapper {
+    funding_source: FundingSource;
+}
 
 interface PpmpFormDialogProps {
     open: boolean;
@@ -46,6 +54,7 @@ interface PpmpFormDialogProps {
     ppmpPriceList: unknown[];
     selectedEntry: { id: number } | null;
     ppmpItems: unknown[];
+    fundingSources: FundingSourceWrapper[];
 }
 
 const formSchema = z
@@ -65,6 +74,7 @@ const formSchema = z
             .string()
             .min(1, 'Unit of measurement is required.'),
         price: z.string().min(1, 'Price is required.'),
+        fundingSource: z.number(),
         isCustomItem: z.boolean(),
         isCustomCategory: z.boolean(),
     })
@@ -91,9 +101,14 @@ export default function PpmpFormDialog({
     ppmpPriceList = [],
     selectedEntry = null,
     ppmpItems = [],
+    fundingSources,
 }: PpmpFormDialogProps) {
+    console.log(fundingSources);
+
     // State for the Command Dialogs
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
+    const [openFundingSourceCommand, setOpenFundingSourceCommand] =
+        useState(false);
     const [openCategoryCommand, setOpenCategoryCommand] = useState(false);
     const [openDescriptionCommand, setOpenDescriptionCommand] = useState(false);
 
@@ -109,6 +124,7 @@ export default function PpmpFormDialog({
             description: '',
             unitOfMeasurement: '',
             price: '',
+            fundingSource: undefined,
             isCustomItem: false,
             isCustomCategory: false,
         },
@@ -181,36 +197,21 @@ export default function PpmpFormDialog({
     }, [isCustomCategory, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        // console.log(data);
+        console.log(data);
 
         if (isCustomItem) {
-            // console.log('yes custom item');
-
             const itemNumber = parseInt(data.itemNo);
-
-            if (isNaN(itemNumber) || itemNumber <= 0) {
-                alert('Please enter a valid item number (positive integer)');
-                return;
-            }
-
-            const price = parseFloat(data.price);
-            if (isNaN(price) || price < 0) {
-                alert('Please enter a valid price (positive number)');
-                return;
-            }
 
             const customItemData = {
                 aip_entry_id: data.aip_entry_id,
                 item_number: itemNumber,
                 description: data.description,
                 unit_of_measurement: data.unitOfMeasurement,
-                price: price,
+                price: data.price,
                 chart_of_account_id: data.expenseAccount,
                 ppmp_category_id: isCustomCategory ? null : data.category,
                 custom_category: isCustomCategory ? data.customCategory : null,
             };
-
-            console.log(customItemData);
 
             router.post('/ppmp/custom', customItemData, {
                 onSuccess: () => onOpenChange(false),
@@ -219,7 +220,7 @@ export default function PpmpFormDialog({
                 preserveState: false,
             });
         } else {
-            // console.log('no custom item');
+            console.log(data);
 
             if (!data.ppmp_price_list_id) {
                 alert('Please select an item from the price list');
@@ -229,6 +230,7 @@ export default function PpmpFormDialog({
             const submitData = {
                 aip_entry_id: data.aip_entry_id,
                 ppmp_price_list_id: data.ppmp_price_list_id,
+                funding_source_id: data.fundingSource,
             };
 
             router.post('/ppmp', submitData, {
@@ -835,6 +837,154 @@ export default function PpmpFormDialog({
                                         )}
                                     </Field>
                                 )}
+                            />
+                        </div>
+
+                        <div>
+                            <Controller
+                                name="fundingSource"
+                                control={form.control}
+                                render={({ field, fieldState }) => {
+                                    const selectedFundingSource =
+                                        fundingSources.find(
+                                            (fundingSource) =>
+                                                fundingSource.funding_source
+                                                    .id === field.value,
+                                        );
+
+                                    return (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            {/*<FieldContent>*/}
+                                            <FieldLabel htmlFor="funding-source-select">
+                                                Funding Source
+                                            </FieldLabel>
+
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                role="combobox"
+                                                aria-expanded={
+                                                    openFundingSourceCommand
+                                                }
+                                                className={cn(
+                                                    'w-full justify-between px-3 text-left font-normal',
+                                                    !field.value &&
+                                                        'text-muted-foreground',
+                                                    fieldState.invalid &&
+                                                        'border-destructive ring-destructive',
+                                                )}
+                                                onClick={() =>
+                                                    setOpenFundingSourceCommand(
+                                                        true,
+                                                    )
+                                                }
+                                            >
+                                                {selectedFundingSource ? (
+                                                    <span className="truncate">
+                                                        <code className="mr-2 rounded bg-muted p-0.5 text-xs">
+                                                            {
+                                                                selectedFundingSource
+                                                                    .funding_source
+                                                                    .code
+                                                            }
+                                                        </code>
+                                                        {
+                                                            selectedFundingSource
+                                                                .funding_source
+                                                                .title
+                                                        }
+                                                    </span>
+                                                ) : (
+                                                    'Select funding source'
+                                                )}
+                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                            </Button>
+
+                                            <CommandDialog
+                                                open={openFundingSourceCommand}
+                                                onOpenChange={
+                                                    setOpenFundingSourceCommand
+                                                }
+                                                className="sm:max-w-[600px]"
+                                            >
+                                                <Command>
+                                                    <CommandInput placeholder="Search funding source..." />
+
+                                                    <CommandList>
+                                                        <CommandEmpty>
+                                                            No funding source
+                                                            found.
+                                                        </CommandEmpty>
+
+                                                        <CommandGroup heading="Chart of Accounts">
+                                                            {fundingSources.map(
+                                                                (
+                                                                    fundingSource,
+                                                                ) => (
+                                                                    <CommandItem
+                                                                        key={
+                                                                            fundingSource
+                                                                                .funding_source
+                                                                                .id
+                                                                        }
+                                                                        value={`${fundingSource.funding_source.fund_type} ${fundingSource.funding_source.code} ${fundingSource.funding_source.title}`}
+                                                                        onSelect={() => {
+                                                                            field.onChange(
+                                                                                fundingSource
+                                                                                    .funding_source
+                                                                                    .id,
+                                                                            );
+                                                                            setOpenFundingSourceCommand(
+                                                                                false,
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <div className="flex w-full items-center justify-between">
+                                                                            <div>
+                                                                                {
+                                                                                    fundingSource
+                                                                                        .funding_source
+                                                                                        .fund_type
+                                                                                }
+                                                                                <code className="mr-2 rounded bg-muted p-1 text-xs">
+                                                                                    {
+                                                                                        fundingSource
+                                                                                            .funding_source
+                                                                                            .code
+                                                                                    }
+                                                                                </code>
+                                                                                {
+                                                                                    fundingSource
+                                                                                        .funding_source
+                                                                                        .title
+                                                                                }
+                                                                            </div>
+                                                                            {field.value ===
+                                                                                fundingSource
+                                                                                    .funding_source
+                                                                                    .id && (
+                                                                                <Check className="ml-2 h-4 w-4 opacity-100" />
+                                                                            )}
+                                                                        </div>
+                                                                    </CommandItem>
+                                                                ),
+                                                            )}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </CommandDialog>
+
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                            {/*</FieldContent>*/}
+                                        </Field>
+                                    );
+                                }}
                             />
                         </div>
                     </div>

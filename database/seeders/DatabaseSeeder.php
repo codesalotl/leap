@@ -30,46 +30,23 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             LguLevelSeeder::class,
-
-            // ---
-
             UserSeeder::class,
-
             SectorSeeder::class,
-            // LguLevelSeeder::class,
             OfficeTypeSeeder::class,
             OfficeSeeder::class,
-
             SignatorySeeder::class,
-
             AllotmentClassSeeder::class,
             AccountGroupSeeder::class,
             ChartOfAccountSeeder::class,
-
-            // AipSeeder::class,
             FiscalYearSeeder::class,
-
-            // ---
-
-            // AipSummaryFormSeeder::class,
-
-            // ProgramSeeder::class,
-            // ProjectSeeder::class,
-            // ActivitySeeder::class,
-
-            // AipCollectionsSeeder::class,
             AttributionSeeder::class,
             PpaSeeder::class,
-
             AipEntrySeeder::class,
-
             PpaItemizedCostSeeder::class,
-
             PpmpCategorySeeder::class,
             PpmpPriceListSeeder::class,
-            PpmpSeeder::class,
-
             FundingSourceSeeder::class,
+            PpmpSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

@@ -23,6 +23,7 @@ import type {
     ChartOfAccount,
     AipEntry,
     PpmpCategory,
+    FundingSource,
 } from '@/pages/types/types';
 import {
     exportToExcel,
@@ -36,6 +37,7 @@ interface PpmpPageProps {
     ppmpItems: Ppmp[];
     chartOfAccounts: ChartOfAccount[];
     ppmpCategories: PpmpCategory[];
+    fundingSources: FundingSource[];
 }
 
 export default function PpmpPage({
@@ -44,8 +46,11 @@ export default function PpmpPage({
     ppmpItems,
     chartOfAccounts,
     ppmpCategories,
+    fundingSources,
 }: PpmpPageProps) {
-    console.log(ppmpItems);
+    // console.log(ppmpItems);
+    console.log(fundingSources);
+
     const [open, setOpen] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -156,6 +161,7 @@ export default function PpmpPage({
                 ppmpPriceList={[]}
                 selectedEntry={aipEntry}
                 ppmpItems={ppmpItems}
+                fundingSources={fundingSources}
             />
         </AppLayout>
     );

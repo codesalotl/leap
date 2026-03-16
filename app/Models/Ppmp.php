@@ -13,6 +13,7 @@ class Ppmp extends Model
     protected $fillable = [
         'aip_entry_id',
         'ppmp_price_list_id',
+        'funding_source_id',
         'quantity',
         'jan_qty',
         'jan_amount',

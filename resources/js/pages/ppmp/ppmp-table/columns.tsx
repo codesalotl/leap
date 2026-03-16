@@ -108,7 +108,7 @@ export const columns: ColumnDef<Ppmp>[] = [
                 cell.row.original.ppmp_price_list?.chart_of_account
                     ?.account_title;
 
-            console.log(accountTitle);
+            // console.log(accountTitle);
 
             return accountTitle;
         },

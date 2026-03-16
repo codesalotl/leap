@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\AipEntry;
+use App\Models\FundingSource;
 use App\Models\PpmpPriceList;
 use App\Models\Ppmp;
 
@@ -17,6 +18,7 @@ class PpmpSeeder extends Seeder
     {
         // Get required data
         $aipEntry = AipEntry::find(1);
+        $fundingSourceItem = FundingSource::first();
         $priceListItems = PpmpPriceList::limit(10)->get();
 
         if (!$aipEntry || $priceListItems->isEmpty()) {
@@ -24,6 +26,12 @@ class PpmpSeeder extends Seeder
                 'Missing required data for PPMP seeder. Please run AIP Entry and Price List seeders first.',
             );
             return;
+        }
+
+        if (!$fundingSourceItem) {
+            $fundingSourceItem = \App\Models\FundingSource::create([
+                'name' => 'General Fund',
+            ]);
         }
 
         // Create 10 sample PPMP items
@@ -39,6 +47,7 @@ class PpmpSeeder extends Seeder
             $ppmpData = [
                 'aip_entry_id' => $aipEntry->id,
                 'ppmp_price_list_id' => $priceListItem->id,
+                'funding_source_id' => $fundingSourceItem->id,
                 // 'quantity' removed from here
             ];
 

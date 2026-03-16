@@ -13,12 +13,8 @@ return new class extends Migration {
         Schema::create('ppmps', function (Blueprint $table) {
             $table->id();
             $table->foreignId('aip_entry_id')->constrained();
-            // $table->foreignId('chart_of_account_id')->nullable()->constrained('chart_of_accounts');
             $table->foreignId('ppmp_price_list_id')->nullable()->constrained();
-            // $table->decimal('quantity', 19, 2);
-            // $table->text('specifications')->nullable();
-
-            // Monthly breakdown
+            $table->foreignId('funding_source_id')->constrained();
             $table->decimal('jan_qty', 19, 2)->default(0);
             $table->decimal('jan_amount', 15, 2)->default(0);
             $table->decimal('feb_qty', 19, 2)->default(0);
