@@ -136,7 +136,7 @@ export const getColumns = ({
     }),
     columnHelper.accessor('aip_entry.funding_source', {
         header: 'Funding Source',
-        size: 200,
+        size: 300,
         cell: (info) => (
             <div className="flex flex-wrap gap-1">
                 {info.getValue().map((value: FundingSource) => (
