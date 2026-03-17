@@ -24,8 +24,11 @@ class PpmpController extends Controller
     public function index(FiscalYear $fiscalYear, AipEntry $aipEntry)
     {
         $ppmpItems = Ppmp::where('aip_entry_id', $aipEntry->id)
-            ->with(['ppmpPriceList.category'])
-            ->with(['ppmpPriceList.chartOfAccount'])
+            ->with([
+                'fundingSource', // Direct relationship
+                'ppmpPriceList.category', // Nested relationships
+                'ppmpPriceList.chartOfAccount',
+            ])
             ->get();
 
         $chartOfAccounts = ChartOfAccount::where('expense_class', 'MOOE')

@@ -87,6 +87,11 @@ class Ppmp extends Model
         return $this->belongsTo(PpmpPriceList::class);
     }
 
+    public function fundingSource()
+    {
+        return $this->belongsTo(FundingSource::class);
+    }
+
     // // Accessor for item description from price list
     // public function getItemDescriptionAttribute()
     // {

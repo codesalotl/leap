@@ -10,11 +10,8 @@ import {
 } from '@/components/ui/dialog';
 import {
     Field,
-    // FieldContent,
     FieldError,
-    // FieldGroup,
     FieldLabel,
-    // FieldDescription,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group';
@@ -33,28 +30,20 @@ import * as z from 'zod';
 import type {
     ChartOfAccount,
     PpmpCategory,
-    FundingSource,
+    PpaFundingSource
 } from '@/pages/types/types';
 import { router } from '@inertiajs/react';
-
-// Import toggle component
 import { Switch } from '@/components/ui/switch';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-interface FundingSourceWrapper {
-    funding_source: FundingSource;
-}
 
 interface PpmpFormDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     chartOfAccounts: ChartOfAccount[];
     ppmpCategories: PpmpCategory[];
-    ppmpPriceList: unknown[];
     selectedEntry: { id: number } | null;
-    ppmpItems: unknown[];
-    fundingSources: FundingSourceWrapper[];
+    fundingSources: PpaFundingSource[];
 }
 
 const formSchema = z
@@ -98,12 +87,10 @@ export default function PpmpFormDialog({
     onOpenChange,
     chartOfAccounts,
     ppmpCategories,
-    ppmpPriceList = [],
     selectedEntry = null,
-    ppmpItems = [],
     fundingSources,
 }: PpmpFormDialogProps) {
-    console.log(fundingSources);
+    // console.log(fundingSources);
 
     // State for the Command Dialogs
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
@@ -847,10 +834,7 @@ export default function PpmpFormDialog({
                                 render={({ field, fieldState }) => {
                                     const selectedFundingSource =
                                         fundingSources.find(
-                                            (fundingSource) =>
-                                                fundingSource.funding_source
-                                                    .id === field.value,
-                                        );
+                                            (fundingSource) => fundingSource.funding_source?.id === field.value);
 
                                     return (
                                         <Field
@@ -884,17 +868,9 @@ export default function PpmpFormDialog({
                                                 {selectedFundingSource ? (
                                                     <span className="truncate">
                                                         <code className="mr-2 rounded bg-muted p-0.5 text-xs">
-                                                            {
-                                                                selectedFundingSource
-                                                                    .funding_source
-                                                                    .code
-                                                            }
+                                                            {selectedFundingSource.funding_source?.code}
                                                         </code>
-                                                        {
-                                                            selectedFundingSource
-                                                                .funding_source
-                                                                .title
-                                                        }
+                                                        {selectedFundingSource.funding_source?.title}
                                                     </span>
                                                 ) : (
                                                     'Select funding source'
@@ -925,17 +901,11 @@ export default function PpmpFormDialog({
                                                                 ) => (
                                                                     <CommandItem
                                                                         key={
-                                                                            fundingSource
-                                                                                .funding_source
-                                                                                .id
+                                                                            fundingSource.funding_source?.id
                                                                         }
-                                                                        value={`${fundingSource.funding_source.fund_type} ${fundingSource.funding_source.code} ${fundingSource.funding_source.title}`}
+                                                                        value={`${fundingSource.funding_source?.fund_type} ${fundingSource.funding_source?.code} ${fundingSource.funding_source?.title}`}
                                                                         onSelect={() => {
-                                                                            field.onChange(
-                                                                                fundingSource
-                                                                                    .funding_source
-                                                                                    .id,
-                                                                            );
+                                                                            field.onChange(fundingSource.funding_source?.id);
                                                                             setOpenFundingSourceCommand(
                                                                                 false,
                                                                             );
@@ -944,27 +914,18 @@ export default function PpmpFormDialog({
                                                                         <div className="flex w-full items-center justify-between">
                                                                             <div>
                                                                                 {
-                                                                                    fundingSource
-                                                                                        .funding_source
-                                                                                        .fund_type
+                                                                                    fundingSource.funding_source?.fund_type
                                                                                 }
                                                                                 <code className="mr-2 rounded bg-muted p-1 text-xs">
                                                                                     {
-                                                                                        fundingSource
-                                                                                            .funding_source
-                                                                                            .code
+                                                                                        fundingSource.funding_source?.code
                                                                                     }
                                                                                 </code>
                                                                                 {
-                                                                                    fundingSource
-                                                                                        .funding_source
-                                                                                        .title
+                                                                                    fundingSource.funding_source?.title
                                                                                 }
                                                                             </div>
-                                                                            {field.value ===
-                                                                                fundingSource
-                                                                                    .funding_source
-                                                                                    .id && (
+                                                                            {field.value === fundingSource.funding_source?.id && (
                                                                                 <Check className="ml-2 h-4 w-4 opacity-100" />
                                                                             )}
                                                                         </div>

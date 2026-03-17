@@ -1,4 +1,4 @@
-import type { ColumnDef } from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Ppmp } from '@/pages/types/types';
@@ -6,6 +6,12 @@ import { Decimal } from 'decimal.js';
 import { Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
+
+interface EditableCellProps {
+    getValue: () => any;
+    row: any;
+    column: any;
+}
 
 export const formatNumber = (val: string | number) => {
     const num = typeof val === 'string' ? parseFloat(val) : val;
@@ -16,12 +22,6 @@ export const formatNumber = (val: string | number) => {
               maximumFractionDigits: 2,
           });
 };
-
-interface EditableCellProps {
-    getValue: () => any;
-    row: any;
-    column: any;
-}
 
 const EditableCell: React.FC<EditableCellProps> = ({
     getValue,
@@ -98,42 +98,42 @@ const EditableCell: React.FC<EditableCellProps> = ({
     );
 };
 
-export const columns: ColumnDef<Ppmp>[] = [
-    {
-        accessorKey: 'ppmp_price_list.chart_of_account_id',
+const columnHelper = createColumnHelper<Ppmp>();
+
+export const columns = [
+    columnHelper.accessor('funding_source.code', {
+        header: 'Funding Source',
+        cell: (info) => <span className="text-wrap">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('ppmp_price_list.chart_of_account.account_title', {
         header: 'Expense Account',
         size: 300,
-        cell: ({ cell }) => {
-            const accountTitle =
-                cell.row.original.ppmp_price_list?.chart_of_account
-                    ?.account_title;
-
-            return <span className="text-wrap">{accountTitle}</span>;
-        },
-    },
-    {
-        accessorKey: 'ppmp_price_list.item_number',
+        cell: (info) => <span className="text-wrap">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('ppmp_price_list.item_number', {
         header: 'Item No.',
-    },
-    {
-        accessorKey: 'ppmp_price_list.description',
+        // size: 300,
+    }),
+    columnHelper.accessor('ppmp_price_list.description', {
         header: 'Description',
-        size: 350,
-    },
-    {
-        accessorKey: 'ppmp_price_list.unit_of_measurement',
+        size: 300,
+        cell: (info) => <span className="text-wrap">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('ppmp_price_list.unit_of_measurement', {
         header: 'Unit of Measurement',
-    },
-    {
-        accessorKey: 'ppmp_price_list.price',
+        // size: 300,
+    }),
+    columnHelper.accessor('ppmp_price_list.price', {
         header: () => <div className="w-full text-right">PRICELIST</div>,
+        // size: 300,
         cell: ({ getValue }) => (
             <span className="block text-right">{formatNumber(getValue())}</span>
         ),
-    },
-    {
-        id: 'cy_2026_qty',
+    }),
+    columnHelper.display({
+        id: 'cy_qty',
         header: () => <div className="w-full text-right">CY 2026-QTY</div>,
+        // size: 300,
         cell: ({ row }) => {
             const ppmp = row.original;
             const totalQty = new Decimal(ppmp.jan_qty || 0)
@@ -155,12 +155,10 @@ export const columns: ColumnDef<Ppmp>[] = [
                 </span>
             );
         },
-    },
-    {
-        id: 'total_amount',
-        accessorKey: 'total_amount',
-        header: () => <div className="w-full text-right">TOTAL</div>,
-        accessorFn: (row) => {
+    }),
+    columnHelper.accessor(
+        (row) => {
+            // 1. We use an accessor function to calculate the "Total" value for the row
             return new Decimal(row.jan_amount || 0)
                 .plus(row.feb_amount || 0)
                 .plus(row.mar_amount || 0)
@@ -172,186 +170,204 @@ export const columns: ColumnDef<Ppmp>[] = [
                 .plus(row.sep_amount || 0)
                 .plus(row.oct_amount || 0)
                 .plus(row.nov_amount || 0)
-                .plus(row.dec_amount || 0);
+                .plus(row.dec_amount || 0)
+                .toNumber(); // Accessors usually prefer primitives for sorting/filtering
         },
-        cell: ({ getValue }) => (
-            <span className="block text-right font-bold">
-                {formatNumber(String(getValue()))}
-            </span>
-        ),
-        footer: (props) => {
-            const rows = props.table.getFilteredRowModel().rows;
-            const sum = rows.reduce((acc, row) => {
-                const val = row.getValue('total_amount');
-                return acc.plus(Number(val || 0));
-            }, new Decimal(0));
-
-            return (
+        {
+            id: 'total_amount',
+            header: () => <div className="w-full text-right">TOTAL</div>,
+            cell: ({ getValue }) => (
                 <span className="block text-right font-bold">
-                    {formatNumber(sum.toString())}
+                    {formatNumber(String(getValue()))}
                 </span>
-            );
+            ),
+            footer: ({ table }) => {
+                // 2. Sum up the calculated 'total_amount' across all filtered rows
+                const sum = table
+                    .getFilteredRowModel()
+                    .rows.reduce((acc, row) => {
+                        const val = row.getValue<number>('total_amount');
+                        return acc.plus(val || 0);
+                    }, new Decimal(0));
+
+                return (
+                    <span className="block text-right font-bold">
+                        {formatNumber(sum.toString())}
+                    </span>
+                );
+            },
         },
-    },
+    ),
+
     // JANUARY
-    {
-        accessorKey: 'jan_qty',
+    columnHelper.accessor('jan_qty', {
         header: () => <div className="text-right">JAN-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'jan_amount',
+    }),
+    columnHelper.accessor('jan_amount', {
         header: () => <div className="text-right">JAN</div>,
         cell: ({ getValue }) => (
             <span className="block text-right">
-                {formatNumber(String(getValue()))}
+                {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
-    },
+    }),
+
     // FEBRUARY
-    {
-        accessorKey: 'feb_qty',
+    columnHelper.accessor('feb_qty', {
         header: () => <div className="text-right">FEB-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'feb_amount',
+    }),
+    columnHelper.accessor('feb_amount', {
         header: () => <div className="text-right">FEB</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // MARCH
-    {
-        accessorKey: 'mar_qty',
+    columnHelper.accessor('mar_qty', {
         header: () => <div className="text-right">MAR-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'mar_amount',
+    }),
+    columnHelper.accessor('mar_amount', {
         header: () => <div className="text-right">MAR</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // APRIL
-    {
-        accessorKey: 'apr_qty',
+    columnHelper.accessor('apr_qty', {
         header: () => <div className="text-right">APR-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'apr_amount',
+    }),
+    columnHelper.accessor('apr_amount', {
         header: () => <div className="text-right">APR</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // MAY
-    {
-        accessorKey: 'may_qty',
+    columnHelper.accessor('may_qty', {
         header: () => <div className="text-right">MAY-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'may_amount',
+    }),
+    columnHelper.accessor('may_amount', {
         header: () => <div className="text-right">MAY</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // JUNE
-    {
-        accessorKey: 'jun_qty',
+    columnHelper.accessor('jun_qty', {
         header: () => <div className="text-right">JUN-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'jun_amount',
+    }),
+    columnHelper.accessor('jun_amount', {
         header: () => <div className="text-right">JUNE</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // JULY
-    {
-        accessorKey: 'jul_qty',
+    columnHelper.accessor('jul_qty', {
         header: () => <div className="text-right">JUL-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'jul_amount',
+    }),
+    columnHelper.accessor('jul_amount', {
         header: () => <div className="text-right">JULY</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // AUGUST
-    {
-        accessorKey: 'aug_qty',
+    columnHelper.accessor('aug_qty', {
         header: () => <div className="text-right">AUG-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'aug_amount',
+    }),
+    columnHelper.accessor('aug_amount', {
         header: () => <div className="text-right">AUG</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // SEPTEMBER
-    {
-        accessorKey: 'sep_qty',
+    columnHelper.accessor('sep_qty', {
         header: () => <div className="text-right">SEP-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'sep_amount',
+    }),
+    columnHelper.accessor('sep_amount', {
         header: () => <div className="text-right">SEP</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // OCTOBER
-    {
-        accessorKey: 'oct_qty',
+    columnHelper.accessor('oct_qty', {
         header: () => <div className="text-right">OCT-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'oct_amount',
+    }),
+    columnHelper.accessor('oct_amount', {
         header: () => <div className="text-right">OCT</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // NOVEMBER
-    {
-        accessorKey: 'nov_qty',
+    columnHelper.accessor('nov_qty', {
         header: () => <div className="text-right">NOV-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'nov_amount',
+    }),
+    columnHelper.accessor('nov_amount', {
         header: () => <div className="text-right">NOV</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
+    }),
+
     // DECEMBER
-    {
-        accessorKey: 'dec_qty',
+    columnHelper.accessor('dec_qty', {
         header: () => <div className="text-right">DEC-QTY</div>,
         cell: EditableCell,
-    },
-    {
-        accessorKey: 'dec_amount',
+    }),
+    columnHelper.accessor('dec_amount', {
         header: () => <div className="text-right">DEC</div>,
         cell: ({ getValue }) => (
-            <span className="block text-right">{formatNumber(getValue())}</span>
+            <span className="block text-right">
+                {formatNumber(String(getValue() ?? 0))}
+            </span>
         ),
-    },
-    {
+    }),
+
+    columnHelper.display({
         id: 'action',
         size: 52,
         cell: ({ row, table }) => (
@@ -367,5 +383,5 @@ export const columns: ColumnDef<Ppmp>[] = [
                 </Button>
             </div>
         ),
-    },
+    }),
 ];

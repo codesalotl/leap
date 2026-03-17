@@ -14,7 +14,7 @@ export default function PpmpTablePage({
     data,
     // onEdit,
     onDelete,
-    children,
+    children
 }: PpmpTablePageProps) {
     return (
         <DataTable
@@ -22,7 +22,8 @@ export default function PpmpTablePage({
             data={data}
             // onEdit={onEdit}
             onDelete={onDelete}
-            children={children}
-        />
+        >
+            {children}
+        </DataTable>
     );
 }

@@ -31,7 +31,12 @@ class PpmpPriceList extends Model
 
     public function category()
     {
-        return $this->belongsTo(PpmpCategory::class, "ppmp_category_id");
+        return $this->belongsTo(PpmpCategory::class, 'ppmp_category_id');
+    }
+
+    public function fundingSource()
+    {
+        return $this->belongsTo(FundingSource::class);
     }
 
     public function itemizedCosts()

@@ -24,7 +24,7 @@ export default function DeleteDialog({
     setOpen,
     initialData,
 }: DeleteDialogProps) {
-    console.log(initialData);
+    // console.log(initialData);
 
     const [isLoading, setIsLoading] = useState(false);
 

@@ -48,7 +48,6 @@ export default function DataTable<TData>({
         initialState: {
             columnPinning: {
                 right: ['action'],
-                // right: ['actions'],
             },
         },
         getFilteredRowModel: getFilteredRowModel(),
@@ -56,10 +55,6 @@ export default function DataTable<TData>({
             globalFilter,
         },
         onGlobalFilterChange: setGlobalFilter,
-
-        // meta: {
-        //     onDelete: (item: TData) => onDelete(item),
-        // },
     });
 
     return (

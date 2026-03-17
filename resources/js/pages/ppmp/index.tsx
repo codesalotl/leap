@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -17,11 +15,11 @@ import {
     SelectItem,
     SelectTrigger,
     SelectValue,
+    SelectLabel,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import DataTable from '@/pages/ppmp/ppmp-table/data-table';
 import PpmpFormDialog from '@/pages/ppmp/ppmp-form-dialog';
-import PpmpTablePageProps from './ppmp-table/page';
+import PpmpTablePage from './ppmp-table/page';
 import DeleteDialog from './delete-dialog';
 
 import { type BreadcrumbItem } from '@/types';
@@ -31,7 +29,7 @@ import type {
     ChartOfAccount,
     AipEntry,
     PpmpCategory,
-    FundingSource,
+    PpaFundingSource,
 } from '@/pages/types/types';
 import {
     exportToExcel,
@@ -45,7 +43,7 @@ interface PpmpPageProps {
     ppmpItems: Ppmp[];
     chartOfAccounts: ChartOfAccount[];
     ppmpCategories: PpmpCategory[];
-    fundingSources: FundingSource[];
+    fundingSources: PpaFundingSource[];
 }
 
 export default function PpmpPage({
@@ -62,6 +60,7 @@ export default function PpmpPage({
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [selectedSource, setSelectedSource] = useState<Ppmp | null>(null);
+    const [selectedFundingSource, setSelectedFundingSource] = useState(0);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
@@ -77,28 +76,54 @@ export default function PpmpPage({
         setOpenDelete(true);
     }
 
+    function handleFundingSourceSelect(value: string) {
+        const id = Number(value);
+        setSelectedFundingSource(id);
+    }
+
+    const filteredPpmpItems =
+        selectedFundingSource !== 0
+            ? ppmpItems.filter(
+                  (ppmpItem) =>
+                      selectedFundingSource === ppmpItem.funding_source.id,
+              )
+            : ppmpItems;
+
+    // console.log(filteredPpmpItems);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full flex-1 px-4 py-4">
-                <PpmpTablePageProps
-                    data={ppmpItems}
+                <PpmpTablePage
+                    data={filteredPpmpItems}
                     // onEdit={handleEdit}
                     onDelete={handleDelete}
                 >
                     <div className="flex items-center justify-between">
-                        <Select>
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder="Theme" />
+                        <Select
+                            onValueChange={(value) =>
+                                handleFundingSourceSelect(value)
+                            }
+                        >
+                            <SelectTrigger className="w-full max-w-48">
+                                <SelectValue placeholder="Select funding source" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
-                                    <SelectItem value="dark">
+                                    <SelectLabel>Funding Sources</SelectLabel>
+                                    <SelectItem key="0" value="0">
                                         Show All
                                     </SelectItem>
-                                    <SelectItem value="light">
-                                        Funding Source
-                                    </SelectItem>
-                                    <SelectItem value="dark">Dark</SelectItem>
+                                    {fundingSources.map((fs) => (
+                                        <SelectItem
+                                            key={fs.funding_source?.id}
+                                            value={String(
+                                                fs.funding_source?.id,
+                                            )}
+                                        >
+                                            {fs.funding_source?.title}
+                                        </SelectItem>
+                                    ))}
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
@@ -110,12 +135,13 @@ export default function PpmpPage({
                                         <FileDown /> Export
                                     </Button>
                                 </DropdownMenuTrigger>
+
                                 <DropdownMenuContent>
                                     <DropdownMenuGroup>
                                         <DropdownMenuItem
                                             onClick={() =>
                                                 exportToPrint({
-                                                    ppmpItems,
+                                                    filteredPpmpItems,
                                                     ppmpCategories,
                                                     chartOfAccounts,
                                                 })
@@ -127,7 +153,7 @@ export default function PpmpPage({
                                         <DropdownMenuItem
                                             onClick={() =>
                                                 exportToPDF({
-                                                    ppmpItems,
+                                                    filteredPpmpItems,
                                                     ppmpCategories,
                                                     chartOfAccounts,
                                                 })
@@ -139,7 +165,7 @@ export default function PpmpPage({
                                         <DropdownMenuItem
                                             onClick={() =>
                                                 exportToExcel({
-                                                    ppmpItems,
+                                                    filteredPpmpItems,
                                                     ppmpCategories,
                                                     chartOfAccounts,
                                                 })
@@ -156,37 +182,7 @@ export default function PpmpPage({
                             </Button>
                         </div>
                     </div>
-
-                    {/* <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
-                    <DataTable
-                        ppmpItems={ppmpItems}
-                        onDelete={(ppmp) => {
-                            if (
-                                confirm(
-                                    `Are you sure you want to delete "${ppmp.ppmp_price_list?.description}"? This action cannot be undone.`,
-                                )
-                            ) {
-                                router.delete(`/ppmp/${ppmp.id}`, {
-                                    onSuccess: () => {
-                                        console.log(
-                                            'PPMP item deleted successfully',
-                                        );
-                                    },
-                                    onError: (errors) => {
-                                        console.error(
-                                            'Error deleting PPMP item:',
-                                            errors,
-                                        );
-                                        alert('Failed to delete PPMP item');
-                                    },
-                                    preserveState: false,
-                                });
-                            }
-                        }}
-                    />
-                    <ScrollBar orientation="horizontal" />
-                </ScrollArea> */}
-                </PpmpTablePageProps>
+                </PpmpTablePage>
             </div>
 
             <PpmpFormDialog
@@ -194,9 +190,7 @@ export default function PpmpPage({
                 onOpenChange={setOpen}
                 chartOfAccounts={chartOfAccounts}
                 ppmpCategories={ppmpCategories}
-                ppmpPriceList={[]}
                 selectedEntry={aipEntry}
-                ppmpItems={ppmpItems}
                 fundingSources={fundingSources}
             />
 

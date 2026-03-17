@@ -92,7 +92,6 @@ export interface Ppmp {
     id: number;
     aip_entry_id: number;
     ppmp_price_list_id: number | null;
-    // quantity: string;
     jan_qty: string;
     jan_amount: string;
     feb_qty: string;
@@ -120,6 +119,7 @@ export interface Ppmp {
     created_at: string | null;
     updated_at: string | null;
     ppmp_price_list?: PriceList;
+    funding_source: FundingSource;
 }
 
 export interface PriceList {
@@ -220,5 +220,14 @@ export interface FundingSource {
     pivot: {
         funding_source_id: number;
         ppa_id: number;
-    }
+    };
+}
+
+export interface PpaFundingSource {
+    id: number;
+    ppa_id: number;
+    funding_source_id: number;
+    created_at: string | null;
+    updated_at: string | null;
+    funding_source?: FundingSource;
 }
