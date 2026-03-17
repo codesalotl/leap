@@ -1,9 +1,14 @@
-import type { ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import {
     flexRender,
     getCoreRowModel,
+    getFilteredRowModel,
     useReactTable,
 } from '@tanstack/react-table';
+import type { ColumnDef } from '@tanstack/react-table';
+import { Input } from '@/components/ui/input';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
     Table,
     TableBody,
@@ -13,76 +18,84 @@ import {
     TableRow,
     TableFooter,
 } from '@/components/ui/table';
-import { columns } from './columns';
-import type { Ppmp } from '@/pages/types/types';
 import { getCommonPinningStyles } from '@/pages/utils/column-pinning-styles';
 
-interface PpmpTableProps {
-    ppmpItems: Ppmp[];
-    onDelete: (item: Ppmp) => void;
-}
-
-interface DataTableProps<TData, TValue> {
-    columns: ColumnDef<TData, TValue>[];
+interface DataTableProps<TData> {
+    columns: ColumnDef<TData, any>[];
     data: TData[];
-    onDelete: (item: TData) => void;
+    // onEdit?: (record: TData) => void;
+    onDelete?: (record: TData) => void;
+    children: ReactElement;
 }
 
-export default function PpmpTable({ ppmpItems, onDelete }: PpmpTableProps) {
-    return (
-        <div>
-            <DataTable<Ppmp, unknown>
-                columns={columns}
-                data={ppmpItems}
-                onDelete={onDelete}
-            />
-        </div>
-    );
-}
-
-export function DataTable<TData, TValue>({
+export default function DataTable<TData>({
     columns,
     data,
+    // onEdit,
     onDelete,
-}: DataTableProps<TData, TValue>) {
+    children,
+}: DataTableProps<TData>) {
+    const [globalFilter, setGlobalFilter] = useState('');
+
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
+        meta: {
+            // onEdit,
+            onDelete,
+        },
         initialState: {
             columnPinning: {
-                right: ['actions'],
+                right: ['action'],
+                // right: ['actions'],
             },
         },
-        enableColumnPinning: true,
-        columnResizeMode: 'onChange',
-        meta: {
-            onDelete: (item: TData) => onDelete(item),
+        getFilteredRowModel: getFilteredRowModel(),
+        state: {
+            globalFilter,
         },
+        onGlobalFilterChange: setGlobalFilter,
+
+        // meta: {
+        //     onDelete: (item: TData) => onDelete(item),
+        // },
     });
 
     return (
-        // <div className="overflow-hidden rounded-md border">
-        <div className="border">
-            <Table
-                style={{
-                    //     width: table.getTotalSize(),
-                    tableLayout: 'fixed',
-                }}
-            >
-                <TableHeader>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                        <TableRow key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => {
-                                const { column } = header;
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+                <Input
+                    placeholder="Filter funding sources..."
+                    value={table.getState().globalFilter ?? ''}
+                    onChange={(event) =>
+                        table.setGlobalFilter(event.target.value)
+                    }
+                    className="max-w-sm"
+                />
 
-                                return (
+                {children}
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
+                <Table
+                    style={{
+                        //     width: table.getTotalSize(),
+                        tableLayout: 'fixed',
+                    }}
+                >
+                    <TableHeader>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        colSpan={header.colSpan}
+                                        // colSpan={header.colSpan}
                                         style={{
-                                            ...getCommonPinningStyles(column),
                                             width: header.getSize(),
+                                            ...getCommonPinningStyles(
+                                                header.column,
+                                            ),
                                             backgroundColor: 'var(--primary)',
                                             color: 'var(--primary-foreground)',
                                         }}
@@ -95,24 +108,22 @@ export function DataTable<TData, TValue>({
                                                   header.getContext(),
                                               )}
                                     </TableHead>
-                                );
-                            })}
-                        </TableRow>
-                    ))}
-                </TableHeader>
-                <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row, index) => (
-                            <TableRow key={row.id}>
-                                {row.getVisibleCells().map((cell) => {
-                                    const { column } = cell;
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
 
-                                    return (
+                    <TableBody>
+                        {table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow key={row.id}>
+                                    {row.getVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
                                             style={{
+                                                width: cell.column.getSize(),
                                                 ...getCommonPinningStyles(
-                                                    column,
+                                                    cell.column,
                                                 ),
                                             }}
                                         >
@@ -121,39 +132,42 @@ export function DataTable<TData, TValue>({
                                                 cell.getContext(),
                                             )}
                                         </TableCell>
-                                    );
-                                })}
-                            </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell
-                                colSpan={table.getVisibleLeafColumns().length}
-                                // colSpan={columns.length}
-                                className="h-24 text-center"
-                            >
-                                No PPMP items found.
-                            </TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-                <TableFooter>
-                    {table.getFooterGroups().map((footerGroup) => (
-                        <TableRow key={footerGroup.id}>
-                            {footerGroup.headers.map((header) => (
-                                <TableCell key={header.id}>
-                                    {header.isPlaceholder
-                                        ? null
-                                        : flexRender(
-                                              header.column.columnDef.footer,
-                                              header.getContext(),
-                                          )}
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : (
+                            <TableRow>
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center"
+                                >
+                                    No results found.
                                 </TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableFooter>
-            </Table>
+                            </TableRow>
+                        )}
+                    </TableBody>
+
+                    <TableFooter>
+                        {table.getFooterGroups().map((footerGroup) => (
+                            <TableRow key={footerGroup.id}>
+                                {footerGroup.headers.map((header) => (
+                                    <TableCell key={header.id}>
+                                        {header.isPlaceholder
+                                            ? null
+                                            : flexRender(
+                                                  header.column.columnDef
+                                                      .footer,
+                                                  header.getContext(),
+                                              )}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))}
+                    </TableFooter>
+                </Table>
+
+                <ScrollBar orientation="horizontal" />
+            </ScrollArea>
         </div>
     );
 }

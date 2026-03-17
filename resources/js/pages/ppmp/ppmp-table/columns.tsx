@@ -108,9 +108,7 @@ export const columns: ColumnDef<Ppmp>[] = [
                 cell.row.original.ppmp_price_list?.chart_of_account
                     ?.account_title;
 
-            // console.log(accountTitle);
-
-            return accountTitle;
+            return <span className="text-wrap">{accountTitle}</span>;
         },
     },
     {
@@ -354,7 +352,7 @@ export const columns: ColumnDef<Ppmp>[] = [
         ),
     },
     {
-        id: 'actions',
+        id: 'action',
         size: 52,
         cell: ({ row, table }) => (
             <div className="flex justify-center">

@@ -134,6 +134,7 @@ export default function DataTable<TData>({
                         )}
                     </TableBody>
                 </Table>
+
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>
         </div>

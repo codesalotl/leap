@@ -1,4 +1,4 @@
-import { createColumnHelper } from '@tanstack/react-table'; // Added this import
+import { createColumnHelper } from '@tanstack/react-table';
 import { router } from '@inertiajs/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

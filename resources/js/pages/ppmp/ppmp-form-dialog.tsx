@@ -197,7 +197,7 @@ export default function PpmpFormDialog({
     }, [isCustomCategory, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
-        console.log(data);
+        // console.log(data);
 
         if (isCustomItem) {
             const itemNumber = parseInt(data.itemNo);
@@ -998,6 +998,7 @@ export default function PpmpFormDialog({
                     >
                         Reset
                     </Button>
+
                     <Button
                         type="button"
                         variant="outline"
@@ -1005,6 +1006,7 @@ export default function PpmpFormDialog({
                     >
                         Cancel
                     </Button>
+
                     <Button type="submit" form="form-rhf-demo">
                         Add Item
                     </Button>
