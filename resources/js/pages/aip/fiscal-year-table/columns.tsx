@@ -35,14 +35,10 @@ export const columns = [
 
             return (
                 <Badge
-                    variant={isOpen ? 'default' : 'destructive'}
-                    className="secondary text-white"
+                    variant={isOpen ? 'default' : 'secondary'}
+                    className="flex items-center gap-1"
                 >
-                    {isOpen ? (
-                        <CheckCircle2 className="mr-1 h-3 w-3" />
-                    ) : (
-                        <XCircle className="mr-1 h-3 w-3" />
-                    )}
+                    {isOpen ? <CheckCircle2 /> : <XCircle />}
                     {status}
                 </Badge>
             );
