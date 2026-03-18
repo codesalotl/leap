@@ -18,7 +18,7 @@ import {
     SelectLabel,
 } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import PpmpFormDialog from '@/pages/ppmp/ppmp-form-dialog';
+import PpmpFormDialog from '@/pages/ppmp/form-dialog';
 import PpmpTablePage from './ppmp-table/page';
 import DeleteDialog from './delete-dialog';
 

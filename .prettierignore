@@ -1,4 +1,4 @@
-resources/js/*
+# resources/js/*
 resources/views/mail/*
 
 # Standard Laravel exclusions
