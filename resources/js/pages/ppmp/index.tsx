@@ -21,6 +21,17 @@ import AppLayout from '@/layouts/app-layout';
 import PpmpFormDialog from '@/pages/ppmp/form-dialog';
 import PpmpTablePage from './ppmp-table/page';
 import DeleteDialog from './delete-dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 import { type BreadcrumbItem } from '@/types';
 import type {
@@ -58,6 +69,7 @@ export default function PpmpPage({
     console.log(fundingSources);
 
     const [open, setOpen] = useState(false);
+    const [openAlert, setOpenAlert] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
     const [selectedSource, setSelectedSource] = useState<Ppmp | null>(null);
     const [selectedFundingSource, setSelectedFundingSource] = useState(0);
@@ -139,11 +151,13 @@ export default function PpmpPage({
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToPrint({
-                                                filteredPpmpItems,
-                                                ppmpCategories,
-                                                chartOfAccounts,
-                                            })
+                                            selectedFundingSource
+                                                ? exportToPrint({
+                                                      filteredPpmpItems,
+                                                      ppmpCategories,
+                                                      chartOfAccounts,
+                                                  })
+                                                : setOpenAlert(true)
                                         }
                                     >
                                         <Printer /> Print
@@ -151,11 +165,13 @@ export default function PpmpPage({
 
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToPDF({
-                                                filteredPpmpItems,
-                                                ppmpCategories,
-                                                chartOfAccounts,
-                                            })
+                                            selectedFundingSource
+                                                ? exportToPDF({
+                                                      filteredPpmpItems,
+                                                      ppmpCategories,
+                                                      chartOfAccounts,
+                                                  })
+                                                : setOpenAlert(true)
                                         }
                                     >
                                         <FileText /> To PDF
@@ -163,11 +179,13 @@ export default function PpmpPage({
 
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToExcel({
-                                                filteredPpmpItems,
-                                                ppmpCategories,
-                                                chartOfAccounts,
-                                            })
+                                            selectedFundingSource
+                                                ? exportToExcel({
+                                                      filteredPpmpItems,
+                                                      ppmpCategories,
+                                                      chartOfAccounts,
+                                                  })
+                                                : setOpenAlert(true)
                                         }
                                     >
                                         <Sheet /> To Excel
@@ -197,6 +215,26 @@ export default function PpmpPage({
                 setOpen={setOpenDelete}
                 initialData={selectedSource}
             />
+
+            <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Funding Source Required
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You must select a valid funding source before you
+                            can export this document. Please choose one from the
+                            list and try again.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setOpenAlert(false)}>
+                            Got it
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </AppLayout>
     );
 }

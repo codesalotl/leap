@@ -47,6 +47,7 @@ class DatabaseSeeder extends Seeder
             PpmpPriceListSeeder::class,
             FundingSourceSeeder::class,
             PpmpSeeder::class,
+            PpaFundingSourceSeeder::class,
         ]);
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');

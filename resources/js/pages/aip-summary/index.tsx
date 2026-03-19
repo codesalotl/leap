@@ -1,12 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 
-import {
-    Library,
-    FileDown,
-    FileSpreadsheet,
-    FileText,
-    Search,
-} from 'lucide-react';
+import { Library, FileDown, FileText, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,7 +94,7 @@ export default function AipSummaryTable({
     masterPpas,
     fundingSources,
 }: AipSummaryTableProp) {
-    console.log(aipEntries);
+    // console.log(aipEntries);
     // console.log(fundingSources);
 
     const [searchValue, setSearchValue] = useState('');
@@ -168,15 +162,15 @@ export default function AipSummaryTable({
         masterPpas,
     });
 
-    const handleExportExcel = () => {
-        exportToExcel(aipEntries, fiscalYear);
-    };
+    // const handleExportExcel = () => {
+    //     exportToExcel(aipEntries, fiscalYear);
+    // };
 
-    const handleExportPDF = () => {
-        exportToPrint({ aipEntries, fiscalYear });
+    // const handleExportPDF = () => {
+    //     exportToPrint({ aipEntries, fiscalYear });
 
-        // import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
-    };
+    //     // import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
+    // };
 
     function handlePrintPreview() {
         setIsExportOpen(true);

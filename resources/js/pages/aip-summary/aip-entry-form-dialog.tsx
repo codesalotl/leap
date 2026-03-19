@@ -27,10 +27,8 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import type { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
-import { AipEntry } from '@/pages/types/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { useState } from 'react';
 import { MultiSelect } from './multiselect';
 import {
     InputGroup,
@@ -160,8 +158,6 @@ export default function AipEntryFormDialog({
     fiscalYear,
     fundingSources,
 }: AipFormProps) {
-    // const [value, setValue] = useState<string[]>([]);
-
     // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
     const getInitialValues = (d: Ppa | null): z.infer<typeof formSchema> => ({
         ppa_id: d?.aip_entry?.ppa_id || 0,

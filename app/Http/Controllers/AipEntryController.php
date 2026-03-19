@@ -15,6 +15,7 @@ use App\Models\PpmpPriceList;
 use App\Models\Ppmp;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AipEntryController extends Controller
 {
@@ -115,27 +116,63 @@ class AipEntryController extends Controller
     {
         $validated = $request->validated();
 
-        $aipEntry->fundingSource()->sync($validated['fundingSource']);
+        // 1. Identify which IDs the user is trying to remove from the pivot table
+        $currentFundingSourceIds = $aipEntry->fundingSource
+            ->pluck('id')
+            ->toArray();
+        $newFundingSourceIds = $validated['fundingSource'];
 
-        $aipEntry->update([
-            'start_date' =>
-                $validated['scheduleOfImplementation']['startingDate'],
-            'end_date' =>
-                $validated['scheduleOfImplementation']['completionDate'],
-            'expected_output' => $validated['expectedOutputs'],
-            'ps_amount' => $validated['amount']['ps'],
-            'mooe_amount' => $validated['amount']['mooe'],
-            'fe_amount' => $validated['amount']['fe'],
-            'co_amount' => $validated['amount']['co'],
-            'ccet_adaptation' =>
-                $validated['amountOfCcExpenditure']['ccAdaptation'],
-            'ccet_mitigation' =>
-                $validated['amountOfCcExpenditure']['ccMitigation'],
-        ]);
+        // array_diff returns values in current that are NOT in new (the ones being deleted)
+        $idsToRemove = array_diff(
+            $currentFundingSourceIds,
+            $newFundingSourceIds,
+        );
 
-        PPA::where('id', $validated['ppa_id'])->update([
-            'title' => $validated['ppaDescription'],
-        ]);
+        // 2. If there are IDs to remove, check if they are used in the PPMP table
+        if (!empty($idsToRemove)) {
+            $isUsedInPpmp = Ppmp::where('aip_entry_id', $aipEntry->id)
+                ->whereIn('funding_source_id', $idsToRemove)
+                ->exists();
+
+            if ($isUsedInPpmp) {
+                // Throw a validation error back to the Inertia form
+                throw ValidationException::withMessages([
+                    'fundingSource' =>
+                        'Cannot remove a funding source that is already being used by PPMP items for this project.',
+                ]);
+            }
+        }
+
+        // 3. Use a Transaction to ensure data integrity across multiple tables
+        DB::transaction(function () use ($validated, $aipEntry) {
+            // Update the Pivot Table (Safe now because we checked usage above)
+            $aipEntry->fundingSource()->sync($validated['fundingSource']);
+
+            // Update the AIP Entry
+            $aipEntry->update([
+                'start_date' =>
+                    $validated['scheduleOfImplementation']['startingDate'],
+                'end_date' =>
+                    $validated['scheduleOfImplementation']['completionDate'],
+                'expected_output' => $validated['expectedOutputs'],
+                'ps_amount' => $validated['amount']['ps'],
+                'mooe_amount' => $validated['amount']['mooe'],
+                'fe_amount' => $validated['amount']['fe'],
+                'co_amount' => $validated['amount']['co'],
+                'ccet_adaptation' =>
+                    $validated['amountOfCcExpenditure']['ccAdaptation'],
+                'ccet_mitigation' =>
+                    $validated['amountOfCcExpenditure']['ccMitigation'],
+                // It's a good idea to update the cc_typology_code too if it's in your schema
+                'cc_typology_code' =>
+                    $validated['ccTypologyCode'] ?? $aipEntry->cc_typology_code,
+            ]);
+
+            // Update the PPA title
+            Ppa::where('id', $validated['ppa_id'])->update([
+                'title' => $validated['ppaDescription'],
+            ]);
+        });
     }
 
     /**
