@@ -20,6 +20,8 @@ import {
     FolderTree,
     BanknoteArrowUp,
     Gem,
+    Tags,
+    Calculator,
 } from 'lucide-react';
 import AppLogo from './app-logo';
 
@@ -53,6 +55,16 @@ const mainNavItems: NavItem[] = [
         title: 'Funding Sources',
         href: '/funding-sources',
         icon: BanknoteArrowUp,
+    },
+    {
+        title: 'PPMP Categories',
+        href: '/ppmp-categories',
+        icon: Tags,
+    },
+    {
+        title: 'Chart of Accounts',
+        href: '/chart-of-accounts',
+        icon: Calculator,
     },
 ];
 

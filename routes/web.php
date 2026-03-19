@@ -21,6 +21,7 @@ use App\Http\Controllers\PpmpHeaderController;
 use App\Http\Controllers\PpmpItemController;
 use App\Http\Controllers\PpmpController;
 use App\Http\Controllers\FundingSourceController;
+use App\Http\Controllers\PpmpCategoryController;
 
 Route::get(
     '/',
@@ -69,6 +70,40 @@ Route::delete('funding-sources/{fundingSource}', [
     FundingSourceController::class,
     'destroy',
 ])->name('funding-sources.destroy');
+
+// ppmp-category
+Route::get('ppmp-categories', [PpmpCategoryController::class, 'index'])->name(
+    'ppmp-categories.index',
+);
+Route::post('ppmp-categories', [PpmpCategoryController::class, 'store'])->name(
+    'ppmp-categories.store',
+);
+Route::patch('ppmp-categories/{ppmpCategory}', [
+    PpmpCategoryController::class,
+    'update',
+])->name('ppmp-categories.update');
+Route::delete('ppmp-categories/{ppmpCategory}', [
+    PpmpCategoryController::class,
+    'destroy',
+])->name('ppmp-categories.destroy');
+
+// chart-of-account
+Route::get('chart-of-accounts', [
+    ChartOfAccountController::class,
+    'index',
+])->name('chart-of-accounts.manage');
+Route::post('chart-of-accounts', [
+    ChartOfAccountController::class,
+    'store',
+])->name('chart-of-accounts.store');
+Route::patch('chart-of-accounts/{chartOfAccount}', [
+    ChartOfAccountController::class,
+    'update',
+])->name('chart-of-accounts.update');
+Route::delete('chart-of-accounts/{chartOfAccount}', [
+    ChartOfAccountController::class,
+    'destroy',
+])->name('chart-of-accounts.destroy');
 
 // price-list
 Route::post('price-lists', [PpmpPriceListController::class, 'store'])->name(
@@ -122,12 +157,6 @@ Route::patch('/aip-ppa/{aip_ppa}', [PpaController::class, 'update'])->name(
 Route::delete('/aip-ppa/{aipPpa}', [PpaController::class, 'destroy'])->name(
     'aip-ppa.destroy',
 );
-
-// chart of accounts
-Route::get('chart-of-accounts', [
-    ChartOfAccountController::class,
-    'index',
-])->name('coa.index');
 
 Route::get('sectors', [SectorController::class, 'index']);
 

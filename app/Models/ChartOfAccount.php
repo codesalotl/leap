@@ -10,6 +10,19 @@ class ChartOfAccount extends Model
     /** @use HasFactory<\Database\Factories\ChartOfAccountFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'account_number',
+        'account_title',
+        'account_type',
+        'expense_class',
+        'account_series',
+        'parent_id',
+        'is_postable',
+        'is_active',
+        'normal_balance',
+        'description',
+    ];
+
     public function ppmpPriceLists()
     {
         return $this->hasMany(PpmpPriceList::class);

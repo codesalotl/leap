@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PpmpCategory;
 use App\Http\Requests\StorePpmpCategoryRequest;
 use App\Http\Requests\UpdatePpmpCategoryRequest;
+use Inertia\Inertia;
 
 class PpmpCategoryController extends Controller
 {
@@ -13,7 +14,9 @@ class PpmpCategoryController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('ppmp-category/index', [
+            'ppmpCategories' => PpmpCategory::all(),
+        ]);
     }
 
     /**
@@ -29,7 +32,9 @@ class PpmpCategoryController extends Controller
      */
     public function store(StorePpmpCategoryRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        PpmpCategory::create($validated);
     }
 
     /**
@@ -51,9 +56,13 @@ class PpmpCategoryController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePpmpCategoryRequest $request, PpmpCategory $ppmpCategory)
-    {
-        //
+    public function update(
+        UpdatePpmpCategoryRequest $request,
+        PpmpCategory $ppmpCategory,
+    ) {
+        $validated = $request->validated();
+
+        $ppmpCategory->update($validated);
     }
 
     /**
@@ -61,6 +70,6 @@ class PpmpCategoryController extends Controller
      */
     public function destroy(PpmpCategory $ppmpCategory)
     {
-        //
+        $ppmpCategory->delete();
     }
 }
