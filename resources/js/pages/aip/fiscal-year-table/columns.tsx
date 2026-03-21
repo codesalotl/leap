@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, CheckCircle2, XCircle } from 'lucide-react';
 import { summary } from '@/routes/aip';
-import type { FiscalYear } from '@/pages/types/types';
+import type { FiscalYear } from '@/types/global';
 import { update } from '@/routes/aip/index';
 
 // 1. Initialize the helper with your specific Data Type

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import type { PpmpCategory } from '@/pages/types/types';
+import type { PpmpCategory } from '@/types/global';
 import PpmpCategoryTablePage from '@/pages/ppmp-category/table/page';
 import { Button } from '@/components/ui/button';
 import FormDialog from '@/pages/ppmp-category/form-dialog';
@@ -20,9 +20,8 @@ export default function PpmpCategoryPage({
 
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState<PpmpCategory | null>(
-        null,
-    );
+    const [selectedCategory, setSelectedCategory] =
+        useState<PpmpCategory | null>(null);
 
     function handleAdd() {
         setSelectedCategory(null);

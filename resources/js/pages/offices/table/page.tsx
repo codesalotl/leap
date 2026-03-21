@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { columns } from './columns';
 import DataTable from './data-table';
-import type { Office } from '@/pages/types/types';
+import type { Office } from '@/types/global';
 
 interface OfficeTablePageProps {
     data: Office[];

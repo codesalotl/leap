@@ -32,7 +32,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Plus } from 'lucide-react';
 import { generateYearRange } from '@/pages/aip/utils/generate-year-range';
-import { store } from "@/routes/aip/index";
+import { store } from '@/routes/aip/index';
 
 const formSchema = z.object({
     year: z.number().int(),

@@ -26,7 +26,7 @@ import type {
     ChartOfAccount,
     PpmpCategory,
     PpaFundingSource,
-} from '@/pages/types/types';
+} from '@/types/global';
 import { router } from '@inertiajs/react';
 import { Switch } from '@/components/ui/switch';
 import { Check, ChevronsUpDown } from 'lucide-react';

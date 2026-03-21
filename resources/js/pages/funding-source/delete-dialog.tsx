@@ -7,7 +7,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { FundingSource } from '@/pages/types/types';
+import type { FundingSource } from '@/types/global';
 import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';

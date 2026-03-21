@@ -1,7 +1,7 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import type { Ppmp } from '@/pages/types/types';
+import type { Ppmp } from '@/types/global';
 import { Decimal } from 'decimal.js';
 import { Trash } from 'lucide-react';
 import { useState, useEffect } from 'react';

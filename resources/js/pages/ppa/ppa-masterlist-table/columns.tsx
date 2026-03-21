@@ -3,7 +3,7 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { CheckCircle2, XCircle, Pencil, Trash, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Ppa } from '@/pages/types/types';
+import type { Ppa } from '@/types/global';
 
 declare module '@tanstack/table-core' {
     interface TableMeta<TData extends RowData> {
@@ -44,7 +44,9 @@ export const columns = [
                         </span>
                         <span
                             className={`leading-tight break-words whitespace-normal ${
-                                info.row.depth === 0 ? 'font-bold' : 'font-medium'
+                                info.row.depth === 0
+                                    ? 'font-bold'
+                                    : 'font-medium'
                             }`}
                         >
                             {ppa.title}

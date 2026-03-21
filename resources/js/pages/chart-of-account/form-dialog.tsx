@@ -8,7 +8,7 @@ import {
     DialogFooter,
     DialogClose,
 } from '@/components/ui/dialog';
-import type { ChartOfAccount } from '@/pages/types/types';
+import type { ChartOfAccount } from '@/types/global';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';

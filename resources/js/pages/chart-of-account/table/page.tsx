@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { columns } from './columns';
 import DataTable from './data-table';
-import type { ChartOfAccount } from '@/pages/types/types';
+import type { ChartOfAccount } from '@/types/global';
 
 interface ChartOfAccountTablePageProps {
     data: ChartOfAccount[];

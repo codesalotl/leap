@@ -7,7 +7,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import type { PpmpCategory } from '@/pages/types/types';
+import type { PpmpCategory } from '@/types/global';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { router } from '@inertiajs/react';

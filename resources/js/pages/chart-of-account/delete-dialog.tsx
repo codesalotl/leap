@@ -7,7 +7,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import type { ChartOfAccount } from '@/pages/types/types';
+import type { ChartOfAccount } from '@/types/global';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { router } from '@inertiajs/react';
@@ -46,8 +46,9 @@ export default function DeleteDialog({
                     <DialogTitle>Delete Chart of Account</DialogTitle>
                     <DialogDescription>
                         Are you sure you want to delete the chart of account "
-                        {initialData?.account_title}" ({initialData?.account_number})? 
-                        This action cannot be undone.
+                        {initialData?.account_title}" (
+                        {initialData?.account_number})? This action cannot be
+                        undone.
                     </DialogDescription>
                 </DialogHeader>
 

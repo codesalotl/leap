@@ -1,6 +1,6 @@
 import type { RowData } from '@tanstack/react-table';
 import { createColumnHelper } from '@tanstack/react-table';
-import type { Office } from '@/pages/types/types';
+import type { Office } from '@/types/global';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash } from 'lucide-react';

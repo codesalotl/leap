@@ -3,7 +3,7 @@ import { type BreadcrumbItem } from '@/types';
 import FiscalYearFormDialog from '@/pages/aip/fiscal-year-form-dialog';
 import { columns } from '@/pages/aip/fiscal-year-table/columns';
 import { FiscalYearDataTable } from '@/pages/aip/fiscal-year-table/data-table';
-import type { FiscalYear } from '@/pages/types/types';
+import type { FiscalYear } from '@/types/global';
 // import { index } from '@/routes/aip';
 
 const breadcrumbs: BreadcrumbItem[] = [

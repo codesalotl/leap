@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { columns } from './columns';
 import DataTable from './data-table';
-import type { Ppmp } from '@/pages/types/types';
+import type { Ppmp } from '@/types/global';
 
 interface PpmpTablePageProps {
     data: Ppmp[];
@@ -14,7 +14,7 @@ export default function PpmpTablePage({
     data,
     // onEdit,
     onDelete,
-    children
+    children,
 }: PpmpTablePageProps) {
     return (
         <DataTable

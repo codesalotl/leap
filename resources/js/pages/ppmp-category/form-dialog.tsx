@@ -8,7 +8,7 @@ import {
     DialogFooter,
     DialogClose,
 } from '@/components/ui/dialog';
-import type { PpmpCategory } from '@/pages/types/types';
+import type { PpmpCategory } from '@/types/global';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';

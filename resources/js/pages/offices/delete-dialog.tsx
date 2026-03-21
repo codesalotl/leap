@@ -7,7 +7,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import type { Office } from '@/pages/types/types';
+import type { Office } from '@/types/global';
 import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
 import { Button } from '@/components/ui/button';
@@ -48,9 +48,7 @@ export default function DeleteDialog({
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently
                         delete{' '}
-                        <span className="font-bold">
-                            "{initialData?.name}"
-                        </span>
+                        <span className="font-bold">"{initialData?.name}"</span>
                         .
                     </AlertDialogDescription>
                 </AlertDialogHeader>

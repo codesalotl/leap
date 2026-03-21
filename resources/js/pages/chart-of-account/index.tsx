@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import type { ChartOfAccount } from '@/pages/types/types';
+import type { ChartOfAccount } from '@/types/global';
 import ChartOfAccountTablePage from '@/pages/chart-of-account/table/page';
 import { Button } from '@/components/ui/button';
 import FormDialog from '@/pages/chart-of-account/form-dialog';
 import DeleteDialog from '@/pages/chart-of-account/delete-dialog';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Chart of Accounts', href: '#' }];
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Chart of Accounts', href: '#' },
+];
 
 interface ChartOfAccountPageProps {
     chartOfAccounts: ChartOfAccount[];
@@ -20,9 +22,8 @@ export default function ChartOfAccountPage({
 
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
-    const [selectedAccount, setSelectedAccount] = useState<ChartOfAccount | null>(
-        null,
-    );
+    const [selectedAccount, setSelectedAccount] =
+        useState<ChartOfAccount | null>(null);
 
     function handleAdd() {
         setSelectedAccount(null);
@@ -56,7 +57,9 @@ export default function ChartOfAccountPage({
                     onDelete={handleDelete}
                 >
                     <div className="flex justify-end">
-                        <Button onClick={handleAdd}>Add Chart of Account</Button>
+                        <Button onClick={handleAdd}>
+                            Add Chart of Account
+                        </Button>
                     </div>
                 </ChartOfAccountTablePage>
             </div>

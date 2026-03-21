@@ -8,7 +8,7 @@ import {
     DialogTitle,
     DialogClose,
 } from '@/components/ui/dialog';
-import type { Office } from '@/pages/types/types';
+import type { Office } from '@/types/global';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -16,7 +16,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
-import type { Sector, LguLevel, OfficeType } from '@/pages/types/types';
+import type { Sector, LguLevel, OfficeType } from '@/types/global';
 import { router } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -43,7 +43,10 @@ const formSchema = z.object({
     office_type_id: z.string().min(1, 'Office Type is required'),
     code: z.string().min(1).max(3, 'Suffix must be 1-3 characters'),
     name: z.string().min(1, 'Office name is required').max(100),
-    acronym: z.string().max(20, 'Acronym must be 20 characters or less').optional(),
+    acronym: z
+        .string()
+        .max(20, 'Acronym must be 20 characters or less')
+        .optional(),
     is_lee: z.boolean(),
 });
 
@@ -128,25 +131,30 @@ export default function FormDialog({
                   onSuccess: () => onOpenChange(false),
                   onError: (errors) => {
                       console.error('Backend errors:', errors);
-                      
+
                       // Handle validation errors from backend
                       Object.keys(errors).forEach((field) => {
-                          const errorMessage = Array.isArray(errors[field]) 
-                              ? errors[field][0] 
+                          const errorMessage = Array.isArray(errors[field])
+                              ? errors[field][0]
                               : errors[field];
-                          
-                          console.log(`Setting error for field: ${field}, message: ${errorMessage}`);
-                          
+
+                          console.log(
+                              `Setting error for field: ${field}, message: ${errorMessage}`,
+                          );
+
                           // Set the error directly without forcing validation
                           form.setError(field as any, {
                               type: 'manual',
                               message: errorMessage,
                           });
                       });
-                      
+
                       // Log the form state after setting all errors
                       setTimeout(() => {
-                          console.log('All form errors:', form.formState.errors);
+                          console.log(
+                              'All form errors:',
+                              form.formState.errors,
+                          );
                       }, 100);
                   },
               })
@@ -158,25 +166,30 @@ export default function FormDialog({
                   onSuccess: () => onOpenChange(false),
                   onError: (errors) => {
                       console.error('Backend errors:', errors);
-                      
+
                       // Handle validation errors from backend
                       Object.keys(errors).forEach((field) => {
-                          const errorMessage = Array.isArray(errors[field]) 
-                              ? errors[field][0] 
+                          const errorMessage = Array.isArray(errors[field])
+                              ? errors[field][0]
                               : errors[field];
-                          
-                          console.log(`Setting error for field: ${field}, message: ${errorMessage}`);
-                          
+
+                          console.log(
+                              `Setting error for field: ${field}, message: ${errorMessage}`,
+                          );
+
                           // Set the error directly without forcing validation
                           form.setError(field as any, {
                               type: 'manual',
                               message: errorMessage,
                           });
                       });
-                      
+
                       // Log the form state after setting all errors
                       setTimeout(() => {
-                          console.log('All form errors:', form.formState.errors);
+                          console.log(
+                              'All form errors:',
+                              form.formState.errors,
+                          );
                       }, 100);
                   },
               });
@@ -421,9 +434,7 @@ export default function FormDialog({
                                 name="acronym"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
-                                    <Field
-                                        data-invalid={fieldState.invalid}
-                                    >
+                                    <Field data-invalid={fieldState.invalid}>
                                         <FieldLabel htmlFor="office-form-acronym">
                                             Acronym
                                         </FieldLabel>
@@ -483,7 +494,9 @@ export default function FormDialog({
 
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button variant="outline" disabled={isLoading}>Cancel</Button>
+                        <Button variant="outline" disabled={isLoading}>
+                            Cancel
+                        </Button>
                     </DialogClose>
 
                     <Button

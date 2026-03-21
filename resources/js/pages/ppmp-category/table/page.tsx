@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { columns } from './columns';
 import DataTable from './data-table';
-import type { PpmpCategory } from '@/pages/types/types';
+import type { PpmpCategory } from '@/types/global';
 
 interface PpmpCategoryTablePageProps {
     data: PpmpCategory[];

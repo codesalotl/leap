@@ -2,12 +2,13 @@ import * as React from 'react';
 import type {
     ColumnDef,
     RowSelectionState,
-    ExpandedState} from '@tanstack/react-table';
+    ExpandedState,
+} from '@tanstack/react-table';
 import {
     getCoreRowModel,
     getFilteredRowModel,
     getExpandedRowModel,
-    useReactTable
+    useReactTable,
 } from '@tanstack/react-table';
 
 import {

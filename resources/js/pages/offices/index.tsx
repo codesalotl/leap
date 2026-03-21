@@ -6,7 +6,7 @@ import { router } from '@inertiajs/react';
 import FormDialog from './form-dialog';
 import DeleteDialog from './delete-dialog';
 import OfficeTablePage from './table/page';
-import type { Office, Sector, LguLevel, OfficeType } from '@/pages/types/types';
+import type { Office, Sector, LguLevel, OfficeType } from '@/types/global';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Offices', href: '#' }];
 
@@ -28,7 +28,8 @@ export default function OfficesPage({
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedOffice, setSelectedOffice] = useState<Office | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [selectedOfficeForDelete, setSelectedOfficeForDelete] = useState<Office | null>(null);
+    const [selectedOfficeForDelete, setSelectedOfficeForDelete] =
+        useState<Office | null>(null);
 
     console.log(selectedOffice);
 

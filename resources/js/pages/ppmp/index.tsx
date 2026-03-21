@@ -41,7 +41,7 @@ import type {
     AipEntry,
     PpmpCategory,
     PpaFundingSource,
-} from '@/pages/types/types';
+} from '@/types/global';
 import {
     exportToExcel,
     exportToPDF,

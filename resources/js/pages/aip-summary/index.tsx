@@ -23,7 +23,7 @@ import { useAipColumns } from '@/pages/aip-summary/table/columns';
 
 import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
 
-import type { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
+import type { FiscalYear, Ppa, FundingSource } from '@/types/global';
 import { type BreadcrumbItem } from '@/types';
 
 interface AipSummaryTableProp {
@@ -169,7 +169,7 @@ export default function AipSummaryTable({
     // const handleExportPDF = () => {
     //     exportToPrint({ aipEntries, fiscalYear });
 
-    //     // import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
+    //     // import { Ppmp, PpmpCategory, ChartOfAccount } from '@/types/global';
     // };
 
     function handlePrintPreview() {

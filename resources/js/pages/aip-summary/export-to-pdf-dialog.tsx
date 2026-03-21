@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/dialog';
 import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 import { PDFViewer } from '@react-pdf/renderer';
-import type { FiscalYear, Ppa } from '@/pages/types/types';
+import type { FiscalYear, Ppa } from '@/types/global';
 import { Font } from '@react-pdf/renderer';
 
 interface ExportToPdfDialogProps {

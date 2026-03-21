@@ -18,7 +18,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { getCommonPinningStyles } from '@/pages/utils/column-pinning-styles';
-import type { Office } from '@/pages/types/types';
+import type { Office } from '@/types/global';
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];

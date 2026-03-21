@@ -2,7 +2,7 @@ import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Ppa, FundingSource } from '@/pages/types/types';
+import type { Ppa, FundingSource } from '@/types/global';
 import { Badge } from '@/components/ui/badge';
 
 export const formatNumber = (val: string) => {
