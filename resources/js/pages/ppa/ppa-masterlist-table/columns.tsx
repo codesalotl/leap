@@ -73,9 +73,9 @@ export const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 60,
+        size: 62,
         cell: ({ row, table }) => (
-            <div className="flex gap-1">
+            <div className="flex items-center gap-1">
                 <Button
                     onClick={() => {
                         // Logic to determine what the next child level should be

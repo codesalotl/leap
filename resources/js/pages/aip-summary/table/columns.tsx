@@ -223,7 +223,7 @@ export const getColumns = ({
     }),
     columnHelper.display({
         id: 'actions',
-        size: 126,
+        size: 124,
         cell: ({ row }) => {
             const entry = row.original;
             const ppaId = entry.aip_entry?.ppa_id;
@@ -231,7 +231,7 @@ export const getColumns = ({
             const isSubActivity = masterNode?.type === 'Sub-Activity';
 
             return (
-                <div className="flex gap-1">
+                <div className="flex items-center gap-1">
                     <Button
                         title="Add PPA"
                         size="icon"

@@ -21,9 +21,9 @@ export const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 87,
+        size: 24,
         cell: ({ row, table }) => (
-            <div className="flex gap-0.5">
+            <div className="flex items-center gap-1">
                 <Button
                     size="icon"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
