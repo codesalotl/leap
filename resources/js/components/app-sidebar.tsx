@@ -31,6 +31,7 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    { title: '', href: '', type: 'separator' },
     {
         title: 'Annual Investment Programs',
         href: index(),
@@ -46,15 +47,11 @@ const mainNavItems: NavItem[] = [
         href: '/offices',
         icon: Users,
     },
+    { title: '', href: '', type: 'separator' },
     {
         title: 'Price Lists',
         href: '/price-lists',
         icon: Gem,
-    },
-    {
-        title: 'Funding Sources',
-        href: '/funding-sources',
-        icon: BanknoteArrowUp,
     },
     {
         title: 'PPMP Categories',
@@ -65,6 +62,11 @@ const mainNavItems: NavItem[] = [
         title: 'Chart of Accounts',
         href: '/chart-of-accounts',
         icon: Calculator,
+    },
+    {
+        title: 'Funding Sources',
+        href: '/funding-sources',
+        icon: BanknoteArrowUp,
     },
 ];
 
