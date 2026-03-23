@@ -104,6 +104,8 @@ const CurrencyInput = ({
     field,
     fieldState,
     label,
+    action,
+    readOnly = false,
 }: {
     field: {
         value: string;
@@ -116,36 +118,53 @@ const CurrencyInput = ({
         error?: { message?: string };
     };
     label: string;
+    action?: React.ReactNode;
+    readOnly?: boolean;
 }) => {
     const [isFocused, setIsFocused] = React.useState(false);
-    const displayValue = isFocused ? field.value : formatCurrency(field.value);
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        setIsFocused(false);
+        if (readOnly) return;
+        const val = e.target.value;
+        if (val && !isNaN(Number(stripCommas(val)))) {
+            const roundedValue = parseFloat(stripCommas(val)).toFixed(2);
+            field.onChange(roundedValue);
+        }
+        field.onBlur();
+    };
+
+    // Display value depends on focus state and readOnly
+    const displayValue = readOnly
+        ? formatCurrency(field.value)
+        : isFocused
+          ? field.value
+          : formatCurrency(field.value);
 
     return (
-        <Field data-invalid={fieldState.invalid} className="flex-1 pr-10">
+        <Field data-invalid={fieldState.invalid}>
             <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-
-            <Input
-                value={displayValue}
-                id={field.name}
-                name={field.name}
-                aria-invalid={fieldState.invalid}
-                autoComplete="off"
-                onFocus={() => setIsFocused(true)}
-                onBlur={(e) => {
-                    setIsFocused(false);
-                    const val = e.target.value;
-                    if (val && !isNaN(Number(stripCommas(val)))) {
-                        const roundedValue = parseFloat(
-                            stripCommas(val),
-                        ).toFixed(2);
-                        field.onChange(roundedValue);
+            <div className="flex gap-2">
+                <Input
+                    value={displayValue}
+                    id={field.name}
+                    name={field.name}
+                    aria-invalid={fieldState.invalid}
+                    autoComplete="off"
+                    readOnly={readOnly}
+                    onFocus={() => !readOnly && setIsFocused(true)}
+                    onBlur={handleBlur}
+                    onChange={(e) =>
+                        !readOnly && field.onChange(e.target.value)
                     }
-                    field.onBlur();
-                }}
-                onChange={(e) => field.onChange(e.target.value)}
-                className="w-full text-right tabular-nums"
-            />
-
+                    className={cn(
+                        'flex-1 text-right tabular-nums',
+                        readOnly &&
+                            'cursor-not-allowed bg-muted text-muted-foreground',
+                    )}
+                />
+                {action}
+            </div>
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
         </Field>
     );
@@ -669,39 +688,14 @@ export default function AipEntryFormDialog({
                                                         field,
                                                         fieldState,
                                                     }) => (
-                                                        <Field
-                                                            data-invalid={
-                                                                fieldState.invalid
+                                                        <CurrencyInput
+                                                            field={field}
+                                                            fieldState={
+                                                                fieldState
                                                             }
-                                                        >
-                                                            <FieldLabel
-                                                                htmlFor={
-                                                                    field.name
-                                                                }
-                                                            >
-                                                                Maintenance &
-                                                                Other Operating
-                                                                Expenses (MOOE)
-                                                            </FieldLabel>
-
-                                                            <div className="flex gap-2">
-                                                                <Input
-                                                                    {...field}
-                                                                    id={
-                                                                        field.name
-                                                                    }
-                                                                    aria-invalid={
-                                                                        fieldState.invalid
-                                                                    }
-                                                                    placeholder="0.00"
-                                                                    readOnly
-                                                                    // className="cursor-not-allowed bg-muted text-right font-mono text-muted-foreground tabular-nums"
-                                                                    className="text-right tabular-nums"
-                                                                    value={formatCurrency(
-                                                                        field.value,
-                                                                    )}
-                                                                />
-
+                                                            label="Maintenance & Other Operating Expenses (MOOE)"
+                                                            readOnly={true}
+                                                            action={
                                                                 <Button
                                                                     type="button"
                                                                     variant="outline"
@@ -720,16 +714,8 @@ export default function AipEntryFormDialog({
                                                                 >
                                                                     <ListPlus className="h-4 w-4" />
                                                                 </Button>
-                                                            </div>
-
-                                                            {fieldState.invalid && (
-                                                                <FieldError
-                                                                    errors={[
-                                                                        fieldState.error,
-                                                                    ]}
-                                                                />
-                                                            )}
-                                                        </Field>
+                                                            }
+                                                        />
                                                     )}
                                                 />
 
@@ -763,6 +749,27 @@ export default function AipEntryFormDialog({
                                                                 fieldState
                                                             }
                                                             label="Capital Outlay (CO)"
+                                                            readOnly={true}
+                                                            action={
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                                                                    onClick={() => {
+                                                                        if (
+                                                                            data?.id
+                                                                        ) {
+                                                                            router.visit(
+                                                                                `/aip/${fiscalYear.id}/summary/${data.aip_entry?.id}/ppmp`,
+                                                                            );
+                                                                        }
+                                                                    }}
+                                                                    title="Manage Itemized MOOE"
+                                                                >
+                                                                    <ListPlus className="h-4 w-4" />
+                                                                </Button>
+                                                            }
                                                         />
                                                     )}
                                                 />
