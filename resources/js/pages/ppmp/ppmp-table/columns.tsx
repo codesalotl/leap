@@ -215,6 +215,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('jan_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // FEBRUARY
@@ -229,6 +239,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('feb_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // MARCH
@@ -243,6 +263,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('mar_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // APRIL
@@ -257,6 +287,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('apr_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // MAY
@@ -271,6 +311,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('may_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // JUNE
@@ -285,6 +335,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('jun_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // JULY
@@ -299,6 +359,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('jul_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // AUGUST
@@ -313,6 +383,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('aug_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // SEPTEMBER
@@ -327,6 +407,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('sep_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // OCTOBER
@@ -341,6 +431,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('oct_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // NOVEMBER
@@ -355,6 +455,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('nov_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     // DECEMBER
@@ -369,6 +479,16 @@ export const columns = [
                 {formatNumber(String(getValue() ?? 0))}
             </span>
         ),
+        footer: ({ table }) => {
+            const sum = table.getFilteredRowModel().rows.reduce((acc, row) => {
+                return acc.plus(new Decimal(row.getValue('dec_amount') || 0));
+            }, new Decimal(0));
+            return (
+                <span className="block text-right font-bold">
+                    {formatNumber(sum.toString())}
+                </span>
+            );
+        },
     }),
 
     columnHelper.display({

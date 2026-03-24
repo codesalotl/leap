@@ -58,33 +58,76 @@ class PpmpController extends Controller
     /**
      * Update AIP MOOE amount based on total PPMP amounts
      */
-    private function updateAipMooeAmount($aipEntryId)
+    // private function updateAipMooeAmount($aipEntryId)
+    // {
+    //     try {
+    //         // Calculate total from all PPMP items for this AIP entry
+    //         $totalAmount =
+    //             Ppmp::where('aip_entry_id', $aipEntryId)
+    //                 ->selectRaw(
+    //                     'SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total',
+    //                 )
+    //                 ->value('total') ?? 0;
+
+    //         // Update the corresponding AIP entry
+    //         $aipEntry = AipEntry::find($aipEntryId);
+    //         if ($aipEntry) {
+    //             $aipEntry->mooe_amount = $totalAmount;
+    //             $aipEntry->save();
+
+    //             \Log::info('AIP MOOE amount updated:', [
+    //                 'aip_entry_id' => $aipEntryId,
+    //                 'mooe_amount' => $totalAmount,
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         \Log::error('Failed to update AIP MOOE amount:', [
+    //             'aip_entry_id' => $aipEntryId,
+    //             'error' => $e->getMessage(),
+    //         ]);
+    //     }
+    // }
+    private function updateAipAmount($aipEntryId, $expenseClass)
     {
+        // 1. Map the Expense Class to your Schema columns
+        $columnMap = [
+            'MOOE' => 'mooe_amount',
+            'CO' => 'co_amount',
+            'PS' => 'ps_amount',
+            'FE' => 'fe_amount',
+        ];
+
+        $targetColumn = $columnMap[$expenseClass] ?? null;
+
+        // If the expense class isn't in our map, don't try to update the AIP
+        if (!$targetColumn) {
+            \Log::warning("Unknown expense class encountered: {$expenseClass}");
+            return;
+        }
+
         try {
-            // Calculate total from all PPMP items for this AIP entry
-            $totalAmount =
+            // 2. Sum up ALL items belonging to this specific AIP entry AND this expense class
+            $totalForClass =
                 Ppmp::where('aip_entry_id', $aipEntryId)
+                    ->whereHas('ppmpPriceList.chartOfAccount', function (
+                        $query,
+                    ) use ($expenseClass) {
+                        $query->where('expense_class', $expenseClass);
+                    })
                     ->selectRaw(
                         'SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total',
                     )
                     ->value('total') ?? 0;
 
-            // Update the corresponding AIP entry
-            $aipEntry = AipEntry::find($aipEntryId);
-            if ($aipEntry) {
-                $aipEntry->mooe_amount = $totalAmount;
-                $aipEntry->save();
-
-                \Log::info('AIP MOOE amount updated:', [
-                    'aip_entry_id' => $aipEntryId,
-                    'mooe_amount' => $totalAmount,
-                ]);
-            }
-        } catch (\Exception $e) {
-            \Log::error('Failed to update AIP MOOE amount:', [
-                'aip_entry_id' => $aipEntryId,
-                'error' => $e->getMessage(),
+            // 3. Update only the specific column in the AipEntry
+            \App\Models\AipEntry::where('id', $aipEntryId)->update([
+                $targetColumn => $totalForClass,
             ]);
+        } catch (\Exception $e) {
+            \Log::error(
+                "Failed to sync AIP totals for {$expenseClass}: " .
+                    $e->getMessage(),
+            );
         }
     }
 
@@ -103,7 +146,7 @@ class PpmpController extends Controller
     {
         $validated = $request->validated();
 
-        Ppmp::create([
+        $ppmp = Ppmp::create([
             'aip_entry_id' => $validated['aip_entry_id'],
             'ppmp_price_list_id' => $validated['ppmp_price_list_id'],
             'funding_source_id' => $validated['fundingSource'],
@@ -132,113 +175,145 @@ class PpmpController extends Controller
             'dec_qty' => 0,
             'dec_amount' => 0,
         ]);
+
+        $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
+
+        $this->updateAipAmount($ppmp->aip_entry_id, $expenseClass);
     }
 
     /**
      * Store a custom PPMP item (creates price list first, then PPMP)
      */
-    public function storeCustomItem(Request $request)
-    {
-        $validated = $request->validate([
-            'expenseAccount' => 'required|integer|exists:chart_of_accounts,id',
-            'aip_entry_id' => 'required|integer|exists:aip_entries,id',
-            'ppmp_price_list_id' =>
-                'required|integer|exists:ppmp_price_lists,id',
-            'fundingSource' => 'required|integer|exists:funding_sources,id',
-            'itemNo' => 'required|integer|min:1',
-            'description' => 'required|string',
-            'unitOfMeasurement' => 'required|string|max:20',
-            'price' => 'required|numeric|min:0',
-            'category' => 'required|integer|exists:ppmp_categories,id',
-        ]);
+    // public function storeCustomItem(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'expenseAccount' => 'required|integer|exists:chart_of_accounts,id',
+    //         'aip_entry_id' => 'required|integer|exists:aip_entries,id',
+    //         'ppmp_price_list_id' =>
+    //             'required|integer|exists:ppmp_price_lists,id',
+    //         'fundingSource' => 'required|integer|exists:funding_sources,id',
+    //         'itemNo' => 'required|integer|min:1',
+    //         'description' => 'required|string',
+    //         'unitOfMeasurement' => 'required|string|max:20',
+    //         'price' => 'required|numeric|min:0',
+    //         'category' => 'required|integer|exists:ppmp_categories,id',
+    //     ]);
 
-        Ppmp::create([
-            'aip_entry_id' => $validated['aip_entry_id'],
-            'ppmp_price_list_id' => $validated['ppmp_price_list_id'],
-            'funding_source_id' => $validated['fundingSource'],
-            'jan_qty' => 0,
-            'jan_amount' => 0,
-            'feb_qty' => 0,
-            'feb_amount' => 0,
-            'mar_qty' => 0,
-            'mar_amount' => 0,
-            'apr_qty' => 0,
-            'apr_amount' => 0,
-            'may_qty' => 0,
-            'may_amount' => 0,
-            'jun_qty' => 0,
-            'jun_amount' => 0,
-            'jul_qty' => 0,
-            'jul_amount' => 0,
-            'aug_qty' => 0,
-            'aug_amount' => 0,
-            'sep_qty' => 0,
-            'sep_amount' => 0,
-            'oct_qty' => 0,
-            'oct_amount' => 0,
-            'nov_qty' => 0,
-            'nov_amount' => 0,
-            'dec_qty' => 0,
-            'dec_amount' => 0,
-        ]);
+    //     Ppmp::create([
+    //         'aip_entry_id' => $validated['aip_entry_id'],
+    //         'ppmp_price_list_id' => $validated['ppmp_price_list_id'],
+    //         'funding_source_id' => $validated['fundingSource'],
+    //         'jan_qty' => 0,
+    //         'jan_amount' => 0,
+    //         'feb_qty' => 0,
+    //         'feb_amount' => 0,
+    //         'mar_qty' => 0,
+    //         'mar_amount' => 0,
+    //         'apr_qty' => 0,
+    //         'apr_amount' => 0,
+    //         'may_qty' => 0,
+    //         'may_amount' => 0,
+    //         'jun_qty' => 0,
+    //         'jun_amount' => 0,
+    //         'jul_qty' => 0,
+    //         'jul_amount' => 0,
+    //         'aug_qty' => 0,
+    //         'aug_amount' => 0,
+    //         'sep_qty' => 0,
+    //         'sep_amount' => 0,
+    //         'oct_qty' => 0,
+    //         'oct_amount' => 0,
+    //         'nov_qty' => 0,
+    //         'nov_amount' => 0,
+    //         'dec_qty' => 0,
+    //         'dec_amount' => 0,
+    //     ]);
 
-        // // 1. Handle Category
-        // $categoryId = $validated['ppmp_category_id'];
+    //     // // 1. Handle Category
+    //     // $categoryId = $validated['ppmp_category_id'];
 
-        // if (empty($categoryId) && !empty($validated['custom_category'])) {
-        //     $newCategory = PpmpCategory::create([
-        //         'name' => $validated['custom_category'],
-        //     ]);
-        //     $categoryId = $newCategory->id;
-        // }
+    //     // if (empty($categoryId) && !empty($validated['custom_category'])) {
+    //     //     $newCategory = PpmpCategory::create([
+    //     //         'name' => $validated['custom_category'],
+    //     //     ]);
+    //     //     $categoryId = $newCategory->id;
+    //     // }
 
-        // // 2. Create the price list
-        // $newPriceList = PpmpPriceList::create([
-        //     'item_number' => $validated['item_number'],
-        //     'description' => $validated['description'],
-        //     'unit_of_measurement' => $validated['unit_of_measurement'],
-        //     'price' => $validated['price'],
-        //     'chart_of_account_id' => $validated['chart_of_account_id'],
-        //     'ppmp_category_id' => $categoryId,
-        // ]);
+    //     // // 2. Create the price list
+    //     // $newPriceList = PpmpPriceList::create([
+    //     //     'item_number' => $validated['item_number'],
+    //     //     'description' => $validated['description'],
+    //     //     'unit_of_measurement' => $validated['unit_of_measurement'],
+    //     //     'price' => $validated['price'],
+    //     //     'chart_of_account_id' => $validated['chart_of_account_id'],
+    //     //     'ppmp_category_id' => $categoryId,
+    //     // ]);
 
-        // // 3. Create the PPMP with the funding_source_id
-        // Ppmp::create([
-        //     'aip_entry_id' => $validated['aip_entry_id'],
-        //     'ppmp_price_list_id' => $newPriceList->id,
-        //     'funding_source_id' => $validated['fundingSource'],
-        //     'jan_qty' => 0,
-        //     'jan_amount' => 0,
-        //     'feb_qty' => 0,
-        //     'feb_amount' => 0,
-        //     'mar_qty' => 0,
-        //     'mar_amount' => 0,
-        //     'apr_qty' => 0,
-        //     'apr_amount' => 0,
-        //     'may_qty' => 0,
-        //     'may_amount' => 0,
-        //     'jun_qty' => 0,
-        //     'jun_amount' => 0,
-        //     'jul_qty' => 0,
-        //     'jul_amount' => 0,
-        //     'aug_qty' => 0,
-        //     'aug_amount' => 0,
-        //     'sep_qty' => 0,
-        //     'sep_amount' => 0,
-        //     'oct_qty' => 0,
-        //     'oct_amount' => 0,
-        //     'nov_qty' => 0,
-        //     'nov_amount' => 0,
-        //     'dec_qty' => 0,
-        //     'dec_amount' => 0,
-        // ]);
+    //     // // 3. Create the PPMP with the funding_source_id
+    //     // Ppmp::create([
+    //     //     'aip_entry_id' => $validated['aip_entry_id'],
+    //     //     'ppmp_price_list_id' => $newPriceList->id,
+    //     //     'funding_source_id' => $validated['fundingSource'],
+    //     //     'jan_qty' => 0,
+    //     //     'jan_amount' => 0,
+    //     //     'feb_qty' => 0,
+    //     //     'feb_amount' => 0,
+    //     //     'mar_qty' => 0,
+    //     //     'mar_amount' => 0,
+    //     //     'apr_qty' => 0,
+    //     //     'apr_amount' => 0,
+    //     //     'may_qty' => 0,
+    //     //     'may_amount' => 0,
+    //     //     'jun_qty' => 0,
+    //     //     'jun_amount' => 0,
+    //     //     'jul_qty' => 0,
+    //     //     'jul_amount' => 0,
+    //     //     'aug_qty' => 0,
+    //     //     'aug_amount' => 0,
+    //     //     'sep_qty' => 0,
+    //     //     'sep_amount' => 0,
+    //     //     'oct_qty' => 0,
+    //     //     'oct_amount' => 0,
+    //     //     'nov_qty' => 0,
+    //     //     'nov_amount' => 0,
+    //     //     'dec_qty' => 0,
+    //     //     'dec_amount' => 0,
+    //     // ]);
 
-        // $this->updateAipMooeAmount($ppmp->aip_entry_id);
-    }
+    //     // $this->updateAipMooeAmount($ppmp->aip_entry_id);
+    // }
 
     /**
      * Update monthly quantity for a PPMP item.
      */
+    // public function updateMonthlyQuantity(Request $request, Ppmp $ppmp)
+    // {
+    //     $validated = $request->validate([
+    //         'month' =>
+    //             'required|in:jan_qty,feb_qty,mar_qty,apr_qty,may_qty,jun_qty,jul_qty,aug_qty,sep_qty,oct_qty,nov_qty,dec_qty',
+    //         'quantity' => 'required|numeric|min:0',
+    //     ]);
+
+    //     $monthColumn = $validated['month'];
+    //     $quantity = $validated['quantity'];
+
+    //     // Get unit price from the price list relationship
+    //     $unitPrice = $ppmp->ppmpPriceList?->price ?? 0;
+
+    //     // Calculate amount (quantity × unit_price)
+    //     $amountColumn = str_replace('_qty', '_amount', $monthColumn);
+
+    //     // Update both quantity and amount
+    //     $ppmp->update([
+    //         $monthColumn => $quantity,
+    //         $amountColumn => $quantity * $unitPrice,
+    //     ]);
+
+    //     // Update AIP MOOE amount after PPMP update
+    //     $this->updateAipMooeAmount($ppmp->aip_entry_id);
+
+    //     return back()->with('success', 'PPMP item updated successfully');
+    // }
     public function updateMonthlyQuantity(Request $request, Ppmp $ppmp)
     {
         $validated = $request->validate([
@@ -247,25 +322,23 @@ class PpmpController extends Controller
             'quantity' => 'required|numeric|min:0',
         ]);
 
-        $monthColumn = $validated['month'];
-        $quantity = $validated['quantity'];
-
-        // Get unit price from the price list relationship
+        $monthQty = $validated['month'];
+        $monthAmount = str_replace('_qty', '_amount', $monthQty);
         $unitPrice = $ppmp->ppmpPriceList?->price ?? 0;
 
-        // Calculate amount (quantity × unit_price)
-        $amountColumn = str_replace('_qty', '_amount', $monthColumn);
-
-        // Update both quantity and amount
+        // Update the individual PPMP item
         $ppmp->update([
-            $monthColumn => $quantity,
-            $amountColumn => $quantity * $unitPrice,
+            $monthQty => $validated['quantity'],
+            $monthAmount => $validated['quantity'] * $unitPrice,
         ]);
 
-        // Update AIP MOOE amount after PPMP update
-        $this->updateAipMooeAmount($ppmp->aip_entry_id);
+        // Navigate the tree: PPMP -> PriceList -> ChartOfAccount -> expense_class
+        $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
 
-        return back()->with('success', 'PPMP item updated successfully');
+        // Trigger the dynamic sync
+        $this->updateAipAmount($ppmp->aip_entry_id, $expenseClass);
+
+        return back();
     }
 
     /**
@@ -289,12 +362,13 @@ class PpmpController extends Controller
      */
     public function destroy(Ppmp $ppmp)
     {
-        $aipEntryId = $ppmp->aip_entry_id; // Store before deletion
+        $aipEntryId = $ppmp->aip_entry_id;
+        // Capture class BEFORE deletion
+        $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
 
-        // Delete the PPMP item
         $ppmp->delete();
 
-        // Update AIP MOOE amount after PPMP deletion
-        $this->updateAipMooeAmount($aipEntryId);
+        // Trigger dynamic recalculation for the specific class
+        $this->updateAipAmount($aipEntryId, $expenseClass);
     }
 }

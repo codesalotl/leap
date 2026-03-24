@@ -8,6 +8,7 @@ interface PpmpTablePageProps {
     // onEdit: (record: Ppmp) => void;
     onDelete: (record: Ppmp) => void;
     children: ReactElement;
+    // text: ReactElement;
 }
 
 export default function PpmpTablePage({
@@ -15,6 +16,7 @@ export default function PpmpTablePage({
     // onEdit,
     onDelete,
     children,
+    // text,
 }: PpmpTablePageProps) {
     return (
         <DataTable
@@ -22,6 +24,7 @@ export default function PpmpTablePage({
             data={data}
             // onEdit={onEdit}
             onDelete={onDelete}
+            // text={text}
         >
             {children}
         </DataTable>

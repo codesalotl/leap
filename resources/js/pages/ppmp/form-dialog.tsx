@@ -43,6 +43,7 @@ interface PpmpFormDialogProps {
     ppmpCategories: PpmpCategory[];
     selectedEntry: { id: number } | null;
     fundingSources: PpaFundingSource[];
+    selectedExpenseClass: string;
 }
 
 export default function PpmpFormDialog({
@@ -52,6 +53,7 @@ export default function PpmpFormDialog({
     ppmpCategories,
     selectedEntry = null,
     fundingSources,
+    selectedExpenseClass,
 }: PpmpFormDialogProps) {
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
     const [openFundingSourceCommand, setOpenFundingSourceCommand] =
@@ -255,7 +257,11 @@ export default function PpmpFormDialog({
                                                     }
                                                 >
                                                     <FieldLabel htmlFor="expense-select">
-                                                        Expense Account
+                                                        Expense Account{' '}
+                                                        {selectedExpenseClass ===
+                                                        'MOOE'
+                                                            ? '(MOOE)'
+                                                            : '(CO)'}
                                                     </FieldLabel>
 
                                                     {/* <div className="flex w-full"> */}

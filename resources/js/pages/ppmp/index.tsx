@@ -141,6 +141,7 @@ export default function PpmpPage({
                     data={filteredPpmpItems}
                     // onEdit={handleEdit}
                     onDelete={handleDeleteDialogOpen}
+                    // text={<span>Showing all MOOE with All Funding Source</span>}
                 >
                     <div className="flex gap-2">
                         <Select
@@ -158,8 +159,14 @@ export default function PpmpPage({
                                     <SelectItem value="ALL">
                                         All Classes
                                     </SelectItem>
-                                    <SelectItem value="MOOE">MOOE</SelectItem>
-                                    <SelectItem value="CO">CO</SelectItem>
+                                    <SelectItem value="MOOE">
+                                        {/* Maintenance and Other Operating Expenses */}
+                                        (MOOE)
+                                    </SelectItem>
+                                    <SelectItem value="CO">
+                                        {/* Capital Outlay  */}
+                                        (CO)
+                                    </SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
@@ -252,8 +259,6 @@ export default function PpmpPage({
                         <Button onClick={() => setOpen(true)}>
                             <Plus /> Add Item
                         </Button>
-
-                        <span>Showing all MOOE with All Funding Source</span>
                     </div>
                 </PpmpTablePage>
             </div>
@@ -265,6 +270,7 @@ export default function PpmpPage({
                 ppmpCategories={ppmpCategories}
                 selectedEntry={aipEntry}
                 fundingSources={fundingSources}
+                selectedExpenseClass={selectedExpenseClass}
             />
 
             <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>

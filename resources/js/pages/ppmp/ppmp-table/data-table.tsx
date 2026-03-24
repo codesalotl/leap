@@ -26,6 +26,7 @@ interface DataTableProps<TData> {
     // onEdit?: (record: TData) => void;
     onDelete?: (record: TData) => void;
     children: ReactElement;
+    text: ReactElement;
 }
 
 export default function DataTable<TData>({
@@ -34,6 +35,7 @@ export default function DataTable<TData>({
     // onEdit,
     onDelete,
     children,
+    // text,
 }: DataTableProps<TData>) {
     const [globalFilter, setGlobalFilter] = useState('');
 
@@ -71,6 +73,8 @@ export default function DataTable<TData>({
 
                 {children}
             </div>
+
+            {/* <span>{text}</span> */}
 
             <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                 <Table

@@ -16,7 +16,6 @@ import {
 import AppLayout from '@/layouts/app-layout';
 import DataTable from '@/pages/aip-summary/table/data-table';
 import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
-// import DeleteDialog from '@/pages/aip-summary/delete-dialog';
 import { DeleteDialog } from '@/components/delete-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
 import { useAipColumns } from '@/pages/aip-summary/table/columns';
@@ -93,7 +92,7 @@ export default function AipSummaryTable({
     masterPpas,
     fundingSources,
 }: AipSummaryTableProp) {
-    // console.log(aipEntries);
+    console.log(aipEntries);
     // console.log(fundingSources);
 
     const [searchValue, setSearchValue] = useState('');
@@ -110,7 +109,7 @@ export default function AipSummaryTable({
     const [isExportOpen, setIsExportOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    console.log(selectedEntryId);
+    // console.log(selectedEntryId);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },

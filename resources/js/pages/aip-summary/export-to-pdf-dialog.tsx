@@ -32,14 +32,6 @@ export default function ExportToPdfDialog({
         5.36, 5.36, 5.34,
     ];
 
-    // // width checker, COLUMN_WIDTHS should equal to 100
-    // const COLUMN_WIDTHS_TOTAL = COLUMN_WIDTHS.reduce(
-    //     (acc, current) => acc + current,
-    //     0,
-    // );
-    // if (COLUMN_WIDTHS_TOTAL !== 100)
-    //     return console.log('total width:' + ' ' + COLUMN_WIDTHS_TOTAL);
-
     const keys = [
         'full_code',
         'title',
@@ -47,7 +39,7 @@ export default function ExportToPdfDialog({
         'aip_entry.start_date',
         'aip_entry.end_date',
         'aip_entry.expected_output',
-        'aip_entry.funding_source.title',
+        'aip_entry.funding_source.code',
         'aip_entry.ps_amount',
         'aip_entry.mooe_amount',
         'aip_entry.fe_amount',
@@ -57,6 +49,7 @@ export default function ExportToPdfDialog({
         'aip_entry.ccet_mitigation',
         'aip_entry.typology.code',
     ];
+
     const office =
         'OFFICE OF THE PROVINCIAL GOVERNOR - INFORMATION AND COMMUNICATIONS TECHNOLOGY UNIT';
 
@@ -75,10 +68,21 @@ export default function ExportToPdfDialog({
         headerGroup: { flexDirection: 'column', padding: 0 },
     });
 
+    const formatNumber = (value: string) => {
+        const num = parseFloat(value);
+        // If it's null, undefined, NaN, or exactly 0, return "-"
+        if (!value || isNaN(num) || num === 0) return '-';
+
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(num);
+    };
+
     const getNestedValue = (obj: Ppa, path: string) => {
         const value = path
             .split('.')
-            .reduce((acc, part) => acc && acc[part], obj);
+            .reduce((acc, part) => acc && acc[part], obj as any);
 
         // 1. Handle Dates
         if (
@@ -107,7 +111,7 @@ export default function ExportToPdfDialog({
             }
         }
 
-        // 2. Handle Amounts (Columns 7 through 11)
+        // 2. Handle Amounts
         const amountFields = [
             'ps_amount',
             'mooe_amount',
@@ -127,22 +131,42 @@ export default function ExportToPdfDialog({
             : value;
     };
 
-    const formatNumber = (value: string) => {
-        // console.log(value);
+    // Helper to safely get value directly from funding source object or fallback
+    const getFsValue = (fs: any, originalKey: string, item: Ppa) => {
+        let value;
 
-        const num = parseFloat(value);
-        // If it's null, undefined, NaN, or exactly 0, return "-"
-        if (!value || isNaN(num) || num === 0) return '-';
+        if (originalKey === 'aip_entry.funding_source.code') {
+            value = fs.code ?? fs.funding_source?.code;
+        } else {
+            const field = originalKey.replace('aip_entry.', '');
+            value = fs[field];
 
-        return new Intl.NumberFormat('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(num);
+            // Fallback to item.aip_entry if value isn't in fs (in case API places them differently)
+            if (value === undefined && item.aip_entry) {
+                value = (item.aip_entry as any)[field];
+            }
+        }
+
+        const amountFields = [
+            'ps_amount',
+            'mooe_amount',
+            'fe_amount',
+            'co_amount',
+            'total_amount',
+            'ccet_adaptation',
+            'ccet_mitigation',
+        ];
+
+        if (amountFields.some((field) => originalKey.includes(field))) {
+            return formatNumber(value);
+        }
+
+        return value === null || value === undefined || value === ''
+            ? '-'
+            : value;
     };
 
     const renderOrderedRows = (initialEntries: Ppa[]) => {
-        console.log(initialEntries);
-
         const result = [];
         let rootCounter = 0;
 
@@ -150,12 +174,11 @@ export default function ExportToPdfDialog({
         const stack = [...initialEntries].toReversed().map((item) => ({
             item,
             level: 0,
-            path: [],
+            path: [] as number[],
         }));
 
         while (stack.length > 0) {
-            // Destructure 'path' so it is available in this scope
-            const { item, level, path } = stack.pop();
+            const { item, level, path } = stack.pop()!;
             let displayTitle = getNestedValue(item, 'title');
 
             if (level === 0) {
@@ -165,9 +188,7 @@ export default function ExportToPdfDialog({
                 rootCounter++;
             } else {
                 // Level 1+: Hierarchical numbers (1., 1.1, 1.1.1)
-                // .join('.') creates the "1.1.1" string
                 const outlineString = path.join('.');
-                // Adding a trailing dot for level 1 (e.g., "1.") as requested
                 const suffix = level === 1 ? '.' : '';
                 displayTitle = `${outlineString}${suffix} ${displayTitle}`;
             }
@@ -175,12 +196,11 @@ export default function ExportToPdfDialog({
             result.push(
                 <View
                     key={`${item.id}-${level}`}
-                    style={{
-                        flexDirection: 'row',
-                    }}
+                    style={{ flexDirection: 'row' }}
                     wrap={false}
                 >
-                    {COLUMN_WIDTHS.map((width, colIndex) => (
+                    {/* Cols 0 to 5: Base Details */}
+                    {COLUMN_WIDTHS.slice(0, 6).map((width, colIndex) => (
                         <View
                             key={colIndex}
                             style={{
@@ -188,17 +208,11 @@ export default function ExportToPdfDialog({
                                 borderRightWidth: 1,
                                 borderLeftWidth: colIndex === 0 ? 1 : 0,
                                 alignItems:
-                                    (colIndex >= 7 && colIndex <= 11) ||
-                                    colIndex === 12 ||
-                                    colIndex === 13
-                                        ? 'flex-end'
-                                        : colIndex === 2 ||
-                                            colIndex === 3 ||
-                                            colIndex === 4 ||
-                                            colIndex === 6 ||
-                                            colIndex === 14
-                                          ? 'center'
-                                          : 'baseline',
+                                    colIndex === 2 ||
+                                    colIndex === 3 ||
+                                    colIndex === 4
+                                        ? 'center'
+                                        : 'baseline',
                             }}
                         >
                             <Text
@@ -206,9 +220,7 @@ export default function ExportToPdfDialog({
                                     styles.tableCell,
                                     colIndex === 0 ? { fontSize: 4.5 } : {},
                                     colIndex === 1 || colIndex === 5
-                                        ? {
-                                              textAlign: 'left',
-                                          }
+                                        ? { textAlign: 'left' }
                                         : {},
                                     colIndex === 1
                                         ? {
@@ -226,6 +238,123 @@ export default function ExportToPdfDialog({
                             </Text>
                         </View>
                     ))}
+
+                    {/* Cols 6 to 14: Split into Multiple Rows for Funding Sources */}
+                    {(() => {
+                        let fundingSources: any[] = [];
+                        if (
+                            Array.isArray(item.aip_entry?.funding_source) &&
+                            item.aip_entry.funding_source.length > 0
+                        ) {
+                            fundingSources = item.aip_entry.funding_source;
+                        } else if (item.aip_entry?.funding_source) {
+                            fundingSources = [item.aip_entry.funding_source];
+                        } else {
+                            fundingSources = [{}]; // fallback render
+                        }
+
+                        // CHANGE 1: Slice up to 15 to include Col 14 in the wrapper width
+                        const containerWidth = COLUMN_WIDTHS.slice(
+                            6,
+                            15,
+                        ).reduce((a, b) => a + b, 0);
+
+                        return (
+                            <View
+                                style={{
+                                    width: `${containerWidth}%`,
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                {fundingSources.map((fs, fsIndex) => (
+                                    <View
+                                        key={fsIndex}
+                                        style={{
+                                            flexDirection: 'row',
+                                            flexGrow: 1,
+                                            borderBottomWidth:
+                                                fsIndex <
+                                                fundingSources.length - 1
+                                                    ? 1
+                                                    : 0,
+                                        }}
+                                    >
+                                        {/* CHANGE 2: Slice up to 15 to map Col 14 inside the inner loop */}
+                                        {COLUMN_WIDTHS.slice(6, 15).map(
+                                            (width, subIndex) => {
+                                                const colIndex = subIndex + 6;
+                                                const relativeWidth =
+                                                    (width / containerWidth) *
+                                                    100;
+
+                                                return (
+                                                    <View
+                                                        key={colIndex}
+                                                        style={{
+                                                            width: `${relativeWidth}%`,
+                                                            borderRightWidth: 1,
+                                                            justifyContent:
+                                                                'center',
+                                                            alignItems:
+                                                                (colIndex >=
+                                                                    7 &&
+                                                                    colIndex <=
+                                                                        11) ||
+                                                                colIndex ===
+                                                                    12 ||
+                                                                colIndex === 13
+                                                                    ? 'flex-end'
+                                                                    : colIndex ===
+                                                                            6 ||
+                                                                        colIndex ===
+                                                                            14 // center Col 14
+                                                                      ? 'center'
+                                                                      : 'baseline',
+                                                        }}
+                                                    >
+                                                        <Text
+                                                            style={
+                                                                styles.tableCell
+                                                            }
+                                                        >
+                                                            {/* CHANGE 3: Fetch main nested value for Col 14, else use getFsValue */}
+                                                            {colIndex === 14
+                                                                ? getNestedValue(
+                                                                      item,
+                                                                      keys[
+                                                                          colIndex
+                                                                      ],
+                                                                  )
+                                                                : getFsValue(
+                                                                      fs,
+                                                                      keys[
+                                                                          colIndex
+                                                                      ],
+                                                                      item,
+                                                                  )}
+                                                        </Text>
+                                                    </View>
+                                                );
+                                            },
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        );
+                    })()}
+
+                    {/* Col 14: CC Typology Code */}
+                    {/* <View
+                        style={{
+                            width: `${COLUMN_WIDTHS[14]}%`,
+                            borderRightWidth: 1,
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Text style={styles.tableCell}>
+                            {getNestedValue(item, keys[14])}
+                        </Text>
+                    </View> */}
                 </View>,
             );
 
@@ -234,8 +363,6 @@ export default function ExportToPdfDialog({
                     stack.push({
                         item: item.children[i],
                         level: level + 1,
-                        // If level 0, the first child starts path [1]
-                        // If deeper, append current index + 1 to the path array
                         path: level === 0 ? [i + 1] : [...path, i + 1],
                     });
                 }

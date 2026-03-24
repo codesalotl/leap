@@ -415,7 +415,7 @@ export async function exportToPrint({
     filteredPpmpItems,
     ppmpCategories,
     chartOfAccounts,
-}) {
+}: ExportToExcelProps) {
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
 
@@ -783,7 +783,7 @@ export async function exportToPDF({
     filteredPpmpItems,
     ppmpCategories,
     chartOfAccounts,
-}) {
+}: ExportToExcelProps) {
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
 
