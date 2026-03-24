@@ -87,49 +87,61 @@ class PpmpController extends Controller
     //         ]);
     //     }
     // }
-    private function updateAipAmount($aipEntryId, $expenseClass)
-    {
-        // 1. Map the Expense Class to your Schema columns
-        $columnMap = [
-            'MOOE' => 'mooe_amount',
-            'CO' => 'co_amount',
-            'PS' => 'ps_amount',
-            'FE' => 'fe_amount',
-        ];
+    private function updateAipAmount($aipEntryId, $expenseClass, $fundingSourceId)
+{
+    $columnMap = [
+        'MOOE' => 'mooe_amount',
+        'CO'   => 'co_amount',
+        'PS'   => 'ps_amount',
+        'FE'   => 'fe_amount',
+    ];
 
-        $targetColumn = $columnMap[$expenseClass] ?? null;
+    $targetColumn = $columnMap[$expenseClass] ?? null;
 
-        // If the expense class isn't in our map, don't try to update the AIP
-        if (!$targetColumn) {
-            \Log::warning("Unknown expense class encountered: {$expenseClass}");
-            return;
-        }
-
-        try {
-            // 2. Sum up ALL items belonging to this specific AIP entry AND this expense class
-            $totalForClass =
-                Ppmp::where('aip_entry_id', $aipEntryId)
-                    ->whereHas('ppmpPriceList.chartOfAccount', function (
-                        $query,
-                    ) use ($expenseClass) {
-                        $query->where('expense_class', $expenseClass);
-                    })
-                    ->selectRaw(
-                        'SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total',
-                    )
-                    ->value('total') ?? 0;
-
-            // 3. Update only the specific column in the AipEntry
-            \App\Models\AipEntry::where('id', $aipEntryId)->update([
-                $targetColumn => $totalForClass,
-            ]);
-        } catch (\Exception $e) {
-            \Log::error(
-                "Failed to sync AIP totals for {$expenseClass}: " .
-                    $e->getMessage(),
-            );
-        }
+    if (!$targetColumn) {
+        \Log::warning("Unknown expense class encountered: {$expenseClass}");
+        return;
     }
+
+    try {
+        // A. UPDATE GLOBAL AIP ENTRY TOTALS
+        $totalForClass = Ppmp::where('aip_entry_id', $aipEntryId)
+            ->whereHas('ppmpPriceList.chartOfAccount', function ($query) use ($expenseClass) {
+                $query->where('expense_class', $expenseClass);
+            })
+            ->selectRaw('SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total')
+            ->value('total') ?? 0;
+
+        \App\Models\AipEntry::where('id', $aipEntryId)->update([
+            $targetColumn => $totalForClass,
+        ]);
+
+        // B. UPDATE SPECIFIC FUNDING SOURCE TOTALS (Pivot Table)
+        // Get the PPA ID from the AIP Entry
+        $aipEntry = \App\Models\AipEntry::find($aipEntryId);
+        if (!$aipEntry) return;
+
+        $totalForSource = Ppmp::where('aip_entry_id', $aipEntryId)
+            ->where('funding_source_id', $fundingSourceId) // Filter by the specific source
+            ->whereHas('ppmpPriceList.chartOfAccount', function ($query) use ($expenseClass) {
+                $query->where('expense_class', $expenseClass);
+            })
+            ->selectRaw('SUM(jan_amount + feb_amount + mar_amount + apr_amount + may_amount + jun_amount + jul_amount + aug_amount + sep_amount + oct_amount + nov_amount + dec_amount) as total')
+            ->value('total') ?? 0;
+
+        // Update the ppa_funding_sources table
+        \DB::table('ppa_funding_sources')
+            ->where('ppa_id', $aipEntry->ppa_id)
+            ->where('funding_source_id', $fundingSourceId)
+            ->update([
+                $targetColumn => $totalForSource,
+                'updated_at'  => now(),
+            ]);
+
+    } catch (\Exception $e) {
+        \Log::error("Failed to sync AIP/Funding totals: " . $e->getMessage());
+    }
+}
 
     /**
      * Show the form for creating a new resource.
@@ -178,7 +190,7 @@ class PpmpController extends Controller
 
         $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
 
-        $this->updateAipAmount($ppmp->aip_entry_id, $expenseClass);
+        $this->updateAipAmount($ppmp->aip_entry_id, $expenseClass, $ppmp->funding_source_id);
     }
 
     /**
@@ -315,31 +327,28 @@ class PpmpController extends Controller
     //     return back()->with('success', 'PPMP item updated successfully');
     // }
     public function updateMonthlyQuantity(Request $request, Ppmp $ppmp)
-    {
-        $validated = $request->validate([
-            'month' =>
-                'required|in:jan_qty,feb_qty,mar_qty,apr_qty,may_qty,jun_qty,jul_qty,aug_qty,sep_qty,oct_qty,nov_qty,dec_qty',
-            'quantity' => 'required|numeric|min:0',
-        ]);
+{
+    $validated = $request->validate([
+        'month' => 'required|in:jan_qty,feb_qty,mar_qty,apr_qty,may_qty,jun_qty,jul_qty,aug_qty,sep_qty,oct_qty,nov_qty,dec_qty',
+        'quantity' => 'required|numeric|min:0',
+    ]);
 
-        $monthQty = $validated['month'];
-        $monthAmount = str_replace('_qty', '_amount', $monthQty);
-        $unitPrice = $ppmp->ppmpPriceList?->price ?? 0;
+    $monthQty = $validated['month'];
+    $monthAmount = str_replace('_qty', '_amount', $monthQty);
+    $unitPrice = $ppmp->ppmpPriceList?->price ?? 0;
 
-        // Update the individual PPMP item
-        $ppmp->update([
-            $monthQty => $validated['quantity'],
-            $monthAmount => $validated['quantity'] * $unitPrice,
-        ]);
+    $ppmp->update([
+        $monthQty => $validated['quantity'],
+        $monthAmount => $validated['quantity'] * $unitPrice,
+    ]);
 
-        // Navigate the tree: PPMP -> PriceList -> ChartOfAccount -> expense_class
-        $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
+    $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
 
-        // Trigger the dynamic sync
-        $this->updateAipAmount($ppmp->aip_entry_id, $expenseClass);
+    // Pass the funding_source_id to the sync method
+    $this->updateAipAmount($ppmp->aip_entry_id, $expenseClass, $ppmp->funding_source_id);
 
-        return back();
-    }
+    return back();
+}
 
     /**
      * Show the form for editing the specified resource.
@@ -366,9 +375,11 @@ class PpmpController extends Controller
         // Capture class BEFORE deletion
         $expenseClass = $ppmp->ppmpPriceList->chartOfAccount->expense_class;
 
+        $fsId = $ppmp->funding_source_id; // Capture before delete
+
         $ppmp->delete();
 
         // Trigger dynamic recalculation for the specific class
-        $this->updateAipAmount($aipEntryId, $expenseClass);
+        $this->updateAipAmount($aipEntryId, $expenseClass, $fsId);
     }
 }

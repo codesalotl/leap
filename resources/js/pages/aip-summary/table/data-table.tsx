@@ -120,6 +120,10 @@ export default function DataTable<TData, TValue>({
                                     key={cell.id}
                                     style={{
                                         width: cell.column.getSize(),
+                                        verticalAlign: 'top', // Traditional way to pin content to the top
+                                        // textAlign: 'left', // Traditional way to pin content to the left
+                                        paddingTop: '1rem',
+                                        paddingBottom: '1rem',
                                         ...getCommonPinningStyles(cell.column),
                                     }}
                                 >

@@ -25,7 +25,7 @@ export default function ExportToPdfDialog({
     aipEntries,
     fiscalYear,
 }: ExportToPdfDialogProps) {
-    console.log(aipEntries);
+    // console.log(aipEntries);
 
     const COLUMN_WIDTHS = [
         7.14, 17.86, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 5.36,
@@ -133,13 +133,19 @@ export default function ExportToPdfDialog({
 
     // Helper to safely get value directly from funding source object or fallback
     const getFsValue = (fs: any, originalKey: string, item: Ppa) => {
+        console.log(fs);
+        console.log(originalKey);
+        console.log(item);
+
         let value;
 
         if (originalKey === 'aip_entry.funding_source.code') {
             value = fs.code ?? fs.funding_source?.code;
         } else {
             const field = originalKey.replace('aip_entry.', '');
-            value = fs[field];
+            console.log(field);
+            value = fs.pivot?.[field];
+            console.log(value);
 
             // Fallback to item.aip_entry if value isn't in fs (in case API places them differently)
             if (value === undefined && item.aip_entry) {

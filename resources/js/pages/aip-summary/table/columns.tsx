@@ -138,7 +138,7 @@ export const getColumns = ({
         header: 'Funding Source',
         size: 300,
         cell: (info) => (
-            <div className="flex flex-wrap gap-1">
+            <div className="flex flex-col gap-4">
                 {info.getValue().map((value: FundingSource) => (
                     <Badge key={value.id}>{value.code}</Badge>
                 ))}
