@@ -2,11 +2,18 @@ import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
 import { useMemo } from 'react';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Ppa, FundingSource } from '@/types/global';
+import type {
+    Ppa,
+    FundingSource,
+    PpaFundingSource,
+    Office,
+} from '@/types/global';
 import { Badge } from '@/components/ui/badge';
 import { Decimal } from 'decimal.js'; // Added Decimal.js import
 
-export const formatNumber = (val: string) => {
+export const formatNumber = (val: string | null) => {
+    if (!val) return;
+
     const num = parseFloat(val);
 
     return num
@@ -67,14 +74,52 @@ export const getColumns = ({
     onDelete,
     masterPpas,
 }: ColumnActions): ColumnDef<Ppa, any>[] => [
-    columnHelper.accessor('full_code', {
+    columnHelper.accessor('office', {
         header: 'AIP Reference Code',
-        size: 200,
-        cell: (info) => (
-            <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
-                {info.getValue()}
-            </code>
-        ),
+        size: 250,
+        cell: (info) => {
+            const office = info.getValue();
+            const row = info.row;
+
+            // 1. Base Office Codes (keeping their specific padding)
+            const sector = office?.sector?.code ?? '0';
+            const lguLevel = office?.lgu_level?.code ?? '00';
+            const officeType = office?.office_type?.code ?? '00';
+            const officeCode = office?.code ?? '000';
+            const baseCode = `1000-${sector}-${lguLevel}-${officeCode}`;
+
+            // 2. Generate the Hierarchy Path
+            const getHierarchyPath = (currentRow: any): string[] => {
+                const path: string[] = [];
+                let current = currentRow;
+
+                while (current) {
+                    const suffix = current.original.code_suffix;
+                    const depth = current.depth; // 0 = Program, 1 = Project, 2 = Activity, 3 = Sub-Activity
+
+                    if (suffix) {
+                        // If it's the 4th level (Sub-Activity), strip leading zeros
+                        // Otherwise, keep the original string (e.g., "001")
+                        const formattedSuffix =
+                            depth === 3
+                                ? parseInt(suffix, 10).toString()
+                                : suffix;
+
+                        path.unshift(formattedSuffix);
+                    }
+                    current = current.getParentRow();
+                }
+                return path;
+            };
+
+            const hierarchyCode = getHierarchyPath(row).join('-');
+
+            return (
+                <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
+                    {hierarchyCode ? `${baseCode}-${hierarchyCode}` : baseCode}
+                </code>
+            );
+        },
     }),
     columnHelper.accessor('title', {
         header: 'Program/Project/Activity Description',
@@ -116,56 +161,94 @@ export const getColumns = ({
         header: 'Schedule of Implementation',
         size: 250,
         columns: [
-            columnHelper.accessor('aip_entry.start_date', {
+            columnHelper.accessor('aip_entries', {
+                id: 'start_date',
                 header: 'Start Date',
-                cell: (info) => formatDate(info.getValue()),
+                cell: (info) => {
+                    const aipEntry = info.getValue();
+
+                    if (!aipEntry || aipEntry.length === 0) {
+                        return '—';
+                    }
+
+                    return formatDate(aipEntry[0].start_date);
+                },
             }),
-            columnHelper.accessor('aip_entry.end_date', {
+            columnHelper.accessor('aip_entries', {
+                id: 'end_date',
                 header: 'Completion Date',
-                cell: (info) => formatDate(info.getValue()),
+                cell: (info) => {
+                    const aipEntry = info.getValue();
+
+                    if (!aipEntry || aipEntry.length === 0) {
+                        return '—';
+                    }
+
+                    return formatDate(aipEntry[0].end_date);
+                },
             }),
         ],
     }),
-    columnHelper.accessor('aip_entry.expected_output', {
+    columnHelper.accessor('aip_entries', {
+        id: 'expected_output',
         header: 'Expected Outputs',
         size: 500,
-        cell: (info) => (
-            <div className="break-words whitespace-normal">
-                {info.getValue()}
-            </div>
-        ),
+        cell: (info) => {
+            const aipEntry = info.getValue();
+
+            if (!aipEntry || aipEntry.length === 0) {
+                return '—';
+            }
+
+            return (
+                <div className="break-words whitespace-normal">
+                    {aipEntry[0].expected_output}
+                </div>
+            );
+        },
     }),
-    columnHelper.accessor('aip_entry.funding_source', {
+
+    columnHelper.accessor('ppa_funding_sources', {
+        id: 'funding_sources',
         header: 'Funding Source',
         size: 300,
-        cell: (info) =>
-            info.getValue().length !== 0 ? (
+        cell: (info) => {
+            const ppaFs = info.getValue();
+            // console.log(ppaFs);
+
+            return ppaFs.length !== 0 ? (
                 <div className="flex flex-col gap-4">
-                    {info.getValue().map((value: FundingSource) => (
-                        <Badge key={value.id}>{value.code}</Badge>
+                    {ppaFs.map((item: PpaFundingSource) => (
+                        <Badge key={item.funding_source?.id}>
+                            {item.funding_source?.code}
+                        </Badge>
                     ))}
                 </div>
             ) : (
                 '-'
-            ),
+            );
+        },
     }),
     columnHelper.group({
         header: 'Amount (in thousand pesos)',
         size: 600,
         columns: [
-            columnHelper.accessor('aip_entry.funding_source', {
+            columnHelper.accessor('ppa_funding_sources', {
                 id: 'ps_amount',
                 header: () => <div className="text-right">PS</div>,
                 cell: (info) => {
-                    return info.getValue().length !== 0 ? (
+                    const ppaFs = info.getValue();
+                    // console.log(ppaFs);
+
+                    return ppaFs.length !== 0 ? (
                         <div className="flex flex-col gap-4">
-                            {info.getValue().map((amount) => {
+                            {ppaFs.map((amount: PpaFundingSource) => {
                                 return (
                                     <span
                                         key={amount.id}
                                         className="block text-right"
                                     >
-                                        {formatNumber(amount.pivot.ps_amount)}
+                                        {formatNumber(amount.ps_amount)}
                                     </span>
                                 );
                             })}
@@ -175,19 +258,21 @@ export const getColumns = ({
                     );
                 },
             }),
-            columnHelper.accessor('aip_entry.funding_source', {
+            columnHelper.accessor('ppa_funding_sources', {
                 id: 'mooe_amount',
                 header: () => <div className="text-right">MOOE</div>,
                 cell: (info) => {
-                    return info.getValue().length !== 0 ? (
+                    const ppaFs = info.getValue();
+
+                    return ppaFs.length !== 0 ? (
                         <div className="flex flex-col gap-4">
-                            {info.getValue().map((amount) => {
+                            {ppaFs.map((amount: PpaFundingSource) => {
                                 return (
                                     <span
                                         key={amount.id}
                                         className="block text-right"
                                     >
-                                        {formatNumber(amount.pivot.mooe_amount)}
+                                        {formatNumber(amount.mooe_amount)}
                                     </span>
                                 );
                             })}
@@ -197,19 +282,21 @@ export const getColumns = ({
                     );
                 },
             }),
-            columnHelper.accessor('aip_entry.funding_source', {
+            columnHelper.accessor('ppa_funding_sources', {
                 id: 'fe_amount',
                 header: () => <div className="text-right">FE</div>,
                 cell: (info) => {
-                    return info.getValue().length !== 0 ? (
+                    const ppaFs = info.getValue();
+
+                    return ppaFs.length !== 0 ? (
                         <div className="flex flex-col gap-4">
-                            {info.getValue().map((amount) => {
+                            {ppaFs.map((amount: PpaFundingSource) => {
                                 return (
                                     <span
                                         key={amount.id}
                                         className="block text-right"
                                     >
-                                        {formatNumber(amount.pivot.fe_amount)}
+                                        {formatNumber(amount.fe_amount)}
                                     </span>
                                 );
                             })}
@@ -219,19 +306,21 @@ export const getColumns = ({
                     );
                 },
             }),
-            columnHelper.accessor('aip_entry.funding_source', {
+            columnHelper.accessor('ppa_funding_sources', {
                 id: 'co_amount',
                 header: () => <div className="text-right">CO</div>,
                 cell: (info) => {
-                    return info.getValue().length !== 0 ? (
+                    const ppaFs = info.getValue();
+
+                    return ppaFs.length !== 0 ? (
                         <div className="flex flex-col gap-4">
-                            {info.getValue().map((amount) => {
+                            {ppaFs.map((amount: PpaFundingSource) => {
                                 return (
                                     <span
                                         key={amount.id}
                                         className="block text-right"
                                     >
-                                        {formatNumber(amount.pivot.co_amount)}
+                                        {formatNumber(amount.co_amount)}
                                     </span>
                                 );
                             })}
@@ -283,23 +372,23 @@ export const getColumns = ({
         header: 'AMOUNT of Climate Change Expenditure (in thousand pesos)',
         size: 400,
         columns: [
-            columnHelper.accessor('aip_entry.funding_source', {
+            columnHelper.accessor('ppa_funding_sources', {
                 id: 'cc_adaptation',
                 header: () => (
                     <div className="text-right">Climate Change Adaptation</div>
                 ),
                 cell: (info) => {
-                    return info.getValue().length !== 0 ? (
+                    const ppaFs = info.getValue();
+
+                    return ppaFs.length !== 0 ? (
                         <div className="flex flex-col gap-4">
-                            {info.getValue().map((amount) => {
+                            {ppaFs.map((amount: PpaFundingSource) => {
                                 return (
                                     <span
                                         key={amount.id}
                                         className="block text-right"
                                     >
-                                        {formatNumber(
-                                            amount.pivot.ccet_adaptation,
-                                        )}
+                                        {formatNumber(amount.ccet_adaptation)}
                                     </span>
                                 );
                             })}
@@ -309,23 +398,23 @@ export const getColumns = ({
                     );
                 },
             }),
-            columnHelper.accessor('aip_entry.funding_source', {
+            columnHelper.accessor('ppa_funding_sources', {
                 id: 'cc_mitigation',
                 header: () => (
                     <div className="text-right">Climate Change Mitigation</div>
                 ),
                 cell: (info) => {
-                    return info.getValue().length !== 0 ? (
+                    const ppaFs = info.getValue();
+
+                    return ppaFs.length !== 0 ? (
                         <div className="flex flex-col gap-4">
-                            {info.getValue().map((amount) => {
+                            {ppaFs.map((amount: PpaFundingSource) => {
                                 return (
                                     <span
                                         key={amount.id}
                                         className="block text-right"
                                     >
-                                        {formatNumber(
-                                            amount.pivot.ccet_mitigation,
-                                        )}
+                                        {formatNumber(amount.ccet_mitigation)}
                                     </span>
                                 );
                             })}

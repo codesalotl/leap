@@ -1,3 +1,20 @@
+export interface Ppa {
+    id: number;
+    office_id: number;
+    parent_id: number | null;
+    title: string;
+    type: 'Program' | 'Project' | 'Activity' | 'Sub-Activity';
+    code_suffix: string;
+    is_active: boolean;
+    created_at: string | null;
+    updated_at: string | null;
+    full_code: string;
+    aip_entries?: AipEntry[];
+    children?: Ppa[];
+    office?: Office;
+    ppa_funding_sources?: PpaFundingSource[];
+}
+
 export interface AipEntry {
     id: number;
     ppa_id: number;
@@ -149,22 +166,6 @@ export interface Sector {
     sector: string;
     created_at: string | null;
     updated_at: string | null;
-}
-
-export interface Ppa {
-    id: number;
-    office_id: number;
-    parent_id: number | null;
-    title: string;
-    type: 'Program' | 'Project' | 'Activity' | 'Sub-Activity';
-    code_suffix: string;
-    is_active: boolean;
-    created_at: string | null;
-    updated_at: string | null;
-    full_code: string;
-    office?: Office;
-    children?: Ppa[];
-    aip_entry?: AipEntry;
 }
 
 export interface Office {

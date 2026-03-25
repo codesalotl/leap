@@ -24,35 +24,50 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
-        $ppaMasterList = Ppa::whereNull('parent_id')
-            ->with(['office', 'children', 'parent'])
-            ->get();
+        // $ppaMasterList = Ppa::whereNull('parent_id')
+        //     ->with(['office', 'children', 'parent'])
+        //     ->get();
 
         $yearId = $fiscalYear->id;
+        $filter = fn($q) => $q->where('fiscal_year_id', $yearId);
+        $aipEntries = Ppa::whereNull('parent_id')
+            ->with([
+                // --- LEVEL 1: Program (Roots) ---
+                'aipEntries' => $filter,
+                'ppaFundingSources.fundingSource',
+                'office.sector',
+                'office.lguLevel',
+                'office.officeType',
 
-        $loadAipTree = function ($query) use ($yearId, &$loadAipTree) {
-            $query
-                ->whereHas(
-                    'aipEntry',
-                    fn($q) => $q->where('fiscal_year_id', $yearId),
-                )
-                ->with([
-                    'office',
-                    'parent',
-                    'aipEntry' => fn($q) => $q
-                        ->where('fiscal_year_id', $yearId)
-                        ->with('fundingSource'),
-                    'children' => $loadAipTree,
-                ]);
-        };
-        $aipEntries = Ppa::whereNull('parent_id')->where($loadAipTree)->get();
+                // --- LEVEL 2: Projects ---
+                'children.aipEntries' => $filter,
+                'children.ppaFundingSources.fundingSource',
+                'children.office.sector',
+                'children.office.lguLevel',
+                'children.office.officeType',
+
+                // --- LEVEL 3: Activities ---
+                'children.children.aipEntries' => $filter,
+                'children.children.ppaFundingSources.fundingSource',
+                'children.children.office.sector',
+                'children.children.office.lguLevel',
+                'children.children.office.officeType',
+
+                // --- LEVEL 4: Sub-Activities ---
+                'children.children.children.aipEntries' => $filter,
+                'children.children.children.ppaFundingSources.fundingSource',
+                'children.children.children.office.sector',
+                'children.children.children.office.lguLevel',
+                'children.children.children.office.officeType',
+            ])
+            ->get();
 
         $offices = Office::all();
 
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipEntries,
-            'masterPpas' => $ppaMasterList,
+            // 'masterPpas' => $ppaMasterList,
             'fundingSources' => FundingSource::all(),
 
             'offices' => $offices,

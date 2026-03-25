@@ -21,59 +21,46 @@ class Ppa extends Model
         'is_active',
     ];
 
-    protected $appends = ['full_code'];
+    // protected $appends = ['full_code'];
 
-    protected function fullCode(): Attribute
+    // protected function fullCode(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: function () {
+    //             $suffix = $this->code_suffix ?? '000';
+
+    //             if ($this->parent_id) {
+    //                 $parent = $this->parent;
+
+    //                 if ($parent) {
+    //                     return $parent->full_code . '-' . $suffix;
+    //                 }
+    //             }
+
+    //             $officePrefix = $this->office?->full_code ?? '0000-0-00-000';
+
+    //             return $officePrefix . '-' . $suffix;
+    //         },
+    //     );
+    // }
+
+    public function children()
     {
-        return Attribute::make(
-            get: function () {
-                $suffix = $this->code_suffix ?? '000';
+        return $this->hasMany(Ppa::class, 'parent_id');
+    }
 
-                // 1. Check for Parent FIRST
-                if ($this->parent_id) {
-                    // Use relationLoaded to ensure we aren't triggering new queries
-                    // and use the actual parent object
-                    $parent = $this->parent;
+    public function ppaFundingSources()
+    {
+        return $this->hasMany(PpaFundingSource::class, 'ppa_id');
+    }
 
-                    if ($parent) {
-                        return $parent->full_code . '-' . $suffix;
-                    }
-                }
-
-                // 2. If no parent_id, then it's a Top-Level Program
-                // Get the Office prefix (Sector-LGU-Type-Office)
-                $officePrefix = $this->office?->full_code ?? '0000-0-00-000';
-
-                return $officePrefix . '-' . $suffix;
-            },
-        );
+    public function aipEntries()
+    {
+        return $this->hasMany(AipEntry::class, 'ppa_id');
     }
 
     public function office()
     {
-        return $this->belongsTo(Office::class)->with(
-            'sector',
-            'lguLevel',
-            'officeType',
-        );
-    }
-
-    public function children()
-    {
-        return $this->hasMany(Ppa::class, 'parent_id')->with(
-            'children',
-            'office',
-        );
-    }
-
-    public function parent()
-    {
-        return $this->belongsTo(Ppa::class, 'parent_id');
-    }
-
-    public function aipEntry()
-    {
-        // We use hasOne because you confirmed there's only one per year
-        return $this->hasOne(AipEntry::class);
+        return $this->belongsTo(Office::class);
     }
 }

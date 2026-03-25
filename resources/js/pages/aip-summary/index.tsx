@@ -116,20 +116,20 @@ export default function AipSummaryTable({
         { title: `AIP Summary FY ${fiscalYear.year}`, href: '#' },
     ];
 
-    const selectedEntry = useMemo(() => {
-        if (!selectedEntryId) return null;
-        return findPpaInTree(aipEntries, selectedEntryId);
-    }, [aipEntries, selectedEntryId]);
+    // const selectedEntry = useMemo(() => {
+    //     if (!selectedEntryId) return null;
+    //     return findPpaInTree(aipEntries, selectedEntryId);
+    // }, [aipEntries, selectedEntryId]);
 
-    const handleImportLibrary = () => {
-        setSelectorState({
-            isOpen: true,
-            data: masterPpas,
-            title: 'Import from Library',
-            description:
-                'Select Programs, Projects, and Activities to import. Items already in the AIP are disabled.',
-        });
-    };
+    // const handleImportLibrary = () => {
+    //     setSelectorState({
+    //         isOpen: true,
+    //         data: masterPpas,
+    //         title: 'Import from Library',
+    //         description:
+    //             'Select Programs, Projects, and Activities to import. Items already in the AIP are disabled.',
+    //     });
+    // };
 
     const handleAddEntry = (entry: Ppa) => {
         const masterNode = findPpaInTree(masterPpas, entry.aip_entry.ppa_id);
@@ -157,18 +157,18 @@ export default function AipSummaryTable({
         setIsDeleteDialogOpen(true);
     }, []);
 
-    const handleDelete = () => {
-        router.delete(`/aip-entries/${selectedEntry?.aip_entry?.id}`, {
-            preserveState: true,
-            preserveScroll: true,
-            onStart: () => setIsLoading(true),
-            onFinish: () => {
-                setIsLoading(false);
-                setSelectedEntryId(null);
-            },
-            onSuccess: () => setIsDeleteDialogOpen(false),
-        });
-    };
+    // const handleDelete = () => {
+    //     router.delete(`/aip-entries/${selectedEntry?.aip_entry?.id}`, {
+    //         preserveState: true,
+    //         preserveScroll: true,
+    //         onStart: () => setIsLoading(true),
+    //         onFinish: () => {
+    //             setIsLoading(false);
+    //             setSelectedEntryId(null);
+    //         },
+    //         onSuccess: () => setIsDeleteDialogOpen(false),
+    //     });
+    // };
 
     const columns = useAipColumns({
         onAddEntry: handleAddEntry,
@@ -250,10 +250,10 @@ export default function AipSummaryTable({
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            <Button onClick={handleImportLibrary}>
+                            {/* <Button onClick={handleImportLibrary}>
                                 <Library className="mr-2 h-4 w-4" /> Import from
                                 Library
-                            </Button>
+                            </Button> */}
                         </div>
                     </div>
 
@@ -272,7 +272,7 @@ export default function AipSummaryTable({
                 </div>
             </div>
 
-            <PpaSelectorDialog
+            {/* <PpaSelectorDialog
                 isOpen={selectorState.isOpen}
                 onClose={() =>
                     setSelectorState((prev) => ({ ...prev, isOpen: false }))
@@ -282,18 +282,18 @@ export default function AipSummaryTable({
                 description={selectorState.description}
                 fiscalYearId={fiscalYear.id}
                 existingPpaIds={Array.from(existingPpaIds(aipEntries))}
-            />
+            /> */}
 
-            <AipEntryFormDialog
+            {/* <AipEntryFormDialog
                 open={isEditOpen}
                 onOpenChange={setIsEditOpen}
                 data={selectedEntry}
                 fiscalYear={fiscalYear}
                 fundingSources={fundingSources}
-            />
+            /> */}
 
             {/*alert dialog*/}
-            <DeleteDialog
+            {/* <DeleteDialog
                 isOpen={isDeleteDialogOpen}
                 onOpenChange={setIsDeleteDialogOpen}
                 title="Remove from AIP Summary?"
@@ -319,14 +319,14 @@ export default function AipSummaryTable({
                     setSelectedEntryId(null);
                 }}
                 isLoading={isLoading}
-            />
+            /> */}
 
-            <ExportToPdfDialog
+            {/* <ExportToPdfDialog
                 open={isExportOpen}
                 onOpenChange={setIsExportOpen}
                 aipEntries={aipEntries}
                 fiscalYear={fiscalYear}
-            />
+            /> */}
         </AppLayout>
     );
 }

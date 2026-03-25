@@ -11,8 +11,13 @@ class PpaFundingSource extends Model
     /** @use HasFactory<\Database\Factories\PpaFundingSourceFactory> */
     use HasFactory;
 
-    public function funding_source()
+    // public function funding_source()
+    // {
+    //     return $this->belongsTo(FundingSource::class);
+    // }
+
+    public function fundingSource()
     {
-        return $this->belongsTo(FundingSource::class);
+        return $this->belongsTo(FundingSource::class, 'funding_source_id');
     }
 }
