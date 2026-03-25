@@ -92,7 +92,7 @@ export default function AipSummaryTable({
     masterPpas,
     fundingSources,
 }: AipSummaryTableProp) {
-    // console.log(aipEntries);
+    console.log(aipEntries);
     // console.log(fundingSources);
 
     const [searchValue, setSearchValue] = useState('');
