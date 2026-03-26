@@ -11,6 +11,18 @@ class PpaFundingSource extends Model
     /** @use HasFactory<\Database\Factories\PpaFundingSourceFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'ppa_id',
+        'funding_source_id',
+        'ps_amount',
+        'mooe_amount',
+        'fe_amount',
+        'co_amount',
+        'ccet_adaptation',
+        'ccet_mitigation',
+        // 'cc_typology_code',
+    ];
+
     // public function funding_source()
     // {
     //     return $this->belongsTo(FundingSource::class);

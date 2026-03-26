@@ -207,7 +207,9 @@ Route::delete('office-types/{officeType}', [
 ])->name('office-types.destroy');
 
 // aip summary
-Route::post('aip/{aip_id}/import', [AipEntryController::class, 'store']);
+// Route::post('aip/{aip_id}/import', [AipEntryController::class, 'store']);
+Route::post('/aip/{fiscalYear}/import', [AipEntryController::class, 'import']);
+// Route::post('/aip-entries', [AipEntryController::class, 'store']);
 Route::put('/aip-entries/{aipEntry}', [AipEntryController::class, 'update']);
 Route::delete('/aip-entries/{aipEntry}', [
     AipEntryController::class,

@@ -1,15 +1,20 @@
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type {
-    Ppa,
-    FundingSource,
-    PpaFundingSource,
-    Office,
-} from '@/types/global';
+import type { Ppa, PpaFundingSource } from '@/types/global';
 import { Badge } from '@/components/ui/badge';
-import { Decimal } from 'decimal.js'; // Added Decimal.js import
+import { Decimal } from 'decimal.js';
+
+const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
+    for (const node of nodes) {
+        if (node.id === targetId) return node;
+        if (node.children && node.children.length > 0) {
+            const found = findPpaInTree(node.children, targetId);
+            if (found) return found;
+        }
+    }
+    return null;
+};
 
 export const formatNumber = (val: string | null) => {
     if (!val) return;
@@ -44,36 +49,9 @@ export const formatDate = (dateString: string) => {
     return `${months[Number(dateSplit[1]) - 1]}-${dateSplit[2]}`;
 };
 
-interface ColumnActions {
-    onAddEntry: (entry: Ppa) => void;
-    onEdit: (entry: Ppa) => void;
-    onDelete: (entry: Ppa) => void;
-    masterPpas: Ppa[];
-}
-
 const columnHelper = createColumnHelper<Ppa>();
 
-const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
-    for (const node of nodes) {
-        if (node.id === targetId) return node;
-        if (node.children && node.children.length > 0) {
-            const found = findPpaInTree(node.children, targetId);
-            if (found) return found;
-        }
-    }
-    return null;
-};
-
-export const useAipColumns = (actions: ColumnActions) => {
-    return useMemo(() => getColumns(actions), [actions]);
-};
-
-export const getColumns = ({
-    onAddEntry,
-    onEdit,
-    onDelete,
-    masterPpas,
-}: ColumnActions): ColumnDef<Ppa, any>[] => [
+export const columns = [
     columnHelper.accessor('office', {
         header: 'AIP Reference Code',
         size: 250,
@@ -86,7 +64,7 @@ export const getColumns = ({
             const lguLevel = office?.lgu_level?.code ?? '00';
             const officeType = office?.office_type?.code ?? '00';
             const officeCode = office?.code ?? '000';
-            const baseCode = `1000-${sector}-${lguLevel}-${officeCode}`;
+            const baseCode = `${sector}-${lguLevel}-${officeType}-${officeCode}`;
 
             // 2. Generate the Hierarchy Path
             const getHierarchyPath = (currentRow: any): string[] => {
@@ -216,9 +194,9 @@ export const getColumns = ({
             const ppaFs = info.getValue();
             // console.log(ppaFs);
 
-            return ppaFs.length !== 0 ? (
+            return ppaFs?.length !== 0 ? (
                 <div className="flex flex-col gap-4">
-                    {ppaFs.map((item: PpaFundingSource) => (
+                    {ppaFs?.map((item) => (
                         <Badge key={item.funding_source?.id}>
                             {item.funding_source?.code}
                         </Badge>
@@ -334,16 +312,15 @@ export const getColumns = ({
                 id: 'amount_total',
                 header: () => <div className="text-right">Total</div>,
                 cell: ({ row }) => {
-                    const items = row.original.aip_entry?.funding_source;
+                    const items = row.original.ppa_funding_sources;
 
-                    function calcTotalAmount(data) {
-                        const pivot = data.pivot;
+                    function calcTotalAmount(data: PpaFundingSource) {
+                        const ppaFs = data;
 
-                        // Use Decimal.js for precise addition
-                        const total = new Decimal(pivot.co_amount || 0)
-                            .plus(new Decimal(pivot.fe_amount || 0))
-                            .plus(new Decimal(pivot.mooe_amount || 0))
-                            .plus(new Decimal(pivot.ps_amount || 0));
+                        const total = new Decimal(ppaFs.co_amount || 0)
+                            .plus(new Decimal(ppaFs.fe_amount || 0))
+                            .plus(new Decimal(ppaFs.mooe_amount || 0))
+                            .plus(new Decimal(ppaFs.ps_amount || 0));
 
                         return total.toString();
                     }
@@ -437,38 +414,42 @@ export const getColumns = ({
     columnHelper.display({
         id: 'actions',
         size: 124,
-        cell: ({ row }) => {
+        cell: ({ row, table }) => {
             const entry = row.original;
-            const ppaId = entry.aip_entry?.ppa_id;
-            const masterNode = ppaId ? findPpaInTree(masterPpas, ppaId) : null;
-            const isSubActivity = masterNode?.type === 'Sub-Activity';
+
+            // FIX: Use the type directly from the row data instead of searching a tree
+            const isSubActivity = entry.type === 'Sub-Activity';
 
             return (
                 <div className="flex items-center gap-1">
                     <Button
-                        title="Add PPA"
+                        title="Add Sub-entry"
                         size="icon"
-                        onClick={() => onAddEntry(entry)}
+                        onClick={() => {
+                            console.log('Button clicked for PPA:', entry.id);
+                            table.options.meta?.onAdd?.(entry);
+                        }}
                         disabled={isSubActivity}
                     >
-                        <Plus />
+                        <Plus className="h-4 w-4" />
                     </Button>
 
                     <Button
                         title="Edit"
                         size="icon"
-                        onClick={() => onEdit(entry)}
+                        onClick={() => table.options.meta?.onEdit?.(entry)}
                     >
-                        <Pencil />
+                        <Pencil className="h-4 w-4" />
                     </Button>
 
                     <Button
                         title="Delete"
                         size="icon"
                         variant="destructive"
-                        onClick={() => onDelete(entry)}
+                        className="text-destructive hover:text-destructive"
+                        onClick={() => table.options.meta?.onDelete?.(entry)}
                     >
-                        <Trash />
+                        <Trash className="h-4 w-4" />
                     </Button>
                 </div>
             );

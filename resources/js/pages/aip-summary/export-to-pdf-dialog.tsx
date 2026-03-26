@@ -36,18 +36,18 @@ export default function ExportToPdfDialog({
         'full_code',
         'title',
         'office.acronym',
-        'aip_entry.start_date',
-        'aip_entry.end_date',
-        'aip_entry.expected_output',
-        'aip_entry.funding_source.code',
-        'aip_entry.ps_amount',
-        'aip_entry.mooe_amount',
-        'aip_entry.fe_amount',
-        'aip_entry.co_amount',
-        'aip_entry.total_amount',
-        'aip_entry.ccet_adaptation',
-        'aip_entry.ccet_mitigation',
-        'aip_entry.typology.code',
+        'aip_entries.0.start_date', // Updated
+        'aip_entries.0.end_date', // Updated
+        'aip_entries.0.expected_output', // Updated
+        'aip_entry.funding_source.code', // This is handled by getFsValue, but we'll update the logic below
+        'aip_entries.0.ps_amount', // Updated
+        'aip_entries.0.mooe_amount', // Updated
+        'aip_entries.0.fe_amount', // Updated
+        'aip_entries.0.co_amount', // Updated
+        'aip_entries.0.total_amount', // Updated
+        'aip_entries.0.ccet_adaptation', // Updated
+        'aip_entries.0.ccet_mitigation', // Updated
+        'aip_entries.0.typology.code', // Updated
     ];
 
     const office =
@@ -134,19 +134,15 @@ export default function ExportToPdfDialog({
 
     // Helper to safely get value directly from funding source object or fallback
     const getFsValue = (fs: any, originalKey: string, item: Ppa) => {
-        console.log(fs);
-        console.log(originalKey);
-        console.log(item);
-
         let value;
 
         if (originalKey === 'aip_entry.funding_source.code') {
+            // Funding source code usually comes from the related object
             value = fs.code ?? fs.funding_source?.code;
         } else {
-            const field = originalKey.replace('aip_entry.', '');
-            console.log(field);
+            // Updated to handle the new key prefix
+            const field = originalKey.replace('aip_entries.0.', '');
             value = fs.pivot?.[field];
-            console.log(value);
 
             if (field === 'total_amount') {
                 const ps = parseFloat(fs.pivot?.ps_amount || 0);
@@ -154,13 +150,11 @@ export default function ExportToPdfDialog({
                 const fe = parseFloat(fs.pivot?.fe_amount || 0);
                 const co = parseFloat(fs.pivot?.co_amount || 0);
                 value = ps + mooe + fe + co;
-            } else {
-                value = fs.pivot?.[field];
             }
 
-            // Fallback to item.aip_entry if value isn't in fs (in case API places them differently)
-            if (value === undefined && item.aip_entry) {
-                value = (item.aip_entry as any)[field];
+            // Fallback to item.aip_entries[0] if value isn't in the pivot
+            if (value === undefined && item.aip_entries?.[0]) {
+                value = (item.aip_entries[0] as any)[field];
             }
         }
 
@@ -259,18 +253,17 @@ export default function ExportToPdfDialog({
                     {/* Cols 6 to 14: Split into Multiple Rows for Funding Sources */}
                     {(() => {
                         let fundingSources: any[] = [];
+
+                        // Updated to use ppa_funding_sources as per your data dump
                         if (
-                            Array.isArray(item.aip_entry?.funding_source) &&
-                            item.aip_entry.funding_source.length > 0
+                            Array.isArray(item.ppa_funding_sources) &&
+                            item.ppa_funding_sources.length > 0
                         ) {
-                            fundingSources = item.aip_entry.funding_source;
-                        } else if (item.aip_entry?.funding_source) {
-                            fundingSources = [item.aip_entry.funding_source];
+                            fundingSources = item.ppa_funding_sources;
                         } else {
-                            fundingSources = [{}]; // fallback render
+                            fundingSources = [{}]; // fallback render for empty rows
                         }
 
-                        // CHANGE 1: Slice up to 15 to include Col 14 in the wrapper width
                         const containerWidth = COLUMN_WIDTHS.slice(
                             6,
                             15,
@@ -289,14 +282,8 @@ export default function ExportToPdfDialog({
                                         style={{
                                             flexDirection: 'row',
                                             flexGrow: 1,
-                                            // borderBottomWidth:
-                                            //     fsIndex <
-                                            //     fundingSources.length - 1
-                                            //         ? 1
-                                            //         : 0,
                                         }}
                                     >
-                                        {/* CHANGE 2: Slice up to 15 to map Col 14 inside the inner loop */}
                                         {COLUMN_WIDTHS.slice(6, 15).map(
                                             (width, subIndex) => {
                                                 const colIndex = subIndex + 6;
@@ -321,12 +308,7 @@ export default function ExportToPdfDialog({
                                                                     12 ||
                                                                 colIndex === 13
                                                                     ? 'flex-end'
-                                                                    : colIndex ===
-                                                                            6 ||
-                                                                        colIndex ===
-                                                                            14 // center Col 14
-                                                                      ? 'center'
-                                                                      : 'baseline',
+                                                                    : 'center',
                                                         }}
                                                     >
                                                         <Text
@@ -334,7 +316,6 @@ export default function ExportToPdfDialog({
                                                                 styles.tableCell
                                                             }
                                                         >
-                                                            {/* CHANGE 3: Fetch main nested value for Col 14, else use getFsValue */}
                                                             {colIndex === 14
                                                                 ? getNestedValue(
                                                                       item,

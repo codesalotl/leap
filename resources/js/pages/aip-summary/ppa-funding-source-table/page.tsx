@@ -16,16 +16,17 @@ export default function FundingSourceTablePage({
     onDelete,
     children,
 }: FundingSourceTablePageProps) {
-    console.log(data.aip_entry.funding_source);
+    // console.log(data.aip_entry.funding_source);
 
     return (
-        <DataTable
-            columns={columns}
-            data={data.aip_entry.funding_source}
-            onEdit={onEdit}
-            onDelete={onDelete}
-        >
-            {children}
-        </DataTable>
+        // <DataTable
+        //     columns={columns}
+        //     data={data.aip_entry.funding_source}
+        //     onEdit={onEdit}
+        //     onDelete={onDelete}
+        // >
+        //     {children}
+        // </DataTable>
+        <></>
     );
 }

@@ -1,11 +1,9 @@
-import React, { useEffect } from 'react';
-import { useForm, useWatch, Controller } from 'react-hook-form';
+import React, { useEffect, useMemo } from 'react';
+import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import Decimal from 'decimal.js';
-import { router } from '@inertiajs/react';
-import { format } from 'date-fns';
-import { ListPlus } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { CalendarIcon, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,7 +14,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Form } from '@/components/ui/form';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -26,154 +23,59 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
-import type { FiscalYear, Ppa, FundingSource } from '@/types/global';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
-import { MultiSelect } from './multiselect';
+import { Input } from '@/components/ui/input';
 import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
-    InputGroupText,
-} from '@/components/ui/input-group';
-import PpaFundingSourceTablePage from '@/pages/aip-summary/ppa-funding-source-table/page';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { router } from '@inertiajs/react';
 
-interface AipFormProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    data: Ppa;
-    fiscalYear: FiscalYear;
-    fundingSources: FundingSource[];
-}
+import type { FiscalYear, Ppa, FundingSource, Office } from '@/types/global';
 
-const amountSchema = z
-    .string()
-    .trim()
-    .refine((val) => !val || !isNaN(Number(val)), 'Must be a valid number')
-    .refine((val) => Number(val) >= 0, 'Amount must be positive');
+const amountSchema = z.string();
 
 const formSchema = z.object({
-    ppa_id: z.number(),
-    aipRefCode: z.string().min(1, 'Reference code is required'),
-    ppaDescription: z.string().min(1, 'Description is required'),
-    implementingOfficeDepartmentLocation: z
-        .string()
-        .min(1, 'Location is required'),
-    scheduleOfImplementation: z.object({
-        startingDate: z.string().min(1, 'Start date is required'),
-        completionDate: z.string().min(1, 'End date is required'),
-    }),
-    expectedOutputs: z.string().min(1, 'Outputs are required'),
-    fundingSource: z
-        .array(
-            z.object({
-                id: z.number(),
-            }),
-        )
-        .min(1, 'Select at least one funding source'),
-    amount: z.object({
-        ps: amountSchema,
-        mooe: amountSchema,
-        fe: amountSchema,
-        co: amountSchema,
-        total: z.string(),
-    }),
-    amountOfCcExpenditure: z.object({
-        ccAdaptation: amountSchema,
-        ccMitigation: amountSchema,
-    }),
-    ccTypologyCode: z.string().min(1, 'Typology code is required'),
+    office_id: z.string().min(1, 'Office is required'), // Added this
+    expected_output: z.string().min(1, 'Required'),
+    start_date: z.string().min(1, 'Required'),
+    end_date: z.string().min(1, 'Required'),
+    ppa_funding_sources: z.array(
+        z.object({
+            id: z.number().optional(),
+            funding_source_id: z.string().min(1, 'Required'),
+            ps_amount: amountSchema,
+            mooe_amount: amountSchema,
+            fe_amount: amountSchema,
+            co_amount: amountSchema,
+            ccet_adaptation: amountSchema,
+            ccet_mitigation: amountSchema,
+            cc_typology_code: z.string().optional().nullable(),
+        }),
+    ),
 });
 
-// Helper to remove all non-numeric characters except the decimal point
-const stripCommas = (val: string) => val.replace(/,/g, '');
+type FormValues = z.infer<typeof formSchema>;
 
-// Helper to format string into currency with commas
-const formatCurrency = (val: string) => {
-    if (!val) return '';
-    const numericValue = stripCommas(val);
-    if (isNaN(Number(numericValue))) return val;
-
-    return new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(parseFloat(numericValue));
-};
-
-// Currency Input Component with proper hook usage
-const CurrencyInput = ({
-    field,
-    fieldState,
-    label,
-    action,
-    readOnly = false,
-    className,
-}: {
-    field: {
-        value: string;
-        onChange: (value: string) => void;
-        onBlur: () => void;
-        name: string;
-    };
-    fieldState: {
-        invalid: boolean;
-        error?: { message?: string };
-    };
-    label: string;
-    action?: React.ReactNode;
-    readOnly?: boolean;
-    className?: string;
-}) => {
-    const [isFocused, setIsFocused] = React.useState(false);
-
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        setIsFocused(false);
-        if (readOnly) return;
-        const val = e.target.value;
-        if (val && !isNaN(Number(stripCommas(val)))) {
-            const roundedValue = parseFloat(stripCommas(val)).toFixed(2);
-            field.onChange(roundedValue);
-        }
-        field.onBlur();
-    };
-
-    // Display value depends on focus state and readOnly
-    const displayValue = readOnly
-        ? formatCurrency(field.value)
-        : isFocused
-          ? field.value
-          : formatCurrency(field.value);
-
-    return (
-        <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
-
-            <div className={`flex gap-2 ${className}`}>
-                <Input
-                    value={displayValue}
-                    id={field.name}
-                    name={field.name}
-                    aria-invalid={fieldState.invalid}
-                    autoComplete="off"
-                    readOnly={readOnly}
-                    onFocus={() => !readOnly && setIsFocused(true)}
-                    onBlur={handleBlur}
-                    onChange={(e) =>
-                        !readOnly && field.onChange(e.target.value)
-                    }
-                    className={cn(
-                        'flex-1 text-right tabular-nums',
-                        readOnly &&
-                            'cursor-not-allowed bg-muted text-muted-foreground',
-                    )}
-                />
-                {action}
-            </div>
-
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-    );
-};
+interface Props {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    data: Ppa | null;
+    fiscalYear: FiscalYear;
+    fundingSources: FundingSource[];
+    offices: Office[]; // Added offices prop
+}
 
 export default function AipEntryFormDialog({
     open,
@@ -181,108 +83,132 @@ export default function AipEntryFormDialog({
     data,
     fiscalYear,
     fundingSources,
-}: AipFormProps) {
-    // Mapping incoming JSON (Snake Case) to Form State (Camel Case)
-    const getInitialValues = (d: Ppa | null): z.infer<typeof formSchema> => ({
-        ppa_id: d?.aip_entry?.ppa_id || 0,
-        aipRefCode: d?.full_code || '',
-        ppaDescription: d?.title || '',
-        implementingOfficeDepartmentLocation: d?.office?.name || '',
-        scheduleOfImplementation: {
-            startingDate: d?.aip_entry?.start_date || '',
-            completionDate: d?.aip_entry?.end_date || '',
+    offices,
+}: Props) {
+    console.log(fiscalYear);
+
+    const form = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            office_id: '',
+            expected_output: '',
+            start_date: '',
+            end_date: '',
+            ppa_funding_sources: [],
         },
-        expectedOutputs: d?.aip_entry?.expected_output || '',
-        fundingSource: d?.aip_entry?.funding_source ?? [],
-        amount: {
-            ps: d?.aip_entry?.ps_amount || '0.00',
-            mooe: d?.aip_entry?.mooe_amount || '0.00',
-            fe: d?.aip_entry?.fe_amount || '0.00',
-            co: d?.aip_entry?.co_amount || '0.00',
-            total: d?.aip_entry?.total_amount || '0.00',
-        },
-        amountOfCcExpenditure: {
-            ccAdaptation: d?.aip_entry?.ccet_adaptation || '0.00',
-            ccMitigation: d?.aip_entry?.ccet_mitigation || '0.00',
-        },
-        ccTypologyCode: d?.aip_entry?.cc_typology_code || '',
     });
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: getInitialValues(data),
+    const { fields, append, remove } = useFieldArray({
+        control: form.control,
+        name: 'ppa_funding_sources',
     });
+
+    const watchedSources = useWatch({
+        control: form.control,
+        name: 'ppa_funding_sources',
+    });
+
+    const calculateRowTotal = (row: any) => {
+        return (
+            parseFloat(row.ps_amount || '0') +
+            parseFloat(row.mooe_amount || '0') +
+            parseFloat(row.fe_amount || '0') +
+            parseFloat(row.co_amount || '0')
+        );
+    };
 
     useEffect(() => {
-        if (open) form.reset(getInitialValues(data));
+        if (open && data) {
+            const entry = data.aip_entries?.[0];
+            form.reset({
+                office_id: data.office_id?.toString() || '',
+                expected_output: entry?.expected_output || '',
+                start_date: entry?.start_date || '',
+                end_date: entry?.end_date || '',
+                ppa_funding_sources:
+                    data.ppa_funding_sources?.map((fs) => ({
+                        id: fs.id,
+                        funding_source_id: fs.funding_source_id.toString(),
+                        ps_amount: fs.ps_amount,
+                        mooe_amount: fs.mooe_amount,
+                        fe_amount: fs.fe_amount,
+                        co_amount: fs.co_amount,
+                        ccet_adaptation: fs.ccet_adaptation,
+                        ccet_mitigation: fs.ccet_mitigation,
+                        cc_typology_code: fs.cc_typology_code || '',
+                    })) || [],
+            });
+        }
     }, [data, open, form]);
 
-    const watchedAmounts = useWatch({ control: form.control, name: 'amount' });
+    const entry = data?.aip_entries?.[0];
+    const isEdit = !!entry;
 
-    // Calculate Total when individual components change
-    useEffect(() => {
-        const { ps, mooe, fe, co } = watchedAmounts || {};
-
-        try {
-            const sum = new Decimal(stripCommas(ps || '0') || 0)
-                .plus(stripCommas(mooe || '0') || 0)
-                .plus(stripCommas(fe || '0') || 0)
-                .plus(stripCommas(co || '0') || 0);
-
-            const totalValue = sum.toFixed(2);
-            const formattedTotal = formatCurrency(totalValue);
-
-            // Only update if value is different to avoid loops
-            if (watchedAmounts?.total !== formattedTotal) {
-                form.setValue('amount.total', formattedTotal);
-            }
-        } catch (e) {
-            console.error('Calculation error', e);
-        }
-    }, [
-        watchedAmounts?.ps,
-        watchedAmounts?.mooe,
-        watchedAmounts?.fe,
-        watchedAmounts?.co,
-        form,
-    ]);
-
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        if (!data?.id) return;
-
+    const onSubmit = (values: FormValues) => {
+        // Add context fields needed for creating a new entry
         const payload = {
             ...values,
-            fundingSource: values.fundingSource.map((fund) => fund.id),
+            ppa_id: data?.id,
+            fiscal_year_id: fiscalYear.id,
         };
 
-        // console.log(payload);
-
-        router.put(`/aip-entries/${data.aip_entry?.id}`, payload, {
-            onSuccess: () => {
-                onOpenChange(false);
-            },
-            preserveScroll: true,
-        });
-    }
+        if (isEdit) {
+            // UPDATE MODE
+            router.put(`/aip-entries/${entry.id}`, payload, {
+                onStart: () => form.clearErrors(),
+                onSuccess: () => onOpenChange(false),
+            });
+        } else {
+            // ADD MODE
+            router.post(`/aip-entries`, payload, {
+                onStart: () => form.clearErrors(),
+                onSuccess: () => onOpenChange(false),
+            });
+        }
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="h-[90vh] gap-0 sm:max-w-[70vw]">
-                <DialogHeader>
-                    <DialogTitle>Edit AIP Entry</DialogTitle>
-                    <DialogDescription></DialogDescription>
+            <DialogContent className="flex h-[90vh] max-w-[95vw] flex-col p-0 lg:max-w-[1400px]">
+                <DialogHeader className="border-b p-6">
+                    <DialogTitle>
+                        {isEdit ? 'Edit AIP Entry' : 'Add to AIP Summary'}
+                    </DialogTitle>
                 </DialogHeader>
 
-                <ScrollArea className="min-h-0 flex-1">
-                    <Form {...form}>
-                        <form
-                            id="aip-entry-form"
-                            onSubmit={form.handleSubmit(onSubmit)}
-                        >
-                            <div className="grid gap-y-8 p-4">
-                                <div className="grid grid-cols-2 gap-6">
+                <Form {...form}>
+                    <form
+                        id="aip-form"
+                        onSubmit={form.handleSubmit(onSubmit)}
+                        className="flex flex-1 flex-col overflow-hidden"
+                    >
+                        <ScrollArea className="flex-1">
+                            <div className="space-y-8 p-6">
+                                {/* Top Metadata */}
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                    <Field>
+                                        <FieldLabel>
+                                            AIP Reference Code
+                                        </FieldLabel>
+                                        <Input
+                                            value=""
+                                            readOnly
+                                            disabled
+                                            placeholder="AUTO-GENERATED"
+                                        />
+                                    </Field>
+                                    <Field className="md:col-span-1">
+                                        <FieldLabel>PPA Title</FieldLabel>
+                                        <Input
+                                            value={data?.title || ''}
+                                            readOnly
+                                            disabled
+                                        />
+                                    </Field>
+
+                                    {/* Editable Office Selection */}
                                     <Controller
-                                        name="aipRefCode"
+                                        name="office_id"
                                         control={form.control}
                                         render={({ field, fieldState }) => (
                                             <Field
@@ -290,76 +216,52 @@ export default function AipEntryFormDialog({
                                                     fieldState.invalid
                                                 }
                                             >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                >
-                                                    AIP Reference Code
-                                                </FieldLabel>
-
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
+                                                <FieldLabel>Office</FieldLabel>
+                                                <Select
+                                                    onValueChange={
+                                                        field.onChange
                                                     }
-                                                    readOnly
-                                                    className="cursor-not-allowed bg-muted text-muted-foreground"
-                                                />
-
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-
-                                    <Controller
-                                        name="implementingOfficeDepartmentLocation"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel
-                                                    htmlFor={field.name}
+                                                    value={field.value}
                                                 >
-                                                    Implementing Office /
-                                                    Department / Location
-                                                </FieldLabel>
-
-                                                {/* Changed from Select to ReadOnly Input */}
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    readOnly
-                                                    className="cursor-not-allowed bg-muted text-muted-foreground"
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select Office" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {offices?.map(
+                                                            (office) => (
+                                                                <SelectItem
+                                                                    key={
+                                                                        office.id
+                                                                    }
+                                                                    value={office.id.toString()}
+                                                                >
+                                                                    {
+                                                                        office.acronym
+                                                                    }{' '}
+                                                                    -{' '}
+                                                                    {
+                                                                        office.name
+                                                                    }
+                                                                </SelectItem>
+                                                            ),
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FieldError
+                                                    errors={[fieldState.error]}
                                                 />
-
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
                                             </Field>
                                         )}
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="flex flex-col gap-6">
+                                <Separator />
+
+                                {/* Implementation Details */}
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                                    <div className="md:col-span-2">
                                         <Controller
-                                            name="ppaDescription"
+                                            name="expected_output"
                                             control={form.control}
                                             render={({ field, fieldState }) => (
                                                 <Field
@@ -367,733 +269,322 @@ export default function AipEntryFormDialog({
                                                         fieldState.invalid
                                                     }
                                                 >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        Program / Project /
-                                                        Activity Description
+                                                    <FieldLabel>
+                                                        Expected Output
                                                     </FieldLabel>
-
                                                     <Textarea
                                                         {...field}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        // placeholder="I'm a software engineer..."
-                                                        className="min-h-15"
+                                                        className="min-h-[100px]"
                                                     />
-
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
                                                 </Field>
                                             )}
                                         />
-
-                                        <div className="grid gap-4 rounded-md border">
-                                            <div className="rounded-t-md bg-muted p-4">
-                                                <span>
-                                                    Schedule of Implementation
-                                                </span>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-4 p-4 pt-0">
+                                    </div>
+                                    <div className="space-y-4">
+                                        {['start_date', 'end_date'].map(
+                                            (key) => (
                                                 <Controller
-                                                    name="scheduleOfImplementation.startingDate"
+                                                    key={key}
+                                                    name={key as any}
                                                     control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <Field
-                                                            data-invalid={
-                                                                fieldState.invalid
-                                                            }
-                                                            className="flex flex-col"
-                                                        >
-                                                            <FieldLabel>
-                                                                Start Date
+                                                    render={({ field }) => (
+                                                        <Field>
+                                                            <FieldLabel className="capitalize">
+                                                                {key.replace(
+                                                                    '_',
+                                                                    ' ',
+                                                                )}
                                                             </FieldLabel>
                                                             <Popover>
                                                                 <PopoverTrigger
                                                                     asChild
                                                                 >
                                                                     <Button
-                                                                        variant={
-                                                                            'outline'
-                                                                        }
-                                                                        className={cn(
-                                                                            'w-full justify-start text-left font-normal',
-                                                                            !field.value &&
-                                                                                'text-muted-foreground',
-                                                                        )}
+                                                                        variant="outline"
+                                                                        className="w-full justify-start text-left"
                                                                     >
-                                                                        {field.value ? (
-                                                                            format(
-                                                                                new Date(
-                                                                                    field.value,
-                                                                                ),
-                                                                                'PPP',
-                                                                            )
-                                                                        ) : (
-                                                                            <span>
-                                                                                Pick
-                                                                                a
-                                                                                date
-                                                                            </span>
-                                                                        )}
+                                                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                        {field.value
+                                                                            ? format(
+                                                                                  parseISO(
+                                                                                      field.value,
+                                                                                  ),
+                                                                                  'PPP',
+                                                                              )
+                                                                            : 'Select date'}
                                                                     </Button>
                                                                 </PopoverTrigger>
-                                                                <PopoverContent
-                                                                    className="w-auto overflow-hidden p-0"
-                                                                    align="start"
-                                                                >
+                                                                <PopoverContent className="w-auto p-0">
                                                                     <Calendar
                                                                         mode="single"
-                                                                        fromDate={
-                                                                            new Date(
-                                                                                Number(
-                                                                                    fiscalYear.year,
-                                                                                ),
-                                                                                0,
-                                                                                1,
-                                                                            )
-                                                                        }
-                                                                        toDate={
-                                                                            new Date(
-                                                                                Number(
-                                                                                    fiscalYear.year,
-                                                                                ),
-                                                                                11,
-                                                                                31,
-                                                                            )
-                                                                        }
-                                                                        defaultMonth={
-                                                                            new Date(
-                                                                                Number(
-                                                                                    fiscalYear.year,
-                                                                                ),
-                                                                                0,
-                                                                            )
-                                                                        }
                                                                         selected={
                                                                             field.value
-                                                                                ? new Date(
+                                                                                ? parseISO(
                                                                                       field.value,
                                                                                   )
                                                                                 : undefined
                                                                         }
-                                                                        captionLayout="dropdown" // removes year dropdown
                                                                         onSelect={(
-                                                                            date,
-                                                                        ) => {
-                                                                            if (
-                                                                                !date
-                                                                            ) {
-                                                                                field.onChange(
-                                                                                    '',
-                                                                                );
-                                                                                return;
-                                                                            }
-
-                                                                            const finalDate =
-                                                                                new Date(
-                                                                                    Number(
-                                                                                        fiscalYear.year,
-                                                                                    ),
-                                                                                    date.getMonth(),
-                                                                                    date.getDate(),
-                                                                                );
-
+                                                                            d,
+                                                                        ) =>
                                                                             field.onChange(
-                                                                                format(
-                                                                                    finalDate,
-                                                                                    'yyyy-MM-dd',
-                                                                                ),
-                                                                            );
-                                                                        }}
+                                                                                d
+                                                                                    ? format(
+                                                                                          d,
+                                                                                          'yyyy-MM-dd',
+                                                                                      )
+                                                                                    : '',
+                                                                            )
+                                                                        }
                                                                     />
                                                                 </PopoverContent>
                                                             </Popover>
-                                                            {fieldState.invalid && (
-                                                                <FieldError
-                                                                    errors={[
-                                                                        fieldState.error,
-                                                                    ]}
-                                                                />
-                                                            )}
                                                         </Field>
                                                     )}
                                                 />
+                                            ),
+                                        )}
+                                    </div>
+                                </div>
 
-                                                <Controller
-                                                    name="scheduleOfImplementation.completionDate"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <Field
-                                                            data-invalid={
-                                                                fieldState.invalid
-                                                            }
-                                                            className="flex flex-col"
-                                                        >
-                                                            <FieldLabel>
-                                                                Completion Date
-                                                            </FieldLabel>
-                                                            <Popover>
-                                                                <PopoverTrigger
-                                                                    asChild
-                                                                >
-                                                                    <Button
-                                                                        variant={
-                                                                            'outline'
-                                                                        }
-                                                                        className={cn(
-                                                                            'w-full justify-start text-left font-normal',
-                                                                            !field.value &&
-                                                                                'text-muted-foreground',
-                                                                        )}
-                                                                    >
-                                                                        {field.value ? (
-                                                                            format(
-                                                                                new Date(
-                                                                                    field.value,
-                                                                                ),
-                                                                                'PPP',
-                                                                            )
-                                                                        ) : (
-                                                                            <span>
-                                                                                Pick
-                                                                                a
-                                                                                date
-                                                                            </span>
-                                                                        )}
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent
-                                                                    className="w-auto overflow-hidden p-0"
-                                                                    align="start"
-                                                                >
-                                                                    <Calendar
-                                                                        mode="single"
-                                                                        fromDate={
-                                                                            new Date(
-                                                                                Number(
-                                                                                    fiscalYear.year,
-                                                                                ),
-                                                                                0,
-                                                                                1,
-                                                                            )
-                                                                        }
-                                                                        toDate={
-                                                                            new Date(
-                                                                                Number(
-                                                                                    fiscalYear.year,
-                                                                                ),
-                                                                                11,
-                                                                                31,
-                                                                            )
-                                                                        }
-                                                                        defaultMonth={
-                                                                            new Date(
-                                                                                Number(
-                                                                                    fiscalYear.year,
-                                                                                ),
-                                                                                0,
-                                                                            )
-                                                                        }
-                                                                        selected={
-                                                                            field.value
-                                                                                ? new Date(
-                                                                                      field.value,
-                                                                                  )
-                                                                                : undefined
-                                                                        }
-                                                                        captionLayout="dropdown" // removes year dropdown
-                                                                        onSelect={(
-                                                                            date,
-                                                                        ) => {
-                                                                            if (
-                                                                                !date
-                                                                            ) {
-                                                                                field.onChange(
-                                                                                    '',
-                                                                                );
-                                                                                return;
-                                                                            }
-
-                                                                            const finalDate =
-                                                                                new Date(
-                                                                                    Number(
-                                                                                        fiscalYear.year,
-                                                                                    ),
-                                                                                    date.getMonth(),
-                                                                                    date.getDate(),
-                                                                                );
-
-                                                                            field.onChange(
-                                                                                format(
-                                                                                    finalDate,
-                                                                                    'yyyy-MM-dd',
-                                                                                ),
-                                                                            );
-                                                                        }}
-                                                                    />
-                                                                </PopoverContent>
-                                                            </Popover>
-                                                            {fieldState.invalid && (
-                                                                <FieldError
-                                                                    errors={[
-                                                                        fieldState.error,
-                                                                    ]}
-                                                                />
-                                                            )}
-                                                        </Field>
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid gap-4 rounded-md border">
-                                            <div className="rounded-t-md bg-muted p-4">
-                                                <span>
-                                                    Amount (In thousand pesos)
-                                                </span>
-                                            </div>
-
-                                            <div className="grid-rows grid gap-4 p-4 pt-0">
-                                                <Controller
-                                                    name="amount.ps"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <CurrencyInput
-                                                            field={field}
-                                                            fieldState={
-                                                                fieldState
-                                                            }
-                                                            label="Personal Services (PS)"
-                                                            className="pr-10"
-                                                        />
-                                                    )}
-                                                />
-
-                                                <Controller
-                                                    name="amount.mooe"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <CurrencyInput
-                                                            field={field}
-                                                            fieldState={
-                                                                fieldState
-                                                            }
-                                                            label="Maintenance & Other Operating Expenses (MOOE)"
-                                                            readOnly={true}
-                                                            action={
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="outline"
-                                                                    size="icon"
-                                                                    className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                                    onClick={() => {
-                                                                        if (
-                                                                            data?.id
-                                                                        ) {
-                                                                            router.visit(
-                                                                                `/aip/${fiscalYear.id}/summary/${data.aip_entry?.id}/ppmp?choice=MOOE`,
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                    title="Manage Itemized MOOE"
-                                                                >
-                                                                    <ListPlus className="h-4 w-4" />
-                                                                </Button>
-                                                            }
-                                                        />
-                                                    )}
-                                                />
-
-                                                <Controller
-                                                    name="amount.fe"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <CurrencyInput
-                                                            field={field}
-                                                            fieldState={
-                                                                fieldState
-                                                            }
-                                                            label="Financial Expense (FE)"
-                                                            className="pr-10"
-                                                        />
-                                                    )}
-                                                />
-
-                                                <Controller
-                                                    name="amount.co"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <CurrencyInput
-                                                            field={field}
-                                                            fieldState={
-                                                                fieldState
-                                                            }
-                                                            label="Capital Outlay (CO)"
-                                                            readOnly={true}
-                                                            action={
-                                                                <Button
-                                                                    type="button"
-                                                                    variant="outline"
-                                                                    size="icon"
-                                                                    className="shrink-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                                                                    onClick={() => {
-                                                                        if (
-                                                                            data?.id
-                                                                        ) {
-                                                                            router.visit(
-                                                                                `/aip/${fiscalYear.id}/summary/${data.aip_entry?.id}/ppmp?choice=CO`,
-                                                                            );
-                                                                        }
-                                                                    }}
-                                                                    title="Manage Itemized MOOE"
-                                                                >
-                                                                    <ListPlus className="h-4 w-4" />
-                                                                </Button>
-                                                            }
-                                                        />
-                                                    )}
-                                                />
-
-                                                <Separator />
-
-                                                <Controller
-                                                    name="amount.total"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <Field
-                                                            data-invalid={
-                                                                fieldState.invalid
-                                                            }
-                                                        >
-                                                            {/* <FieldLabel
-                                                                htmlFor={
-                                                                    field.name
-                                                                }
-                                                            >
-                                                                TOTAL
-                                                            </FieldLabel> */}
-
-                                                            {/* <Input
-                                                                {...field}
-                                                                id={field.name}
-                                                                aria-invalid={
-                                                                    fieldState.invalid
-                                                                }
-                                                                readOnly
-                                                                className="cursor-not-allowed bg-muted font-bold text-muted-foreground"
-                                                            /> */}
-
-                                                            <div className="pr-10">
-                                                                <InputGroup className="items-center">
-                                                                    <InputGroupInput
-                                                                        {...field}
-                                                                        id={
-                                                                            field.name
-                                                                        }
-                                                                        aria-invalid={
-                                                                            fieldState.invalid
-                                                                        }
-                                                                        className="text-right"
-                                                                        readOnly
-                                                                    />
-
-                                                                    <InputGroupAddon>
-                                                                        <InputGroupText className="text-foreground">
-                                                                            TOTAL
-                                                                        </InputGroupText>
-                                                                    </InputGroupAddon>
-                                                                </InputGroup>
-                                                            </div>
-
-                                                            {fieldState.invalid && (
-                                                                <FieldError
-                                                                    errors={[
-                                                                        fieldState.error,
-                                                                    ]}
-                                                                />
-                                                            )}
-                                                        </Field>
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
+                                {/* Funding Table */}
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-semibold">
+                                            Funding Distribution
+                                        </h3>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                                append({
+                                                    funding_source_id: '',
+                                                    ps_amount: '0.00',
+                                                    mooe_amount: '0.00',
+                                                    fe_amount: '0.00',
+                                                    co_amount: '0.00',
+                                                    ccet_adaptation: '0.00',
+                                                    ccet_mitigation: '0.00',
+                                                    cc_typology_code: '',
+                                                })
+                                            }
+                                        >
+                                            <Plus className="mr-2 h-4 w-4" />{' '}
+                                            Add Fund Source
+                                        </Button>
                                     </div>
 
-                                    <div className="flex flex-col gap-8">
-                                        <Controller
-                                            name="expectedOutputs"
-                                            control={form.control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        Expected Outputs
-                                                    </FieldLabel>
-
-                                                    <Textarea
-                                                        {...field}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        // placeholder="I'm a software engineer..."
-                                                        className="min-h-34"
-                                                    />
-
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
-                                                </Field>
-                                            )}
-                                        />
-
-                                        <div className="rounded-md border p-4">
-                                            <Controller
-                                                name="fundingSource"
-                                                control={form.control}
-                                                render={({
-                                                    field,
-                                                    fieldState,
-                                                }) => (
-                                                    <Field
-                                                        data-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                    >
-                                                        <FieldLabel
-                                                            htmlFor={field.name}
-                                                        >
-                                                            Funding Source
-                                                        </FieldLabel>
-
-                                                        <div
-                                                            className="w-[500px]"
-                                                            // data-invalid={
-                                                            //     fieldState.invalid
-                                                            // }
-                                                        >
-                                                            <MultiSelect
-                                                                options={
-                                                                    fundingSources
+                                    <div className="rounded-md border">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[180px]">
+                                                        Funding Source
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        PS
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        MOOE
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        FE
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        CO
+                                                    </TableHead>
+                                                    <TableHead className="bg-muted/30 text-right font-bold">
+                                                        Total
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        Adaptation
+                                                    </TableHead>
+                                                    <TableHead className="text-right">
+                                                        Mitigation
+                                                    </TableHead>
+                                                    <TableHead className="w-[150px] text-left">
+                                                        CC Typology Code
+                                                    </TableHead>
+                                                    <TableHead className="w-[50px]"></TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {fields.map((field, index) => (
+                                                    <TableRow key={field.id}>
+                                                        <TableCell>
+                                                            <Controller
+                                                                name={`ppa_funding_sources.${index}.funding_source_id`}
+                                                                control={
+                                                                    form.control
                                                                 }
-                                                                value={
-                                                                    field.value
+                                                                render={({
+                                                                    field: ctrl,
+                                                                }) => (
+                                                                    <Select
+                                                                        onValueChange={
+                                                                            ctrl.onChange
+                                                                        }
+                                                                        value={
+                                                                            ctrl.value
+                                                                        }
+                                                                    >
+                                                                        <SelectTrigger>
+                                                                            <SelectValue placeholder="Source" />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {fundingSources.map(
+                                                                                (
+                                                                                    fs,
+                                                                                ) => (
+                                                                                    <SelectItem
+                                                                                        key={
+                                                                                            fs.id
+                                                                                        }
+                                                                                        value={fs.id.toString()}
+                                                                                    >
+                                                                                        {
+                                                                                            fs.code
+                                                                                        }
+                                                                                    </SelectItem>
+                                                                                ),
+                                                                            )}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                )}
+                                                            />
+                                                        </TableCell>
+                                                        {[
+                                                            'ps_amount',
+                                                            'mooe_amount',
+                                                            'fe_amount',
+                                                            'co_amount',
+                                                        ].map((amt) => (
+                                                            <TableCell
+                                                                key={amt}
+                                                            >
+                                                                <Input
+                                                                    value={
+                                                                        watchedSources?.[
+                                                                            index
+                                                                        ]?.[
+                                                                            amt
+                                                                        ] ||
+                                                                        '0.00'
+                                                                    }
+                                                                    readOnly
+                                                                    className="pointer-events-none border-none text-right shadow-none"
+                                                                />
+                                                            </TableCell>
+                                                        ))}
+                                                        <TableCell className="bg-muted/30">
+                                                            <Input
+                                                                value={calculateRowTotal(
+                                                                    watchedSources?.[
+                                                                        index
+                                                                    ] || {},
+                                                                ).toLocaleString(
+                                                                    undefined,
+                                                                    {
+                                                                        minimumFractionDigits: 2,
+                                                                    },
+                                                                )}
+                                                                readOnly
+                                                                className="border-none text-right font-bold shadow-none"
+                                                            />
+                                                        </TableCell>
+                                                        {[
+                                                            'ccet_adaptation',
+                                                            'ccet_mitigation',
+                                                        ].map((amt) => (
+                                                            <TableCell
+                                                                key={amt}
+                                                            >
+                                                                <Input
+                                                                    value={
+                                                                        watchedSources?.[
+                                                                            index
+                                                                        ]?.[
+                                                                            amt
+                                                                        ] ||
+                                                                        '0.00'
+                                                                    }
+                                                                    readOnly
+                                                                    className="border-none text-right shadow-none"
+                                                                />
+                                                            </TableCell>
+                                                        ))}
+                                                        <TableCell>
+                                                            <Controller
+                                                                name={`ppa_funding_sources.${index}.cc_typology_code`}
+                                                                control={
+                                                                    form.control
                                                                 }
-                                                                onChange={(
-                                                                    selectedValues,
-                                                                ) =>
-                                                                    field.onChange(
-                                                                        selectedValues,
+                                                                render={({
+                                                                    field: ctrl,
+                                                                }) => (
+                                                                    <Input
+                                                                        {...ctrl}
+                                                                        value={
+                                                                            ctrl.value ||
+                                                                            ''
+                                                                        }
+                                                                        readOnly
+                                                                        placeholder="---"
+                                                                        className="pointer-events-none min-w-[120px] border-none text-left shadow-none"
+                                                                    />
+                                                                )}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                    remove(
+                                                                        index,
                                                                     )
                                                                 }
-                                                                placeholder="Select funding source..."
-                                                            />
-                                                        </div>
-
-                                                        {fieldState.invalid && (
-                                                            <FieldError
-                                                                errors={[
-                                                                    fieldState.error,
-                                                                ]}
-                                                            />
-                                                        )}
-                                                    </Field>
-                                                )}
-                                            />
-                                        </div>
-
-                                        <div className="grid gap-4 rounded-md border">
-                                            <div className="rounded-t-md bg-muted p-4">
-                                                <span>
-                                                    Amount of Climate Change
-                                                    Expenditure (In thousand
-                                                    pesos)
-                                                </span>
-                                            </div>
-
-                                            <div className="grid gap-4 p-4 pt-0">
-                                                <Controller
-                                                    name="amountOfCcExpenditure.ccAdaptation"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <Field
-                                                            data-invalid={
-                                                                fieldState.invalid
-                                                            }
-                                                        >
-                                                            <FieldLabel
-                                                                htmlFor={
-                                                                    field.name
-                                                                }
                                                             >
-                                                                Climate Change
-                                                                Adaptation
-                                                            </FieldLabel>
-                                                            <Input
-                                                                {...field}
-                                                                id={field.name}
-                                                                aria-invalid={
-                                                                    fieldState.invalid
-                                                                }
-                                                                autoComplete="off"
-                                                            />
-                                                            {fieldState.invalid && (
-                                                                <FieldError
-                                                                    errors={[
-                                                                        fieldState.error,
-                                                                    ]}
-                                                                />
-                                                            )}
-                                                        </Field>
-                                                    )}
-                                                />
-
-                                                <Controller
-                                                    name="amountOfCcExpenditure.ccMitigation"
-                                                    control={form.control}
-                                                    render={({
-                                                        field,
-                                                        fieldState,
-                                                    }) => (
-                                                        <Field
-                                                            data-invalid={
-                                                                fieldState.invalid
-                                                            }
-                                                        >
-                                                            <FieldLabel
-                                                                htmlFor={
-                                                                    field.name
-                                                                }
-                                                            >
-                                                                Climate Change
-                                                                Mitigation
-                                                            </FieldLabel>
-                                                            <Input
-                                                                {...field}
-                                                                id={field.name}
-                                                                aria-invalid={
-                                                                    fieldState.invalid
-                                                                }
-                                                                autoComplete="off"
-                                                            />
-                                                            {fieldState.invalid && (
-                                                                <FieldError
-                                                                    errors={[
-                                                                        fieldState.error,
-                                                                    ]}
-                                                                />
-                                                            )}
-                                                        </Field>
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <Controller
-                                            name="ccTypologyCode"
-                                            control={form.control}
-                                            render={({ field, fieldState }) => (
-                                                <Field
-                                                    data-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                >
-                                                    <FieldLabel
-                                                        htmlFor={field.name}
-                                                    >
-                                                        CC Typology Code
-                                                    </FieldLabel>
-                                                    <Input
-                                                        {...field}
-                                                        id={field.name}
-                                                        aria-invalid={
-                                                            fieldState.invalid
-                                                        }
-                                                        autoComplete="off"
-                                                    />
-                                                    {fieldState.invalid && (
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
-                                                    )}
-                                                </Field>
-                                            )}
-                                        />
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                        <ScrollBar orientation="horizontal" />
                                     </div>
                                 </div>
                             </div>
-                        </form>
-                    </Form>
+                        </ScrollArea>
+                    </form>
+                </Form>
 
-                    {/* table here */}
-                    <div className="w-250 rounded-md border p-4">
-                        <PpaFundingSourceTablePage data={data} />
-                    </div>
-                </ScrollArea>
-
-                <DialogFooter className="mt-auto flex-none shrink-0">
+                <DialogFooter className="border-t p-6">
                     <Button
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                     >
                         Cancel
                     </Button>
-
-                    <Button
-                        type="submit"
-                        form="aip-entry-form"
-                        disabled={form.formState.isSubmitting}
-                    >
+                    <Button type="submit" form="aip-form">
                         {form.formState.isSubmitting
                             ? 'Saving...'
-                            : 'Save changes'}
+                            : isEdit
+                              ? 'Save Changes'
+                              : 'Add Entry'}
                     </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 }
+
+const Separator = () => <div className="h-px w-full bg-border" />;

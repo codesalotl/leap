@@ -1,4 +1,5 @@
-import { useState, type ReactElement } from 'react';
+import { useState } from 'react';
+import type { ReactElement } from 'react';
 import {
     flexRender,
     getCoreRowModel,
@@ -6,6 +7,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/react-table';
+import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
     Table,
@@ -16,14 +18,10 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { getCommonPinningStyles } from '@/pages/utils/column-pinning-styles';
-import { Input } from '@/components/ui/input';
-import type { ColumnFiltersState, SortingState } from '@tanstack/react-table';
-import { getSortedRowModel, getExpandedRowModel } from '@tanstack/react-table';
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
     data: TData[];
-    onAdd?: (record: TData) => void;
     onEdit?: (record: TData) => void;
     onDelete?: (record: TData) => void;
     children: ReactElement;
@@ -32,43 +30,26 @@ interface DataTableProps<TData> {
 export default function DataTable<TData>({
     columns,
     data,
-    onAdd,
     onEdit,
     onDelete,
     children,
 }: DataTableProps<TData>) {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [globalFilter, setGlobalFilter] = useState();
+    const [globalFilter, setGlobalFilter] = useState('');
 
     const table = useReactTable({
         data,
         columns,
+        getCoreRowModel: getCoreRowModel(),
+        meta: { onEdit, onDelete },
+        initialState: {
+            columnPinning: {
+                right: ['action'],
+            },
+        },
+        getFilteredRowModel: getFilteredRowModel(),
         state: {
-            sorting,
-            columnFilters,
-            expanded: true,
             globalFilter,
         },
-        meta: {
-            onAdd,
-            onEdit,
-            onDelete,
-        },
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getExpandedRowModel: getExpandedRowModel(),
-        getSubRows: (row: any) => row.children,
-        filterFromLeafRows: true,
-        maxLeafRowFilterDepth: 100,
-        enableColumnPinning: true,
-        initialState: {
-            columnPinning: { right: ['actions'] },
-        },
-        columnResizeMode: 'onChange',
         onGlobalFilterChange: setGlobalFilter,
     });
 
@@ -76,7 +57,7 @@ export default function DataTable<TData>({
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <Input
-                    placeholder="Filter aip summary..."
+                    placeholder="Filter funding sources..."
                     value={table.getState().globalFilter ?? ''}
                     onChange={(event) =>
                         table.setGlobalFilter(event.target.value)
@@ -84,23 +65,17 @@ export default function DataTable<TData>({
                     className="max-w-sm"
                 />
 
-                <div className="flex gap-2">{children}</div>
+                {children}
             </div>
 
             <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
-                <Table
-                    style={{
-                        // width: table.getTotalSize(),
-                        tableLayout: 'fixed',
-                    }}
-                >
+                <Table style={{ tableLayout: 'fixed' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        colSpan={header.colSpan}
                                         style={{
                                             width: header.getSize(),
                                             ...getCommonPinningStyles(
@@ -132,9 +107,6 @@ export default function DataTable<TData>({
                                             key={cell.id}
                                             style={{
                                                 width: cell.column.getSize(),
-                                                verticalAlign: 'top',
-                                                paddingTop: '1rem',
-                                                paddingBottom: '1rem',
                                                 ...getCommonPinningStyles(
                                                     cell.column,
                                                 ),

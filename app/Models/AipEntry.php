@@ -37,7 +37,7 @@ class AipEntry extends Model
 
     public function ppa(): BelongsTo
     {
-        return $this->belongsTo(Ppa::class);
+        return $this->belongsTo(Ppa::class, 'ppa_id');
     }
 
     public function fundingSource()

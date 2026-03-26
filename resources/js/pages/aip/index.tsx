@@ -5,6 +5,7 @@ import { columns } from '@/pages/aip/fiscal-year-table/columns';
 import { FiscalYearDataTable } from '@/pages/aip/fiscal-year-table/data-table';
 import type { FiscalYear } from '@/types/global';
 // import { index } from '@/routes/aip';
+import DataTable from './table/page';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -19,7 +20,7 @@ interface AipProps {
 }
 
 export default function AipPage({ fiscalYears }: AipProps) {
-    // console.log(fiscalYears);
+    console.log(fiscalYears);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -31,6 +32,8 @@ export default function AipPage({ fiscalYears }: AipProps) {
                 >
                     <FiscalYearFormDialog />
                 </FiscalYearDataTable>
+
+                {/* <DataTable></DataTable> */}
             </div>
         </AppLayout>
     );
