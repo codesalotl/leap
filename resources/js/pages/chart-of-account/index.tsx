@@ -19,6 +19,8 @@ interface ChartOfAccountPageProps {
 export default function ChartOfAccountPage({
     chartOfAccounts,
 }: ChartOfAccountPageProps) {
+    console.log(chartOfAccounts);
+
     const [open, setOpen] = useState(false);
     const [selectedAccount, setSelectedAccount] =
         useState<ChartOfAccount | null>(null);

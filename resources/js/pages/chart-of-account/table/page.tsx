@@ -22,7 +22,8 @@ export default function ChartOfAccountTablePage({
             data={data}
             onEdit={onEdit}
             onDelete={onDelete}
-            children={children}
-        />
+        >
+            {children}
+        </DataTable>
     );
 }
