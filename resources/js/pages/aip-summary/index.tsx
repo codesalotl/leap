@@ -74,26 +74,19 @@ export default function AipSummaryTable({
     offices,
     masterPpas,
 }: AipSummaryTableProp) {
-    // console.log(fiscalYear);
-    console.log(aipEntries);
-    // console.log(fundingSources);
-    // console.log(offices);
-    // console.log(masterPpas);
+    // console.log(aipEntries);
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<Ppa | null>(null);
     const [isExportOpen, setIsExportOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
     const [selectorState, setSelectorState] = useState({
         isOpen: false,
         data: [] as Ppa[],
         title: '',
         description: '',
     });
-
-    // console.log(selectedEntry);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },

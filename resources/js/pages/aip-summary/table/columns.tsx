@@ -39,17 +39,17 @@ const columnHelper = createColumnHelper<any>();
 export const columns = [
     columnHelper.accessor('full_code', {
         id: 'full_code',
-        header: 'AIP Reference Code',
+        header: () => <div className="text-left">AIP Reference Code</div>,
         size: 200,
-        cell: (info) => (
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[12px]">
-                {info.getValue()}
-            </code>
-        ),
+        cell: (info) => <code>{info.getValue()}</code>,
     }),
     columnHelper.accessor('name', {
         id: 'name',
-        header: 'Program/Project/Activity Description',
+        header: () => (
+            <div className="text-left">
+                Program/Project/Activity Description
+            </div>
+        ),
         size: 400,
         cell: ({ row, getValue }) => (
             <div
@@ -59,24 +59,24 @@ export const columns = [
                 {row.original.depth > 0 && (
                     <span className="text-muted-foreground opacity-50">↳</span>
                 )}
-                <span className="break-words whitespace-normal">
-                    {getValue()}
-                </span>
+
+                <span className="text-wrap">{getValue()}</span>
             </div>
         ),
     }),
     columnHelper.accessor('office.acronym', {
         id: 'office_acronym',
-        header: 'Implementing Office',
+        header: () => <div className="text-left">Implementing Office</div>,
         size: 150,
         cell: (info) => info.getValue(),
     }),
     columnHelper.group({
-        header: 'Schedule',
+        id: 'schedule',
+        header: () => <div className="text-left">Schedule</div>,
         columns: [
             columnHelper.accessor('aip_entries', {
                 id: 'start_date',
-                header: 'Start',
+                header: () => <div className="text-left">Start</div>,
                 cell: (info) =>
                     info.getValue()?.[0]
                         ? formatDate(info.getValue()[0].start_date)
@@ -84,7 +84,7 @@ export const columns = [
             }),
             columnHelper.accessor('aip_entries', {
                 id: 'end_date',
-                header: 'End',
+                header: () => <div className="text-left">End</div>,
                 cell: (info) =>
                     info.getValue()?.[0]
                         ? formatDate(info.getValue()[0].end_date)
@@ -94,17 +94,17 @@ export const columns = [
     }),
     columnHelper.accessor('aip_entries', {
         id: 'expected_output',
-        header: 'Expected Outputs',
+        header: () => <div className="text-left">Expected Outputs</div>,
         size: 400,
         cell: (info) => (
-            <div className="text-xs break-words whitespace-normal">
+            <div className="text-wrap">
                 {info.getValue()?.[0]?.expected_output || '—'}
             </div>
         ),
     }),
     columnHelper.accessor('current_fs.funding_source.code', {
         id: 'funding_sources',
-        header: 'Funding Source',
+        header: () => <div className="text-left">Funding Source</div>,
         size: 250,
         cell: (info) =>
             info.getValue() ? <Badge>{info.getValue()}</Badge> : '-',
@@ -112,7 +112,10 @@ export const columns = [
 
     // --- GROUPED AMOUNTS ---
     columnHelper.group({
-        header: 'Amount (in thousand pesos)',
+        id: 'amount',
+        header: () => (
+            <div className="text-left">Amount (in thousand pesos)</div>
+        ),
         size: 400,
         columns: [
             columnHelper.accessor('current_fs.ps_amount', {
@@ -173,14 +176,15 @@ export const columns = [
 
     // --- GROUPED CLIMATE CHANGE ---
     columnHelper.group({
-        header: 'Climate Change Expenditure',
+        id: 'climateChange',
+        header: () => (
+            <div className="text-left">Climate Change Expenditure</div>
+        ),
         size: 250,
         columns: [
             columnHelper.accessor('current_fs.ccet_adaptation', {
                 id: 'cc_adaptation',
-                header: () => (
-                    <div className="text-right text-[10px]">Adaptation</div>
-                ),
+                header: () => <div className="text-right">Adaptation</div>,
                 cell: (info) => (
                     <div className="text-right">
                         {formatNumber(info.getValue())}
@@ -189,9 +193,7 @@ export const columns = [
             }),
             columnHelper.accessor('current_fs.ccet_mitigation', {
                 id: 'cc_mitigation',
-                header: () => (
-                    <div className="text-right text-[10px]">Mitigation</div>
-                ),
+                header: () => <div className="text-right">Mitigation</div>,
                 cell: (info) => (
                     <div className="text-right">
                         {formatNumber(info.getValue())}
@@ -218,12 +220,14 @@ export const columns = [
                 >
                     <Plus className="h-4 w-4" />
                 </Button>
+
                 <Button
                     size="icon"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
                 >
                     <Pencil className="h-4 w-4" />
                 </Button>
+
                 <Button
                     size="icon"
                     variant="destructive"

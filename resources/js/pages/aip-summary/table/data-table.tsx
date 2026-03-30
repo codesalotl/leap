@@ -1,8 +1,7 @@
-import { useState, type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import {
     flexRender,
     getCoreRowModel,
-    getFilteredRowModel,
     useReactTable,
 } from '@tanstack/react-table';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -64,7 +63,7 @@ export default function DataTable<TData>({
                         {table.getHeaderGroups().map((headerGroup, index) => (
                             <TableRow
                                 key={headerGroup.id}
-                                className="hover:bg-transparent"
+                                // className="hover:bg-transparent"
                             >
                                 {headerGroup.headers.map((header) => {
                                     const isTopRow = index === 0;
@@ -115,7 +114,8 @@ export default function DataTable<TData>({
                                                     ? 30
                                                     : 1,
                                             }}
-                                            className="h-10 border border-black px-2 font-bold"
+                                            // className="h-10 border border-black px-2 font-bold"
+                                            className="font-bold"
                                         >
                                             {headerContent}
                                         </TableHead>
@@ -129,7 +129,7 @@ export default function DataTable<TData>({
                         {table.getRowModel().rows.map((row) => (
                             <TableRow
                                 key={row.id}
-                                className="group hover:bg-muted/50"
+                                // className="group hover:bg-muted/50"
                             >
                                 {row.getVisibleCells().map((cell) => {
                                     // List of column IDs that should span the whole group
@@ -175,7 +175,7 @@ export default function DataTable<TData>({
                                                     ? 10
                                                     : 1,
                                             }}
-                                            className="border bg-background p-2"
+                                            // className="border bg-background p-2"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
