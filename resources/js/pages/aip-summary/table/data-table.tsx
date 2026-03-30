@@ -175,7 +175,7 @@ export default function DataTable<TData>({
                                                     ? 10
                                                     : 1,
                                             }}
-                                            className="border bg-background p-4"
+                                            className="border bg-background p-2"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,

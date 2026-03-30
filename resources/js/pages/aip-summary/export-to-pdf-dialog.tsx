@@ -713,8 +713,8 @@ export default function ExportToPdfDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="m-0 flex h-full flex-col gap-0 rounded-none p-0 sm:max-w-full">
-                <div className="p-4 pb-3">
+            <DialogContent className="m-0 flex h-full flex-col gap-0 rounded-none bg-[#3c3c3c] p-0 text-white sm:max-w-full">
+                <div className="p-4 pb-0">
                     <DialogTitle>PDF Preview</DialogTitle>
 
                     <DialogDescription className="sr-only">
