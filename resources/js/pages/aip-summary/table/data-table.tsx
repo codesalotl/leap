@@ -17,8 +17,6 @@ import {
 } from '@/components/ui/table';
 import { getCommonPinningStyles } from '@/pages/utils/column-pinning-styles';
 import { Input } from '@/components/ui/input';
-import type { ColumnFiltersState, SortingState } from '@tanstack/react-table';
-import { getSortedRowModel, getExpandedRowModel } from '@tanstack/react-table';
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
@@ -37,39 +35,15 @@ export default function DataTable<TData>({
     onDelete,
     children,
 }: DataTableProps<TData>) {
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-    const [globalFilter, setGlobalFilter] = useState();
-
     const table = useReactTable({
         data,
         columns,
-        state: {
-            sorting,
-            columnFilters,
-            expanded: true,
-            globalFilter,
-        },
-        meta: {
-            onAdd,
-            onEdit,
-            onDelete,
-        },
-        onSortingChange: setSorting,
-        onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
-        getExpandedRowModel: getExpandedRowModel(),
-        getSubRows: (row: any) => row.children,
-        filterFromLeafRows: true,
-        maxLeafRowFilterDepth: 100,
+        meta: { onAdd, onEdit, onDelete },
         enableColumnPinning: true,
         initialState: {
             columnPinning: { right: ['actions'] },
         },
-        columnResizeMode: 'onChange',
-        onGlobalFilterChange: setGlobalFilter,
     });
 
     return (
@@ -77,90 +51,143 @@ export default function DataTable<TData>({
             <div className="flex items-center justify-between">
                 <Input
                     placeholder="Filter aip summary..."
-                    value={table.getState().globalFilter ?? ''}
-                    onChange={(event) =>
-                        table.setGlobalFilter(event.target.value)
-                    }
+                    value={(table.getState().globalFilter as string) ?? ''}
+                    onChange={(e) => table.setGlobalFilter(e.target.value)}
                     className="max-w-sm"
                 />
-
                 <div className="flex gap-2">{children}</div>
             </div>
 
             <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
-                <Table
-                    style={{
-                        // width: table.getTotalSize(),
-                        tableLayout: 'fixed',
-                    }}
-                >
+                <Table style={{ tableLayout: 'fixed' }}>
                     <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead
-                                        key={header.id}
-                                        colSpan={header.colSpan}
-                                        style={{
-                                            width: header.getSize(),
-                                            ...getCommonPinningStyles(
-                                                header.column,
-                                            ),
-                                            backgroundColor: 'var(--primary)',
-                                            color: 'var(--primary-foreground)',
-                                        }}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext(),
-                                              )}
-                                    </TableHead>
-                                ))}
+                        {table.getHeaderGroups().map((headerGroup, index) => (
+                            <TableRow
+                                key={headerGroup.id}
+                                className="hover:bg-transparent"
+                            >
+                                {headerGroup.headers.map((header) => {
+                                    const isTopRow = index === 0;
+                                    const isGroup =
+                                        header.column.columns.length > 0;
+
+                                    /**
+                                     * Logic:
+                                     * 1. On the Top Row: Only render if it's a Group (has children).
+                                     *    If it's a single column (AIP Code, etc.), render an empty cell.
+                                     * 2. On the Bottom Row: Render the header.
+                                     *    If the header is a placeholder (for single columns), we force it
+                                     *    to render the actual column header.
+                                     */
+                                    let headerContent = null;
+
+                                    if (isTopRow) {
+                                        if (isGroup) {
+                                            headerContent = flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext(),
+                                            );
+                                        }
+                                    } else {
+                                        // If it's the bottom row and not a group title container
+                                        if (!isGroup) {
+                                            headerContent = flexRender(
+                                                header.column.columnDef.header,
+                                                header.getContext(),
+                                            );
+                                        }
+                                    }
+
+                                    return (
+                                        <TableHead
+                                            key={header.id}
+                                            colSpan={header.colSpan}
+                                            style={{
+                                                width: header.getSize(),
+                                                ...getCommonPinningStyles(
+                                                    header.column,
+                                                ),
+                                                backgroundColor:
+                                                    'var(--primary)',
+                                                color: 'var(--primary-foreground)',
+                                                textAlign: 'center',
+                                                zIndex: header.column.getIsPinned()
+                                                    ? 30
+                                                    : 1,
+                                            }}
+                                            className="h-10 border border-black px-2 font-bold"
+                                        >
+                                            {headerContent}
+                                        </TableHead>
+                                    );
+                                })}
                             </TableRow>
                         ))}
                     </TableHeader>
 
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
-                                    {row.getVisibleCells().map((cell) => (
+                        {table.getRowModel().rows.map((row) => (
+                            <TableRow
+                                key={row.id}
+                                className="group hover:bg-muted/50"
+                            >
+                                {row.getVisibleCells().map((cell) => {
+                                    // List of column IDs that should span the whole group
+                                    const spannedCols = [
+                                        'full_code',
+                                        'name',
+                                        'office_acronym',
+                                        'start_date',
+                                        'end_date',
+                                        'expected_output',
+                                        'actions', // Added actions here
+                                    ];
+
+                                    const rowData = row.original as any;
+
+                                    // Skip rendering if this is a spanned column but not the first row in the PPA group
+                                    if (
+                                        spannedCols.includes(cell.column.id) &&
+                                        !rowData.isFirstInGroup
+                                    ) {
+                                        return null;
+                                    }
+
+                                    return (
                                         <TableCell
                                             key={cell.id}
+                                            // Apply vertical span
+                                            rowSpan={
+                                                spannedCols.includes(
+                                                    cell.column.id,
+                                                )
+                                                    ? rowData.groupSize
+                                                    : 1
+                                            }
                                             style={{
                                                 width: cell.column.getSize(),
                                                 verticalAlign: 'top',
-                                                paddingTop: '1rem',
-                                                paddingBottom: '1rem',
                                                 ...getCommonPinningStyles(
                                                     cell.column,
                                                 ),
+                                                // Ensure spanned sticky cells stay on top of non-spanned scrolling cells
+                                                zIndex: cell.column.getIsPinned()
+                                                    ? 10
+                                                    : 1,
                                             }}
+                                            className="border bg-background p-4"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext(),
                                             )}
                                         </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No results found.
-                                </TableCell>
+                                    );
+                                })}
                             </TableRow>
-                        )}
+                        ))}
                     </TableBody>
                 </Table>
-
                 <ScrollBar orientation="horizontal" />
             </ScrollArea>
         </div>
