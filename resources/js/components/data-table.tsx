@@ -89,7 +89,7 @@ export function DataTable<TData>({
                 </div>
             )}
 
-            <ScrollArea className="rounded-md border">
+            <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
                 <Table style={{ tableLayout: 'fixed', width: '100%' }}>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

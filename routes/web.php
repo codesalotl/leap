@@ -25,6 +25,7 @@ use App\Http\Controllers\LguLevelController;
 use App\Http\Controllers\PpmpCategoryController;
 use App\Http\Controllers\OfficeTypeController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TestDataTableController;
 
 Route::get(
     '/',
@@ -41,6 +42,11 @@ Route::middleware(['auth', 'verified'])->group(
 
 // users
 Route::get('users', [UserController::class, 'index'])->name('users.index');
+
+// test reusable table
+Route::get('test-table', [TestDataTableController::class, 'index'])->name(
+    'test-table.index',
+);
 
 // aip
 Route::get('aip', [FiscalYearController::class, 'index'])->name('aip.index');
