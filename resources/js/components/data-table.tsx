@@ -28,6 +28,7 @@ interface DataTableProps<TData> {
     onEdit?: (record: TData) => void;
     onDelete?: (record: TData) => void;
     children?: ReactElement;
+    withRowSpan?: boolean;
 }
 
 export function DataTable<TData>({
@@ -38,6 +39,7 @@ export function DataTable<TData>({
     onDelete,
     children,
     withSearch = false,
+    withRowSpan = false,
 }: DataTableProps<TData>) {
     const [globalFilter, setGlobalFilter] = useState('');
 
@@ -83,7 +85,7 @@ export function DataTable<TData>({
                             className="max-w-sm"
                         />
                     ) : (
-                        <div /> // Spacer to keep children on the right
+                        <></> // Spacer to keep children on the right
                     )}
                     <div>{children}</div>
                 </div>
@@ -98,11 +100,13 @@ export function DataTable<TData>({
                                     return (
                                         <TableHead
                                             key={header.id}
+                                            colSpan={header.colSpan}
                                             style={{
                                                 width: `${header.getSize()}px`,
                                                 ...getCommonPinningStyles(
                                                     header.column,
                                                 ),
+                                                // border: 'solid 1px white', // for debugging
                                             }}
                                         >
                                             {header.isPlaceholder
@@ -128,23 +132,59 @@ export function DataTable<TData>({
                                         row.getIsSelected() && 'selected'
                                     }
                                 >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell
-                                            key={cell.id}
-                                            style={{
-                                                // width: cell.column.getSize(),
-                                                width: `${cell.column.getSize()}px`,
-                                                ...getCommonPinningStyles(
-                                                    cell.column,
-                                                ),
-                                            }}
-                                        >
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext(),
-                                            )}
-                                        </TableCell>
-                                    ))}
+                                    {row.getVisibleCells().map((cell) => {
+                                        const columnMeta = cell.column.columnDef
+                                            .meta as any;
+
+                                        // FIX: Check BOTH the prop and the column meta
+                                        const isSpannedCol =
+                                            withRowSpan && columnMeta?.rowSpan;
+
+                                        const rowData = row.original as any;
+
+                                        // IMPORTANT SAFETY:
+                                        // If the data doesn't have spanning info (like your User table),
+                                        // we should treat it as a normal cell even if withRowSpan is true.
+                                        const hasSpanningData =
+                                            typeof rowData.isFirstInGroup !==
+                                            'undefined';
+                                        const activeSpan =
+                                            isSpannedCol && hasSpanningData;
+
+                                        // Skip rendering if spanning is active and this isn't the first row
+                                        if (
+                                            activeSpan &&
+                                            !rowData.isFirstInGroup
+                                        ) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <TableCell
+                                                key={cell.id}
+                                                rowSpan={
+                                                    activeSpan
+                                                        ? rowData.groupSize
+                                                        : 1
+                                                }
+                                                style={{
+                                                    width: `${cell.column.getSize()}px`,
+                                                    ...getCommonPinningStyles(
+                                                        cell.column,
+                                                    ),
+                                                    // verticalAlign: activeSpan
+                                                    //     ? 'top'
+                                                    //     : 'middle',
+                                                    // border: 'solid 1px white', // for debugging
+                                                }}
+                                            >
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
                                 </TableRow>
                             ))
                         ) : (

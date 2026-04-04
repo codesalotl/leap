@@ -53,6 +53,8 @@ export default function TablePage({
         return rows;
     };
 
+    console.log(flattenAipEntries(data));
+
     return (
         <DataTable
             columns={columns}

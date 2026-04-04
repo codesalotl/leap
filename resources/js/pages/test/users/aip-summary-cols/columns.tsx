@@ -42,6 +42,7 @@ const columns = [
         header: () => <div className="text-left">AIP Reference Code</div>,
         size: 200,
         cell: (info) => <code>{info.getValue()}</code>,
+        meta: { rowSpan: true },
     }),
     columnHelper.accessor('name', {
         id: 'name',
@@ -60,15 +61,21 @@ const columns = [
                     <span className="text-muted-foreground opacity-50">↳</span>
                 )}
 
-                <span className="text-wrap">{getValue()}</span>
+                {/* <span className="text-wrap">{getValue()}</span> */}
+                <span className="text-wrap">
+                    {/* Only show the name if it's the first funding source of this group */}
+                    {row.original.isFirstInGroup ? row.original.name : ''}
+                </span>
             </div>
         ),
+        meta: { rowSpan: true },
     }),
     columnHelper.accessor('office.acronym', {
         id: 'office_acronym',
         header: () => <div className="text-left">Implementing Office</div>,
         size: 150,
         cell: (info) => info.getValue(),
+        meta: { rowSpan: true },
     }),
     columnHelper.group({
         id: 'schedule',
@@ -81,6 +88,7 @@ const columns = [
                     info.getValue()?.[0]
                         ? formatDate(info.getValue()[0].start_date)
                         : '—',
+                meta: { rowSpan: true },
             }),
             columnHelper.accessor('aip_entries', {
                 id: 'end_date',
@@ -89,6 +97,7 @@ const columns = [
                     info.getValue()?.[0]
                         ? formatDate(info.getValue()[0].end_date)
                         : '—',
+                meta: { rowSpan: true },
             }),
         ],
     }),
@@ -101,6 +110,7 @@ const columns = [
                 {info.getValue()?.[0]?.expected_output || '—'}
             </div>
         ),
+        meta: { rowSpan: true },
     }),
     columnHelper.accessor('current_fs.funding_source.code', {
         id: 'funding_sources',
@@ -209,7 +219,7 @@ const columns = [
         cell: () => <div className="text-right">-</div>,
     }),
     columnHelper.display({
-        id: 'actions',
+        id: 'action',
         size: 124,
         cell: ({ row, table }) => (
             <div className="flex items-center gap-1">
