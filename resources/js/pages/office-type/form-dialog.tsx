@@ -78,15 +78,19 @@ export default function FormDialog({
 
         if (isEditing) {
             router.patch(`/office-types/${initialData.id}`, data, {
+                preserveScroll: true,
+                preserveState: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => setOpen(false),
+                onFinish: () => setIsLoading(false),
             });
         } else {
             router.post('/office-types', data, {
+                preserveScroll: true,
+                preserveState: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => setOpen(false),
+                onFinish: () => setIsLoading(false),
             });
         }
     }

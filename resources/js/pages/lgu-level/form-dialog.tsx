@@ -73,15 +73,19 @@ export default function FormDialog({
     function onSubmit(data: z.infer<typeof formSchema>) {
         if (isEditing) {
             router.patch(`/lgu-levels/${initialData.id}`, data, {
+                preserveScroll: true,
+                preserveState: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => setOpen(false),
+                onFinish: () => setIsLoading(false),
             });
         } else {
             router.post('/lgu-levels', data, {
+                preserveScroll: true,
+                preserveState: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => setOpen(false),
+                onFinish: () => setIsLoading(false),
             });
         }
     }

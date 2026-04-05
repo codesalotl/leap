@@ -5,7 +5,7 @@ import type { PpmpCategory } from '@/types/global';
 
 const columnHelper = createColumnHelper<PpmpCategory>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('name', {
         header: 'Name',
         size: 300,
@@ -34,3 +34,5 @@ export const columns = [
         ),
     }),
 ];
+
+export default columns;

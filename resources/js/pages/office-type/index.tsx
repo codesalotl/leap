@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import TablePage from './table/page';
 import { Button } from '@/components/ui/button';
 import FormDialog from './form-dialog';
 import AppLayout from '@/layouts/app-layout';
@@ -7,6 +6,8 @@ import { type BreadcrumbItem } from '@/types';
 import { DeleteDialog } from '@/components/delete-dialog';
 import { router } from '@inertiajs/react';
 import type { OfficeType } from '@/types/global';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Office Types', href: '#' }];
 
@@ -24,6 +25,11 @@ export default function SectorPage({ officeTypes }: OfficeTypePageProps) {
     function handleAdd() {
         setSelectedOfficeType(null);
         setOpen(true);
+    }
+
+    function handleDialogOpenChange(isOpen: boolean) {
+        setOpen(isOpen);
+        if (!isOpen) setSelectedOfficeType(null);
     }
 
     function handleEdit(data: OfficeType) {
@@ -52,20 +58,22 @@ export default function SectorPage({ officeTypes }: OfficeTypePageProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
-                <TablePage
+                <DataTable
+                    columns={columns}
                     data={officeTypes}
+                    withSearch={true}
                     onEdit={handleEdit}
                     onDelete={handleDeleteDialogOpen}
                 >
                     <div className="flex justify-end">
                         <Button onClick={handleAdd}>Add Office Type</Button>
                     </div>
-                </TablePage>
+                </DataTable>
             </div>
 
             <FormDialog
                 open={open}
-                setOpen={setOpen}
+                setOpen={handleDialogOpenChange}
                 initialData={selectedOfficeType}
             />
 

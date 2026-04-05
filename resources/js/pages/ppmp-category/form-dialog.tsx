@@ -6,7 +6,6 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
-    DialogClose,
 } from '@/components/ui/dialog';
 import type { PpmpCategory } from '@/types/global';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,16 +65,16 @@ export default function FormDialog({
                 preserveScroll: true,
                 preserveState: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => setOpen(false),
+                onFinish: () => setIsLoading(false),
             });
         } else {
             router.post('/ppmp-categories', data, {
                 preserveScroll: true,
                 preserveState: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => setOpen(false),
+                onFinish: () => setIsLoading(false),
             });
         }
     }

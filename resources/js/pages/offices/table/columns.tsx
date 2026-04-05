@@ -6,7 +6,7 @@ import { Pencil, Trash } from 'lucide-react';
 
 const columnHelper = createColumnHelper<Office>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('full_code', {
         // id: 'full_code',
         header: 'Office Account Code',
@@ -63,3 +63,5 @@ export const columns = [
         ),
     }),
 ];
+
+export default columns;

@@ -5,7 +5,7 @@ import type { OfficeType } from '@/types/global';
 
 const columnHelper = createColumnHelper<OfficeType>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('code', {
         header: 'Code',
         cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
@@ -37,3 +37,5 @@ export const columns = [
         ),
     }),
 ];
+
+export default columns;

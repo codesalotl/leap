@@ -62,6 +62,7 @@ export default function SectorPage({ sectors }: SectorPageProps) {
                 <DataTable
                     columns={columns}
                     data={sectors}
+                    withSearch={true}
                     onEdit={handleEdit}
                     onDelete={handleDeleteDialogOpen}
                 >
