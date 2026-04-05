@@ -76,6 +76,35 @@ const formatNumber = (value: number | string | undefined) => {
 };
 
 const MyDocument = ({ data }: { data: App[] }) => {
+    const getWidth = (index: number) => `${COLUMN_WIDTHS[index]}%`;
+
+    // Helper to render an empty row with a title in the description column
+    const TitleRow = ({ title, isCategory }: { title: string; isCategory: boolean }) => (
+        <View style={[styles.row, styles.borderBottom, { backgroundColor: isCategory ? '#e2e8f0' : '#f8fafc' }]}>
+            {/* 0: Item No (Empty) */}
+            <View style={[{ width: getWidth(0) }, styles.borderLeft, styles.borderRight]}><Text style={styles.tableCell} /></View>
+            
+            {/* 1: Description (Title goes here) */}
+            <View style={[{ width: getWidth(1) }, styles.borderRight]}>
+                <Text style={[styles.tableCell, { 
+                    textAlign: 'left', 
+                    fontWeight: 'bold', 
+                    textTransform: 'uppercase',
+                    paddingLeft: isCategory ? 2 : 10 // Indent Account titles slightly
+                }]}>
+                    {isCategory ? `CATEGORY: ${title}` : title}
+                </Text>
+            </View>
+
+            {/* 2-13: Remaining Columns (Empty with borders) */}
+            {COLUMN_WIDTHS.slice(2).map((_, i) => (
+                <View key={i} style={[{ width: getWidth(i + 2) }, styles.borderRight]}>
+                    <Text style={styles.tableCell} />
+                </View>
+            ))}
+        </View>
+    );
+
     return (
         <Document title="Quarterly Procurement Report">
             <Page size={[612, 936]} orientation="landscape" style={styles.page}>
@@ -84,6 +113,7 @@ const MyDocument = ({ data }: { data: App[] }) => {
                     <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
                         ANNUAL PROCUREMENT PLAN (QUARTERLY BREAKDOWN)
                     </Text>
+
                     <Text style={{ fontSize: 8 }}>
                         Province of Example - Information Technology Unit
                     </Text>
@@ -387,218 +417,75 @@ const MyDocument = ({ data }: { data: App[] }) => {
                 </View>
 
                 {/* --- Data Rows --- */}
-                {data.map((item, index) => (
-                    <View
-                        key={index}
-                        style={[styles.row, styles.borderBottom]}
-                        wrap={false}
-                    >
-                        {/* 0: Item No. */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[0]}%` },
-                                styles.borderLeft,
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.ppmp_price_list?.item_number || index + 1}
-                            </Text>
-                        </View>
+                {/* {data.map((item, index) => ( */}
+                {Object.entries(data).map(([categoryName, chartOfAccounts]: [string, any]) => {
+                    
+                    const categoryItems = Object.values(chartOfAccounts).flat() as any[];
+                    const catTotalAmt = categoryItems.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
+                    const catQ1Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q1_amount) || 0), 0);
+                    const catQ2Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q2_amount) || 0), 0);
+                    const catQ3Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q3_amount) || 0), 0);
+                    const catQ4Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q4_amount) || 0), 0);
 
-                        {/* 1: Description */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[1]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'left' },
-                                ]}
-                            >
-                                {item.ppmp_price_list?.description || 'N/A'}
-                            </Text>
-                        </View>
+                    return (
+                        <View key={categoryName} break={false}>
+                            {/* CATEGORY ROW (Title in Description Col) */}
+                            <TitleRow title={categoryName} isCategory={true} />
 
-                        {/* 2: UNIT */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[2]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.ppmp_price_list?.unit_of_measurement ||
-                                    '-'}
-                            </Text>
-                        </View>
+                            {Object.entries(chartOfAccounts).map(([accountTitle, items]: [string, any]) => (
+                                <View key={accountTitle}>
+                                    {/* CHART OF ACCOUNT ROW (Title in Description Col) */}
+                                    <TitleRow title={accountTitle} isCategory={false} />
 
-                        {/* 3: UNIT COST */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[3]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'right' },
-                                ]}
-                            >
-                                {formatNumber(item.ppmp_price_list?.price)}
-                            </Text>
-                        </View>
+                                    {/* ITEM ROWS */}
+                                    {items.map((item: any, index: number) => (
+                                        <View key={index} style={[styles.row, styles.borderBottom]} wrap={false}>
+                                            <View style={[{ width: getWidth(0) }, styles.borderLeft, styles.borderRight]}><Text style={styles.tableCell}>{index + 1}</Text></View>
+                                            <View style={[{ width: getWidth(1) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.ppmp_price_list?.description}</Text></View>
+                                            <View style={[{ width: getWidth(2) }, styles.borderRight]}><Text style={styles.tableCell}>{item.ppmp_price_list?.unit_of_measurement}</Text></View>
+                                            <View style={[{ width: getWidth(3) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.ppmp_price_list?.price)}</Text></View>
+                                            <View style={[{ width: getWidth(4) }, styles.borderRight]}><Text style={styles.tableCell}>{item.total_qty}</Text></View>
+                                            <View style={[{ width: getWidth(5) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.total_amount)}</Text></View>
+                                            <View style={[{ width: getWidth(6) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q1_qty || '-'}</Text></View>
+                                            <View style={[{ width: getWidth(7) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q1_amount)}</Text></View>
+                                            <View style={[{ width: getWidth(8) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q2_qty || '-'}</Text></View>
+                                            <View style={[{ width: getWidth(9) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q2_amount)}</Text></View>
+                                            <View style={[{ width: getWidth(10) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q3_qty || '-'}</Text></View>
+                                            <View style={[{ width: getWidth(11) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q3_amount)}</Text></View>
+                                            <View style={[{ width: getWidth(12) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q4_qty || '-'}</Text></View>
+                                            <View style={[{ width: getWidth(13) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q4_amount)}</Text></View>
+                                        </View>
+                                    ))}
+                                </View>
+                            ))}
 
-                        {/* 4: QTY (Total Year Qty) */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[4]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.total_qty || '-'}
-                            </Text>
+                            {/* CATEGORY FOOTER (Follows same col structure) */}
+                            <View style={[styles.row, styles.borderBottom, { backgroundColor: '#cbd5e1' }]} wrap={false}>
+                                <View style={[{ width: getWidth(0) }, styles.borderLeft, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(1) }, styles.borderRight]}>
+                                    <Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'left' }]}>TOTAL FOR {categoryName.toUpperCase()}</Text>
+                                </View>
+                                <View style={[{ width: getWidth(2) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(3) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(4) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                
+                                <View style={[{ width: getWidth(5) }, styles.borderRight]}>
+                                    <Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catTotalAmt)}</Text>
+                                </View>
+                                
+                                <View style={[{ width: getWidth(6) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(7) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ1Amt)}</Text></View>
+                                <View style={[{ width: getWidth(8) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(9) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ2Amt)}</Text></View>
+                                <View style={[{ width: getWidth(10) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(11) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ3Amt)}</Text></View>
+                                <View style={[{ width: getWidth(12) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
+                                <View style={[{ width: getWidth(13) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ4Amt)}</Text></View>
+                            </View>
                         </View>
+                    );
+                })}
 
-                        {/* 5: TOTAL COST (Total Year Amount) */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[5]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'right', fontWeight: 'bold' },
-                                ]}
-                            >
-                                {formatNumber(item.total_amount)}
-                            </Text>
-                        </View>
-
-                        {/* 6: Q1 Qty */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[6]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.q1_qty || '-'}
-                            </Text>
-                        </View>
-
-                        {/* 7: Q1 Amount */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[7]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'right' },
-                                ]}
-                            >
-                                {formatNumber(item.q1_amount)}
-                            </Text>
-                        </View>
-
-                        {/* 8: Q2 Qty */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[8]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.q2_qty || '-'}
-                            </Text>
-                        </View>
-
-                        {/* 9: Q2 Amount */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[9]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'right' },
-                                ]}
-                            >
-                                {formatNumber(item.q2_amount)}
-                            </Text>
-                        </View>
-
-                        {/* 10: Q3 Qty */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[10]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.q3_qty || '-'}
-                            </Text>
-                        </View>
-
-                        {/* 11: Q3 Amount */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[11]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'right' },
-                                ]}
-                            >
-                                {formatNumber(item.q3_amount)}
-                            </Text>
-                        </View>
-
-                        {/* 12: Q4 Qty */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[12]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text style={styles.tableCell}>
-                                {item.q4_qty || '-'}
-                            </Text>
-                        </View>
-
-                        {/* 13: Q4 Amount */}
-                        <View
-                            style={[
-                                { width: `${COLUMN_WIDTHS[13]}%` },
-                                styles.borderRight,
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.tableCell,
-                                    { textAlign: 'right' },
-                                ]}
-                            >
-                                {formatNumber(item.q4_amount)}
-                            </Text>
-                        </View>
-                    </View>
-                ))}
                 {/* --- Footer / Pagination --- */}
                 <View
                     fixed

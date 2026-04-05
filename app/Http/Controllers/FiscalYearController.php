@@ -27,49 +27,57 @@ class FiscalYearController extends Controller
                     return null;
                 }
 
-                return Ppmp::with(['ppmpPriceList']) // Eager load the relationship
+                return Ppmp::with([
+                    'ppmpPriceList.category',
+                    'ppmpPriceList.chartOfAccount',
+                ])
                     ->whereHas('aipEntry', function ($query) use ($id) {
                         $query->where('fiscal_year_id', $id);
                     })
                     ->get()
                     ->map(function ($item) {
-                        // Quarterly Quantities
-                        $item->q1_qty =
-                            (float) $item->jan_qty +
-                            (float) $item->feb_qty +
-                            (float) $item->mar_qty;
-                        $item->q2_qty =
-                            (float) $item->apr_qty +
-                            (float) $item->may_qty +
-                            (float) $item->jun_qty;
-                        $item->q3_qty =
-                            (float) $item->jul_qty +
-                            (float) $item->aug_qty +
-                            (float) $item->sep_qty;
-                        $item->q4_qty =
-                            (float) $item->oct_qty +
-                            (float) $item->nov_qty +
-                            (float) $item->dec_qty;
+                        // Define month groups for cleaner calculation
+                        $months = [
+                            'jan',
+                            'feb',
+                            'mar',
+                            'apr',
+                            'may',
+                            'jun',
+                            'jul',
+                            'aug',
+                            'sep',
+                            'oct',
+                            'nov',
+                            'dec',
+                        ];
+                        $quarters = [
+                            'q1' => ['jan', 'feb', 'mar'],
+                            'q2' => ['apr', 'may', 'jun'],
+                            'q3' => ['jul', 'aug', 'sep'],
+                            'q4' => ['oct', 'nov', 'dec'],
+                        ];
 
-                        // Quarterly Amounts
-                        $item->q1_amount =
-                            (float) $item->jan_amount +
-                            (float) $item->feb_amount +
-                            (float) $item->mar_amount;
-                        $item->q2_amount =
-                            (float) $item->apr_amount +
-                            (float) $item->may_amount +
-                            (float) $item->jun_amount;
-                        $item->q3_amount =
-                            (float) $item->jul_amount +
-                            (float) $item->aug_amount +
-                            (float) $item->sep_amount;
-                        $item->q4_amount =
-                            (float) $item->oct_amount +
-                            (float) $item->nov_amount +
-                            (float) $item->dec_amount;
+                        // Calculate Quarterly Quantities and Amounts
+                        foreach ($quarters as $q => $mths) {
+                            $qtyKey = "{$q}_qty";
+                            $amtKey = "{$q}_amount";
 
-                        // Grand Totals
+                            $item->$qtyKey = array_reduce(
+                                $mths,
+                                fn($carry, $m) => $carry +
+                                    (float) $item->{"{$m}_qty"},
+                                0,
+                            );
+                            $item->$amtKey = array_reduce(
+                                $mths,
+                                fn($carry, $m) => $carry +
+                                    (float) $item->{"{$m}_amount"},
+                                0,
+                            );
+                        }
+
+                        // Calculate Grand Totals
                         $item->total_qty =
                             $item->q1_qty +
                             $item->q2_qty +
@@ -82,6 +90,18 @@ class FiscalYearController extends Controller
                             $item->q4_amount;
 
                         return $item;
+                    })
+                    // Step 1: Group by Category Name
+                    ->groupBy(function ($item) {
+                        return $item->ppmpPriceList->category->name ??
+                            'Uncategorized';
+                    })
+                    // Step 2: Map through each Category and group by Account Title
+                    ->map(function ($categoryGroup) {
+                        return $categoryGroup->groupBy(function ($item) {
+                            return $item->ppmpPriceList->chartOfAccount
+                                ->account_title ?? 'General Account';
+                        });
                     });
             }),
         ]);
