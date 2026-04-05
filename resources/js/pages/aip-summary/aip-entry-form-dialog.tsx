@@ -107,14 +107,14 @@ export default function AipEntryFormDialog({
     fundingSources,
     offices,
 }: Props) {
-    console.log({
-        open,
-        onOpenChange,
-        data,
-        fiscalYear,
-        fundingSources,
-        offices,
-    });
+    // console.log({
+    //     open,
+    //     onOpenChange,
+    //     data,
+    //     fiscalYear,
+    //     fundingSources,
+    //     offices,
+    // });
 
     const [openOfficeComamnd, setOpenOfficeComamnd] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -205,6 +205,8 @@ export default function AipEntryFormDialog({
 
         if (isEdit) {
             router.put(`/aip-entries/${entry.id}`, payload, {
+                preserveState: true,
+                preserveScroll: true,
                 onStart: () => {
                     setIsLoading(true);
                     form.clearErrors();
@@ -214,10 +216,11 @@ export default function AipEntryFormDialog({
                     form.reset();
                 },
                 onFinish: () => setIsLoading(false),
-                preserveScroll: true,
             });
         } else {
             router.post(`/aip-entries`, payload, {
+                preserveState: true,
+                preserveScroll: true,
                 onStart: () => {
                     setIsLoading(true);
                     form.clearErrors();
@@ -227,7 +230,6 @@ export default function AipEntryFormDialog({
                     form.reset();
                 },
                 onFinish: () => setIsLoading(false),
-                preserveScroll: true,
             });
         }
     };

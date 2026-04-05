@@ -56,6 +56,8 @@ export default function FormDialog({ open, setOpen }: FormDialogProps) {
     function onSubmit(data: z.infer<typeof formSchema>) {
         // router.post(store(), data, {
         router.post('/aip', data, {
+            preserveScroll: true,
+            preserveState: true,
             onStart: () => setIsLoading(true),
             onSuccess: () => {
                 setOpen(false);

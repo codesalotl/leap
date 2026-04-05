@@ -31,6 +31,11 @@ interface DataTableProps<TData> {
     onDelete?: (data: TData) => void;
 
     onAdd?: (parent: TData, childType: any) => void;
+    onUpdateStatus?: (
+        data: TData,
+        status: 'active' | 'inactive' | 'closed',
+    ) => void;
+    onOpen?: (data: TData) => void;
 }
 
 export function DataTable<TData>({
@@ -39,6 +44,8 @@ export function DataTable<TData>({
     onAdd,
     onEdit,
     onDelete,
+    onUpdateStatus,
+    onOpen,
     children,
     withSearch = false,
     withRowSpan = false,
@@ -60,7 +67,7 @@ export function DataTable<TData>({
         getFilteredRowModel: withSearch ? getFilteredRowModel() : undefined,
 
         // meta
-        meta: { onAdd, onEdit, onDelete },
+        meta: { onAdd, onEdit, onDelete, onUpdateStatus, onOpen },
 
         // for sub rows
         getSubRows: (row: any) => row.children,

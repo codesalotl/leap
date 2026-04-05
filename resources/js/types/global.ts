@@ -115,6 +115,20 @@ export interface Ppa {
     full_code: string;
 }
 
+export interface FlattenedPpa extends Ppa {
+    // Overwrite children to be an array of the flattened version
+    children?: FlattenedPpa[];
+
+    // The specific funding source for this row
+    current_fs: PpaFundingSource | null;
+
+    // Metadata for row spanning and UI logic
+    isFirstInGroup: boolean;
+    isLastInGroup: boolean;
+    groupSize: number;
+    depth: number; // No longer optional since your function always provides it
+}
+
 // --- not checked
 
 export interface ChartOfAccount {

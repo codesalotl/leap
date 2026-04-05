@@ -3,6 +3,7 @@ import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Decimal } from 'decimal.js';
+import type { Ppa, FlattenedPpa } from '@/types/global';
 
 export const formatNumber = (val: string | null) => {
     if (!val) return '-';
@@ -34,14 +35,15 @@ export const formatDate = (dateString: string) => {
     return `${months[Number(dateSplit[1]) - 1]}-${dateSplit[2]}`;
 };
 
-const columnHelper = createColumnHelper<any>();
+const columnHelper = createColumnHelper<FlattenedPpa>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('full_code', {
         id: 'full_code',
         header: () => <div className="text-left">AIP Reference Code</div>,
         size: 200,
         cell: (info) => <code>{info.getValue()}</code>,
+        meta: { rowSpan: true },
     }),
     columnHelper.accessor('name', {
         id: 'name',
@@ -63,12 +65,14 @@ export const columns = [
                 <span className="text-wrap">{getValue()}</span>
             </div>
         ),
+        meta: { rowSpan: true },
     }),
     columnHelper.accessor('office.acronym', {
         id: 'office_acronym',
         header: () => <div className="text-left">Implementing Office</div>,
         size: 150,
         cell: (info) => info.getValue(),
+        meta: { rowSpan: true },
     }),
     columnHelper.group({
         id: 'schedule',
@@ -81,6 +85,7 @@ export const columns = [
                     info.getValue()?.[0]
                         ? formatDate(info.getValue()[0].start_date)
                         : '—',
+                meta: { rowSpan: true },
             }),
             columnHelper.accessor('aip_entries', {
                 id: 'end_date',
@@ -89,6 +94,7 @@ export const columns = [
                     info.getValue()?.[0]
                         ? formatDate(info.getValue()[0].end_date)
                         : '—',
+                meta: { rowSpan: true },
             }),
         ],
     }),
@@ -101,7 +107,9 @@ export const columns = [
                 {info.getValue()?.[0]?.expected_output || '—'}
             </div>
         ),
+        meta: { rowSpan: true },
     }),
+    // columnHelper.accessor('current_fs.funding_source.code', {
     columnHelper.accessor('current_fs.funding_source.code', {
         id: 'funding_sources',
         header: () => <div className="text-left">Funding Source</div>,
@@ -209,7 +217,7 @@ export const columns = [
         cell: () => <div className="text-right">-</div>,
     }),
     columnHelper.display({
-        id: 'actions',
+        id: 'action',
         size: 124,
         cell: ({ row, table }) => (
             <div className="flex items-center gap-1">
@@ -239,3 +247,5 @@ export const columns = [
         ),
     }),
 ];
+
+export default columns;

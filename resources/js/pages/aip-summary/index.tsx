@@ -12,10 +12,17 @@ import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
 import { DeleteDialog } from '@/components/delete-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
 import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
-import type { FiscalYear, Ppa, FundingSource, Office } from '@/types/global';
+import type {
+    FiscalYear,
+    Ppa,
+    FundingSource,
+    Office,
+    FlattenedPpa,
+} from '@/types/global';
 import { type BreadcrumbItem } from '@/types';
 import { router } from '@inertiajs/react';
-import TablePage from '@/pages/aip-summary/table/page';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
 
 interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
@@ -74,8 +81,6 @@ export default function AipSummaryTable({
     offices,
     masterPpas,
 }: AipSummaryTableProp) {
-    // console.log(aipEntries);
-
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<Ppa | null>(null);
@@ -151,11 +156,56 @@ export default function AipSummaryTable({
         setIsExportOpen(true);
     }
 
+    const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
+        return ppas.flatMap((ppa): FlattenedPpa[] => {
+            // 1. Recursively process children, incrementing depth for the next level
+            const expandedChildren = ppa.children
+                ? expandPpaByFundingSource(ppa.children, depth + 1)
+                : [];
+
+            const sources = ppa.ppa_funding_sources || [];
+
+            // 2. If no funding sources, return the PPA once with its children
+            if (sources.length === 0) {
+                return [
+                    {
+                        ...ppa,
+                        current_fs: null,
+                        children: expandedChildren,
+                        isFirstInGroup: true,
+                        isLastInGroup: true,
+                        groupSize: 1,
+                        depth, // <--- Added depth
+                    },
+                ];
+            }
+
+            // 3. Duplicate PPA for each funding source
+            return sources.map((fs, index) => {
+                const isLast = index === sources.length - 1;
+
+                return {
+                    ...ppa,
+                    current_fs: fs,
+                    // Only the last duplicate retains the children array
+                    children: isLast ? expandedChildren : [],
+                    isFirstInGroup: index === 0,
+                    isLastInGroup: isLast,
+                    groupSize: sources.length,
+                    depth, // <--- Added depth
+                };
+            });
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
-                <TablePage
-                    data={aipEntries}
+                <DataTable
+                    columns={columns}
+                    data={expandPpaByFundingSource(aipEntries)}
+                    withSearch={true}
+                    withRowSpan={true}
                     onAdd={handleAddEntry}
                     onEdit={handleEditDialogOpen}
                     onDelete={handleDeleteDialogOpen}
@@ -184,7 +234,7 @@ export default function AipSummaryTable({
                             Library
                         </Button>
                     </div>
-                </TablePage>
+                </DataTable>
             </div>
 
             <PpaSelectorDialog

@@ -19,7 +19,10 @@ declare module '@tanstack/react-table' {
         onEdit?: (data: TData) => void;
         onDelete?: (data: TData) => void;
 
-        onAdd?: (data: TData, type: any) => void;
+        onAdd?: (
+            data: TData,
+            type?: 'Program' | 'Project' | 'Activity' | 'Sub-Activity',
+        ) => void;
         onUpdateStatus?: (
             data: TData,
             status: 'active' | 'inactive' | 'closed',
@@ -30,7 +33,7 @@ declare module '@tanstack/react-table' {
 
 const columnHelper = createColumnHelper<FiscalYear>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('year', {
         header: 'Fiscal Year',
         cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
@@ -171,3 +174,5 @@ export const columns = [
         },
     }),
 ];
+
+export default columns;

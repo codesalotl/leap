@@ -3,9 +3,10 @@ import AppLayout from '@/layouts/app-layout';
 import FormDialog from '@/pages/aip/form-dialog';
 import { type BreadcrumbItem } from '@/types';
 import type { FiscalYear, FiscalYearStatus } from '@/types/global';
-import FiscalYearTablePage from './table/page';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -49,17 +50,18 @@ export default function AipPage({ fiscalYears }: AipProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
-                <FiscalYearTablePage
+                <DataTable
+                    columns={columns}
                     data={fiscalYears}
-                    // onEdit={onEdit}
-                    // onDelete={onDelete}
+                    withSearch={true}
                     onUpdateStatus={onUpdateStatus}
                     onOpen={handleOpenAipSummary}
+                    // onDelete={handleDeleteDialogOpen}
                 >
                     <Button onClick={handleOpenFormDialog}>
                         Initialize AIP
                     </Button>
-                </FiscalYearTablePage>
+                </DataTable>
             </div>
 
             <FormDialog open={openFormDialog} setOpen={setOpenFormDialog} />
