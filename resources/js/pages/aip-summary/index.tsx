@@ -81,6 +81,8 @@ export default function AipSummaryTable({
     offices,
     masterPpas,
 }: AipSummaryTableProp) {
+    console.log(aipEntries);
+
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<Ppa | null>(null);
@@ -92,6 +94,8 @@ export default function AipSummaryTable({
         title: '',
         description: '',
     });
+
+    console.log(selectedEntry);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
@@ -156,47 +160,97 @@ export default function AipSummaryTable({
         setIsExportOpen(true);
     }
 
+    // const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
+    //     return ppas.flatMap((ppa): FlattenedPpa[] => {
+    //         // 1. Recursively process children, incrementing depth for the next level
+    //         const expandedChildren = ppa.children
+    //             ? expandPpaByFundingSource(ppa.children, depth + 1)
+    //             : [];
+
+    //         const sources = ppa.ppa_funding_sources || [];
+
+    //         // 2. If no funding sources, return the PPA once with its children
+    //         if (sources.length === 0) {
+    //             return [
+    //                 {
+    //                     ...ppa,
+    //                     current_fs: null,
+    //                     children: expandedChildren,
+    //                     isFirstInGroup: true,
+    //                     isLastInGroup: true,
+    //                     groupSize: 1,
+    //                     depth, // <--- Added depth
+    //                 },
+    //             ];
+    //         }
+
+    //         // 3. Duplicate PPA for each funding source
+    //         return sources.map((fs, index) => {
+    //             const isLast = index === sources.length - 1;
+
+    //             return {
+    //                 ...ppa,
+    //                 current_fs: fs,
+    //                 // Only the last duplicate retains the children array
+    //                 children: isLast ? expandedChildren : [],
+    //                 isFirstInGroup: index === 0,
+    //                 isLastInGroup: isLast,
+    //                 groupSize: sources.length,
+    //                 depth, // <--- Added depth
+    //             };
+    //         });
+    //     });
+    // };
+
     const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
         return ppas.flatMap((ppa): FlattenedPpa[] => {
-            // 1. Recursively process children, incrementing depth for the next level
+            // 1. Recursively process children
             const expandedChildren = ppa.children
                 ? expandPpaByFundingSource(ppa.children, depth + 1)
                 : [];
 
-            const sources = ppa.ppa_funding_sources || [];
+            // 2. NEW SCHEMA NAVIGATION:
+            // Find the AIP Entry for this year, then get its funding sources.
+            // We assume 'aip_entries' is pre-filtered by your Laravel controller.
+            const activeAip = ppa.aip_entries?.[0] || null;
+            const sources = activeAip?.ppa_funding_sources || [];
 
-            // 2. If no funding sources, return the PPA once with its children
+            // 3. If no funding sources or no AIP entry, return the PPA once with its children
             if (sources.length === 0) {
                 return [
                     {
                         ...ppa,
                         current_fs: null,
+                        aip_entry: activeAip, // Helpful for the frontend to see dates/outputs
                         children: expandedChildren,
                         isFirstInGroup: true,
                         isLastInGroup: true,
                         groupSize: 1,
-                        depth, // <--- Added depth
+                        depth,
                     },
                 ];
             }
 
-            // 3. Duplicate PPA for each funding source
+            // 4. Duplicate PPA for each funding source found in the AIP Entry
             return sources.map((fs, index) => {
                 const isLast = index === sources.length - 1;
 
                 return {
                     ...ppa,
                     current_fs: fs,
-                    // Only the last duplicate retains the children array
+                    aip_entry: activeAip,
+                    // Only the last row in the duplicate group carries the nested children
                     children: isLast ? expandedChildren : [],
                     isFirstInGroup: index === 0,
                     isLastInGroup: isLast,
                     groupSize: sources.length,
-                    depth, // <--- Added depth
+                    depth,
                 };
             });
         });
     };
+
+    console.log(expandPpaByFundingSource(aipEntries));
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>

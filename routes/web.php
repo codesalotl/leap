@@ -259,8 +259,6 @@ Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
 
 Route::get('aip-entries', [AipEntryController::class, 'index']);
 
-Route::get('aip-summary', [AipSummaryController::class, 'index']);
-
 Route::post('/aip-costing/{aipEntry}', [
     AipCostingController::class,
     'store',
@@ -285,28 +283,6 @@ Route::delete('/ppmp-price-list/{ppmpPriceList}', [
     PpmpPriceListController::class,
     'destroy',
 ])->name('ppmp-price-list.destroy');
-
-// PPMP Headers Routes
-Route::get('/ppmp-headers', [PpmpHeaderController::class, 'index'])->name(
-    'ppmp-headers.index',
-);
-Route::post('/ppmp-headers', [PpmpHeaderController::class, 'store'])->name(
-    'ppmp-headers.store',
-);
-
-// PPMP Items Routes
-Route::get('/ppmp-headers/{ppmpHeaderId}/items', [
-    PpmpItemController::class,
-    'index',
-])->name('ppmp-items.index');
-Route::get('/ppmp-headers/{ppmpHeaderId}/items/create', [
-    PpmpItemController::class,
-    'create',
-])->name('ppmp-items.create');
-Route::post('/ppmp-headers/{ppmpHeaderId}/items', [
-    PpmpItemController::class,
-    'store',
-])->name('ppmp-items.store');
 
 Route::get('test-combobox', function () {
     return Inertia::render('test-combobox');

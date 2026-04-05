@@ -42,8 +42,8 @@ class DatabaseSeeder extends Seeder
             OfficeSeeder::class,
             PpaSeeder::class,
 
-            PpaFundingSourceSeeder::class,
             AipEntrySeeder::class,
+            PpaFundingSourceSeeder::class,
             PpmpPriceListSeeder::class,
 
             PpmpSeeder::class,

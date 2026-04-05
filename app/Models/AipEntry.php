@@ -40,6 +40,11 @@ class AipEntry extends Model
         return $this->belongsTo(Ppa::class, 'ppa_id');
     }
 
+    public function ppaFundingSources()
+    {
+        return $this->hasMany(PpaFundingSource::class, 'aip_entry_id');
+    }
+
     // public function fundingSource()
     // {
     //     return $this->belongsToMany(

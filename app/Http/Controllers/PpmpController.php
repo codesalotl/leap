@@ -41,7 +41,7 @@ class PpmpController extends Controller
         $ppmpCategories = PpmpCategory::all();
 
         $ppaFundingSources = PpaFundingSource::with('fundingSource')
-            ->where('ppa_id', $aipEntry->ppa_id)
+            ->where('aip_entry_id', $aipEntry->ppa_id)
             ->get();
 
         return Inertia::render('ppmp/index', [

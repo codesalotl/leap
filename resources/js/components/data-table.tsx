@@ -181,6 +181,7 @@ export function DataTable<TData>({
                                                     ...getCommonPinningStyles(
                                                         cell.column,
                                                     ),
+                                                    // backgroundColor: `var(--background)`,
                                                     // verticalAlign: activeSpan
                                                     //     ? 'top'
                                                     //     : 'middle',
@@ -209,7 +210,8 @@ export function DataTable<TData>({
                     </TableBody>
                 </Table>
 
-                <ScrollBar orientation="horizontal" />
+                <ScrollBar orientation="horizontal" className="z-10" />
+                <ScrollBar orientation="vertical" className="z-10" />
             </ScrollArea>
         </div>
     );

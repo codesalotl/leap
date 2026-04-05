@@ -67,6 +67,8 @@ export interface AipEntry {
     ccet_mitigation: string;
     created_at: string | null;
     updated_at: string | null;
+
+    ppa_funding_sources?: PpaFundingSource[];
 }
 
 export interface FundingSource {
@@ -110,7 +112,7 @@ export interface Ppa {
     aip_entries?: AipEntry[];
     children?: Ppa[];
     office?: Office;
-    ppa_funding_sources?: PpaFundingSource[];
+    // ppa_funding_sources?: PpaFundingSource[];
 
     full_code: string;
 }
@@ -239,4 +241,14 @@ export interface User {
     updated_at: string | null;
 
     office?: Office;
+}
+
+// not a table in the database
+
+export interface App {
+    id: number;
+    code: string;
+    name: string;
+    created_at: string | null;
+    updated_at: string | null;
 }

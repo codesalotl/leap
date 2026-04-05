@@ -2,7 +2,7 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import FormDialog from '@/pages/aip/form-dialog';
 import { type BreadcrumbItem } from '@/types';
-import type { FiscalYear, FiscalYearStatus } from '@/types/global';
+import type { FiscalYear, FiscalYearStatus, App } from '@/types/global';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
@@ -18,9 +18,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface AipProps {
     fiscalYears: FiscalYear[];
+    app: App[];
 }
 
-export default function AipPage({ fiscalYears }: AipProps) {
+export default function AipPage({ fiscalYears, app }: AipProps) {
+    console.log({ fiscalYears, app });
+
     const [openFormDialog, setOpenFormDialog] = useState(false);
 
     function onUpdateStatus(data: FiscalYear, status: FiscalYearStatus) {
@@ -56,7 +59,6 @@ export default function AipPage({ fiscalYears }: AipProps) {
                     withSearch={true}
                     onUpdateStatus={onUpdateStatus}
                     onOpen={handleOpenAipSummary}
-                    // onDelete={handleDeleteDialogOpen}
                 >
                     <Button onClick={handleOpenFormDialog}>
                         Initialize AIP

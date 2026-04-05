@@ -54,7 +54,7 @@ export const getCommonPinningStyles = <TData>(
         minWidth: `${size / 16}rem`,
         maxWidth: `${size / 16}rem`,
 
-        // zIndex: isPinned ? 1 : 0,
+        zIndex: isPinned ? 1 : 0,
         backgroundColor: isFirstRightPinnedColumn ? 'var(--background)' : '',
     };
 };

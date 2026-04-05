@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::create('ppa_funding_sources', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ppa_id')->constrained();
+            // $table->foreignId('ppa_id')->constrained();
+            $table->foreignId('aip_entry_id')->constrained();
             $table->foreignId('funding_source_id')->constrained();
             $table->decimal('ps_amount', 19, 2)->default(0);
             $table->decimal('mooe_amount', 19, 2)->default(0);

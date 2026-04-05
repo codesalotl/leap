@@ -3,7 +3,7 @@ import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, parseISO } from 'date-fns';
-import { CalendarIcon, Plus, Trash2, ListPlus, Check } from 'lucide-react';
+import { CalendarIcon, Plus, Trash2, ListPlus } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -33,9 +33,7 @@ import {
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
-    TableFooter,
     TableHead,
     TableHeader,
     TableRow,
@@ -54,15 +52,10 @@ import {
 import {
     Command,
     CommandDialog,
-    CommandEmpty,
     CommandGroup,
     CommandInput,
-    CommandItem,
     CommandList,
-    CommandSeparator,
-    CommandShortcut,
 } from '@/components/ui/command';
-import { Separator } from '@/components/ui/separator';
 
 import type { FiscalYear, Ppa, FundingSource, Office } from '@/types/global';
 
@@ -172,13 +165,14 @@ export default function AipEntryFormDialog({
     useEffect(() => {
         if (open && data) {
             const entry = data.aip_entries?.[0];
+
             form.reset({
                 office_id: data.office_id?.toString() || '',
                 expected_output: entry?.expected_output || '',
                 start_date: entry?.start_date || '',
                 end_date: entry?.end_date || '',
                 ppa_funding_sources:
-                    data.ppa_funding_sources?.map((fs) => ({
+                    entry?.ppa_funding_sources?.map((fs) => ({
                         id: fs.id,
                         funding_source_id: fs.funding_source_id.toString(),
                         ps_amount: fs.ps_amount,
@@ -187,7 +181,7 @@ export default function AipEntryFormDialog({
                         co_amount: fs.co_amount,
                         ccet_adaptation: fs.ccet_adaptation,
                         ccet_mitigation: fs.ccet_mitigation,
-                        // cc_typology_code: fs.cc_typology_code || '',
+                        // cc_typology_code: fs.cc_typology_code || null,
                     })) || [],
             });
         }
@@ -196,43 +190,33 @@ export default function AipEntryFormDialog({
     const entry = data?.aip_entries?.[0];
     const isEdit = !!entry;
 
-    const onSubmit = (values: FormValues) => {
+    function onSubmit(values: FormValues) {
         const payload = {
             ...values,
             ppa_id: data?.id,
             fiscal_year_id: fiscalYear.id,
         };
 
+        const options = {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => {
+                setIsLoading(true);
+                form.clearErrors();
+            },
+            onSuccess: () => {
+                onOpenChange(false);
+                form.reset();
+            },
+            onFinish: () => setIsLoading(false),
+        };
+
         if (isEdit) {
-            router.put(`/aip-entries/${entry.id}`, payload, {
-                preserveState: true,
-                preserveScroll: true,
-                onStart: () => {
-                    setIsLoading(true);
-                    form.clearErrors();
-                },
-                onSuccess: () => {
-                    onOpenChange(false);
-                    form.reset();
-                },
-                onFinish: () => setIsLoading(false),
-            });
+            router.put(`/aip-entries/${entry.id}`, payload, options);
         } else {
-            router.post(`/aip-entries`, payload, {
-                preserveState: true,
-                preserveScroll: true,
-                onStart: () => {
-                    setIsLoading(true);
-                    form.clearErrors();
-                },
-                onSuccess: () => {
-                    onOpenChange(false);
-                    form.reset();
-                },
-                onFinish: () => setIsLoading(false),
-            });
+            router.post(`/aip-entries`, payload, options);
         }
-    };
+    }
 
     return (
         <Dialog
@@ -525,7 +509,7 @@ export default function AipEntryFormDialog({
                                                         co_amount: '0.00',
                                                         ccet_adaptation: '0.00',
                                                         ccet_mitigation: '0.00',
-                                                        cc_typology_code: '',
+                                                        cc_typology_code: null,
                                                     })
                                                 }
                                             >
@@ -603,14 +587,11 @@ export default function AipEntryFormDialog({
                                                                                             const fsIdStr =
                                                                                                 fs.id.toString();
 
-                                                                                            // 1. Is this source used in any row in the whole table?
                                                                                             const isAlreadySelected =
                                                                                                 selectedSourceIds.includes(
                                                                                                     fsIdStr,
                                                                                                 );
 
-                                                                                            // 2. Is this source the one currently picked in THIS specific row?
-                                                                                            // (We use 'ctrl.value' because that's the local alias for this field)
                                                                                             const isSelectedInThisRow =
                                                                                                 ctrl.value ===
                                                                                                 fsIdStr;
@@ -623,7 +604,6 @@ export default function AipEntryFormDialog({
                                                                                                     value={
                                                                                                         fsIdStr
                                                                                                     }
-                                                                                                    // Disable if picked elsewhere, but keep it enabled for this row
                                                                                                     disabled={
                                                                                                         isAlreadySelected &&
                                                                                                         !isSelectedInThisRow

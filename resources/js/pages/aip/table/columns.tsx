@@ -1,5 +1,5 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { Pencil, ExternalLink } from 'lucide-react';
+import { Pencil, ExternalLink, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { FiscalYear } from '@/types/global';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { router } from '@inertiajs/react';
 
 import type { RowData } from '@tanstack/react-table';
 
@@ -93,21 +94,12 @@ const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 38,
+        size: 60,
         cell: ({ row, table }) => {
             const initialStatus = row.original.status;
 
             return (
                 <div className="flex items-center gap-1">
-                    <Button
-                        size="icon"
-                        onClick={() =>
-                            table.options.meta?.onOpen?.(row.original)
-                        }
-                    >
-                        <ExternalLink />
-                    </Button>
-
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -162,13 +154,34 @@ const columns = [
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={() => table.options.meta?.onDelete?.(row.original)}
-                >
-                    <Trash />
-                </Button> */}
+                    <Button
+                        size="icon"
+                        title="Open AIP"
+                        onClick={() =>
+                            table.options.meta?.onOpen?.(row.original)
+                        }
+                    >
+                        <ExternalLink />
+                    </Button>
+
+                    <Button
+                        title="Generate APP"
+                        onClick={
+                            () => {
+                                console.log(row.original);
+                                router.reload({
+                                    only: ['app'], // Request the optional prop
+                                    // onStart: () => setIsGenerating(true),
+                                    onSuccess: () =>
+                                        console.log('fetched data'),
+                                    // onFinish: () => setIsGenerating(false),
+                                });
+                            }
+                            // table.options.meta?.onOpen?.(row.original)
+                        }
+                    >
+                        <FileText />
+                    </Button>
                 </div>
             );
         },

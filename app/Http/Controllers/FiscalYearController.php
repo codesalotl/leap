@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\FiscalYear;
 use App\Models\AipEntry;
 use App\Models\Ppa;
+use App\Models\Ppmp;
 use App\Http\Requests\StoreFiscalYearRequest;
 use App\Http\Requests\UpdateFiscalYearRequest;
 use Inertia\Inertia;
@@ -19,6 +20,7 @@ class FiscalYearController extends Controller
     {
         return Inertia::render('aip/index', [
             'fiscalYears' => FiscalYear::all(),
+            // 'app' => Inertia::optional(fn() => Ppmp::where('')),
         ]);
     }
 

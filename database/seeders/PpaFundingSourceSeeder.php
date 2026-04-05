@@ -14,8 +14,8 @@ class PpaFundingSourceSeeder extends Seeder
     public function run(): void
     {
         $ppaFundingSources = [
-            ['ppa_id' => 1, 'funding_source_id' => 1],
-            ['ppa_id' => 1, 'funding_source_id' => 2],
+            ['aip_entry_id' => 1, 'funding_source_id' => 1],
+            ['aip_entry_id' => 1, 'funding_source_id' => 2],
         ];
 
         foreach ($ppaFundingSources as $ppaFundingSource) {

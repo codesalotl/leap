@@ -63,11 +63,6 @@ class Ppa extends Model
         return $this->hasMany(Ppa::class, 'parent_id');
     }
 
-    public function ppaFundingSources()
-    {
-        return $this->hasMany(PpaFundingSource::class, 'ppa_id');
-    }
-
     public function aipEntries()
     {
         return $this->hasMany(AipEntry::class, 'ppa_id');
@@ -77,4 +72,9 @@ class Ppa extends Model
     {
         return $this->belongsTo(Office::class);
     }
+
+    // public function ppaFundingSources()
+    // {
+    //     return $this->hasMany(PpaFundingSource::class, 'ppa_id');
+    // }
 }

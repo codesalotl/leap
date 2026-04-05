@@ -33,32 +33,48 @@ class AipEntryController extends Controller
             ->whereHas('aipEntries', $filter)
             ->with([
                 // programs
-                'aipEntries' => $filter,
-                'ppaFundingSources.fundingSource',
+                'aipEntries' => function ($query) use ($filter) {
+                    $filter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'ppaFundingSources.fundingSource',
                 'office.sector',
                 'office.lguLevel',
                 'office.officeType',
 
                 // projects
                 'children' => $hasAip,
-                'children.aipEntries' => $filter,
-                'children.ppaFundingSources.fundingSource',
+                'children.aipEntries' => function ($query) use ($filter) {
+                    $filter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'children.ppaFundingSources.fundingSource',
                 'children.office.sector',
                 'children.office.lguLevel',
                 'children.office.officeType',
 
                 // activities
                 'children.children' => $hasAip,
-                'children.children.aipEntries' => $filter,
-                'children.children.ppaFundingSources.fundingSource',
+                'children.children.aipEntries' => function ($query) use (
+                    $filter,
+                ) {
+                    $filter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'children.children.ppaFundingSources.fundingSource',
                 'children.children.office.sector',
                 'children.children.office.lguLevel',
                 'children.children.office.officeType',
 
                 // sub-activities
                 'children.children.children' => $hasAip,
-                'children.children.children.aipEntries' => $filter,
-                'children.children.children.ppaFundingSources.fundingSource',
+                'children.children.children.aipEntries' => function (
+                    $query,
+                ) use ($filter) {
+                    $filter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'children.children.children.ppaFundingSources.fundingSource',
                 'children.children.children.office.sector',
                 'children.children.children.office.lguLevel',
                 'children.children.children.office.officeType',
@@ -188,7 +204,7 @@ class AipEntryController extends Controller
         }
 
         // 2. Identify removed funding sources (Using CamelCase method with parentheses)
-        $currentFundingSourceIds = $ppa
+        $currentFundingSourceIds = $aipEntry
             ->ppaFundingSources()
             ->pluck('funding_source_id')
             ->toArray();
@@ -234,10 +250,10 @@ class AipEntryController extends Controller
             ]);
 
             // Sync PPA Funding Sources: Delete old, Create new
-            $ppa->ppaFundingSources()->delete();
+            $aipEntry->ppaFundingSources()->delete();
 
             foreach ($validated['ppa_funding_sources'] as $source) {
-                $ppa->ppaFundingSources()->create([
+                $aipEntry->ppaFundingSources()->create([
                     'funding_source_id' => $source['funding_source_id'],
                     'ps_amount' => $source['ps_amount'],
                     'mooe_amount' => $source['mooe_amount'],

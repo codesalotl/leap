@@ -245,6 +245,7 @@ const columns = [
                 </Button>
             </div>
         ),
+        meta: { rowSpan: true },
     }),
 ];
 
