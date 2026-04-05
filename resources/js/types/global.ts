@@ -246,9 +246,17 @@ export interface User {
 // not a table in the database
 
 export interface App {
-    id: number;
-    code: string;
-    name: string;
-    created_at: string | null;
-    updated_at: string | null;
+    ppmp_price_list: PriceList;
+
+    q1_qty: number;
+    q2_qty: number;
+    q3_qty: number;
+    q4_qty: number;
+    total_qty: number;
+
+    q1_amount: number;
+    q2_amount: number;
+    q3_amount: number;
+    q4_amount: number;
+    total_amount: number;
 }

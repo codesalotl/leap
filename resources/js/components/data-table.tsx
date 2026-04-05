@@ -36,6 +36,8 @@ interface DataTableProps<TData> {
         status: 'active' | 'inactive' | 'closed',
     ) => void;
     onOpen?: (data: TData) => void;
+
+    onGeneratePdf?: (data: TData) => void;
 }
 
 export function DataTable<TData>({
@@ -46,6 +48,7 @@ export function DataTable<TData>({
     onDelete,
     onUpdateStatus,
     onOpen,
+    onGeneratePdf,
     children,
     withSearch = false,
     withRowSpan = false,
@@ -67,7 +70,14 @@ export function DataTable<TData>({
         getFilteredRowModel: withSearch ? getFilteredRowModel() : undefined,
 
         // meta
-        meta: { onAdd, onEdit, onDelete, onUpdateStatus, onOpen },
+        meta: {
+            onAdd,
+            onEdit,
+            onDelete,
+            onUpdateStatus,
+            onOpen,
+            onGeneratePdf,
+        },
 
         // for sub rows
         getSubRows: (row: any) => row.children,

@@ -11,7 +11,7 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { router } from '@inertiajs/react';
+// import { router } from '@inertiajs/react';
 
 import type { RowData } from '@tanstack/react-table';
 
@@ -29,6 +29,7 @@ declare module '@tanstack/react-table' {
             status: 'active' | 'inactive' | 'closed',
         ) => void;
         onOpen?: (data: TData) => void;
+        onGeneratePdf?: (data: TData) => void;
     }
 }
 
@@ -166,19 +167,17 @@ const columns = [
 
                     <Button
                         title="Generate APP"
-                        onClick={
-                            () => {
-                                console.log(row.original);
-                                router.reload({
-                                    only: ['app'], // Request the optional prop
-                                    // onStart: () => setIsGenerating(true),
-                                    onSuccess: () =>
-                                        console.log('fetched data'),
-                                    // onFinish: () => setIsGenerating(false),
-                                });
-                            }
-                            // table.options.meta?.onOpen?.(row.original)
-                        }
+                        onClick={() => {
+                            // console.log(row.original);
+                            // router.reload({
+                            //     only: ['app'], // Request the optional prop
+                            //     // onStart: () => setIsGenerating(true),
+                            //     onSuccess: () =>
+                            //         console.log('fetched data'),
+                            //     // onFinish: () => setIsGenerating(false),
+                            // });
+                            table.options.meta?.onGeneratePdf?.(row.original);
+                        }}
                     >
                         <FileText />
                     </Button>

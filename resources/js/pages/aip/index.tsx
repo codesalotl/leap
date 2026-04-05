@@ -7,6 +7,7 @@ import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import columns from './table/columns';
+import PdfPreviewDialog from './pdf-preview-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -25,6 +26,7 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
     console.log({ fiscalYears, app });
 
     const [openFormDialog, setOpenFormDialog] = useState(false);
+    const [openPdfPreviewDialog, setOpenPdfPreviewDialog] = useState(false);
 
     function onUpdateStatus(data: FiscalYear, status: FiscalYearStatus) {
         router.patch(
@@ -50,6 +52,19 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
         setOpenFormDialog(true);
     }
 
+    function handleGeneratePdf(selectedYearId: FiscalYear) {
+        console.log(selectedYearId);
+
+        router.reload({
+            only: ['app'], // Request the optional prop
+            data: { fiscal_year_id: selectedYearId.id },
+            // onStart: () => setIsGenerating(true),
+            onSuccess: () => console.log('fetched data'),
+            // onFinish: () => setIsGenerating(false),
+        });
+        setOpenPdfPreviewDialog(true);
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
@@ -59,6 +74,7 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
                     withSearch={true}
                     onUpdateStatus={onUpdateStatus}
                     onOpen={handleOpenAipSummary}
+                    onGeneratePdf={handleGeneratePdf}
                 >
                     <Button onClick={handleOpenFormDialog}>
                         Initialize AIP
@@ -67,6 +83,12 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
             </div>
 
             <FormDialog open={openFormDialog} setOpen={setOpenFormDialog} />
+
+            <PdfPreviewDialog
+                open={openPdfPreviewDialog}
+                onOpenChange={setOpenPdfPreviewDialog}
+                data={app}
+            />
         </AppLayout>
     );
 }
