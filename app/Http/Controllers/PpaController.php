@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePpaRequest;
+use App\Http\Requests\UpdatePpaRequest;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\Ppa;
 use App\Models\Office;
 use App\Models\Sector;
-use App\Http\Requests\StorePpaRequest;
-use App\Http\Requests\UpdatePpaRequest;
 use App\Models\LguLevel;
 use App\Models\OfficeType;
-use Inertia\Inertia;
 
 class PpaController extends Controller
 {
@@ -18,7 +20,12 @@ class PpaController extends Controller
      */
     public function index()
     {
-        $ppaTree = Ppa::whereNull('parent_id')
+        $userOfficeId = Auth::user()->office_id;
+
+        // dd($userOfficeId);
+
+        $ppaTree = Ppa::where('office_id', $userOfficeId)
+            ->whereNull('parent_id')
             ->with([
                 'office',
 

@@ -220,7 +220,7 @@ export function DataTable<TData>({
                         )}
                     </TableBody>
 
-                    <TableFooter className="sticky bottom-0 bg-secondary/50 backdrop-blur-sm">
+                    <TableFooter className="sticky bottom-0 bg-secondary">
                         {table.getFooterGroups().map((footerGroup) => (
                             <TableRow key={footerGroup.id}>
                                 {footerGroup.headers.map((column) => {
