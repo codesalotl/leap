@@ -25,16 +25,19 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
+        $officeId = auth()->user()->office_id;
         $yearId = $fiscalYear->id;
-        $filter = fn($q) => $q->where('fiscal_year_id', $yearId);
-        $hasAip = fn($q) => $q->whereHas('aipEntries', $filter);
 
-        $aipEntries = Ppa::whereNull('parent_id')
-            ->whereHas('aipEntries', $filter)
+        $yearFilter = fn($q) => $q->where('fiscal_year_id', $yearId);
+        $hasAipFilter = fn($q) => $q->whereHas('aipEntries', $yearFilter);
+
+        $aipEntries = Ppa::where('office_id', $officeId)
+            ->whereNull('parent_id')
+            ->whereHas('aipEntries', $yearFilter)
             ->with([
                 // programs
-                'aipEntries' => function ($query) use ($filter) {
-                    $filter($query);
+                'aipEntries' => function ($query) use ($yearFilter) {
+                    $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
                 // 'ppaFundingSources.fundingSource',
@@ -43,9 +46,9 @@ class AipEntryController extends Controller
                 'office.officeType',
 
                 // projects
-                'children' => $hasAip,
-                'children.aipEntries' => function ($query) use ($filter) {
-                    $filter($query);
+                'children' => $hasAipFilter,
+                'children.aipEntries' => function ($query) use ($yearFilter) {
+                    $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
                 // 'children.ppaFundingSources.fundingSource',
@@ -54,11 +57,11 @@ class AipEntryController extends Controller
                 'children.office.officeType',
 
                 // activities
-                'children.children' => $hasAip,
+                'children.children' => $hasAipFilter,
                 'children.children.aipEntries' => function ($query) use (
-                    $filter,
+                    $yearFilter,
                 ) {
-                    $filter($query);
+                    $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
                 // 'children.children.ppaFundingSources.fundingSource',
@@ -67,11 +70,11 @@ class AipEntryController extends Controller
                 'children.children.office.officeType',
 
                 // sub-activities
-                'children.children.children' => $hasAip,
+                'children.children.children' => $hasAipFilter,
                 'children.children.children.aipEntries' => function (
                     $query,
-                ) use ($filter) {
-                    $filter($query);
+                ) use ($yearFilter) {
+                    $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
                 // 'children.children.children.ppaFundingSources.fundingSource',
@@ -81,7 +84,8 @@ class AipEntryController extends Controller
             ])
             ->get();
 
-        $ppaMasterList = Ppa::whereNull('parent_id')
+        $ppaMasterList = Ppa::where('office_id', $officeId)
+            ->whereNull('parent_id')
             ->with([
                 'office.sector',
                 'office.lguLevel',

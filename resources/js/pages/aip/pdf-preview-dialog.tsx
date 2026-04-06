@@ -141,7 +141,7 @@ const MyDocument = ({
     );
 
     return (
-        <Document title="Quarterly Procurement Report">
+        <Document title="">
             <Page size={[612, 936]} orientation="landscape" style={styles.page}>
                 {/* --- Header Section --- */}
                 <View style={{ gap: 20 }}>
