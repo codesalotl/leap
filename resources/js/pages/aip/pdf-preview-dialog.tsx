@@ -13,12 +13,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import type { App } from '@/types/global';
+import type { App, FiscalYear } from '@/types/global';
 
 interface PdfPreviewDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     data: App[];
+    fiscalYear: FiscalYear;
 }
 
 // 1. Define Column Widths (Totaling 100%)
@@ -75,30 +76,64 @@ const formatNumber = (value: number | string | undefined) => {
     }).format(num);
 };
 
-const MyDocument = ({ data }: { data: App[] }) => {
+const MyDocument = ({
+    data,
+    fiscalYear,
+}: {
+    data: App[];
+    fiscalYear: FiscalYear;
+}) => {
     const getWidth = (index: number) => `${COLUMN_WIDTHS[index]}%`;
 
     // Helper to render an empty row with a title in the description column
-    const TitleRow = ({ title, isCategory }: { title: string; isCategory: boolean }) => (
-        <View style={[styles.row, styles.borderBottom, { backgroundColor: isCategory ? '#e2e8f0' : '#f8fafc' }]}>
+    const TitleRow = ({
+        title,
+        isCategory,
+    }: {
+        title: string;
+        isCategory: boolean;
+    }) => (
+        <View
+            style={[
+                styles.row,
+                styles.borderBottom,
+                { backgroundColor: isCategory ? '#e2e8f0' : '#f8fafc' },
+            ]}
+        >
             {/* 0: Item No (Empty) */}
-            <View style={[{ width: getWidth(0) }, styles.borderLeft, styles.borderRight]}><Text style={styles.tableCell} /></View>
-            
+            <View
+                style={[
+                    { width: getWidth(0) },
+                    styles.borderLeft,
+                    styles.borderRight,
+                ]}
+            >
+                <Text style={styles.tableCell} />
+            </View>
+
             {/* 1: Description (Title goes here) */}
             <View style={[{ width: getWidth(1) }, styles.borderRight]}>
-                <Text style={[styles.tableCell, { 
-                    textAlign: 'left', 
-                    fontWeight: 'bold', 
-                    textTransform: 'uppercase',
-                    paddingLeft: isCategory ? 2 : 10 // Indent Account titles slightly
-                }]}>
-                    {isCategory ? `CATEGORY: ${title}` : title}
+                <Text
+                    style={[
+                        styles.tableCell,
+                        {
+                            textAlign: 'left',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            // paddingLeft: isCategory ? 2 : 10 // Indent Account titles slightly
+                        },
+                    ]}
+                >
+                    {isCategory ? `${title}` : title}
                 </Text>
             </View>
 
             {/* 2-13: Remaining Columns (Empty with borders) */}
             {COLUMN_WIDTHS.slice(2).map((_, i) => (
-                <View key={i} style={[{ width: getWidth(i + 2) }, styles.borderRight]}>
+                <View
+                    key={i}
+                    style={[{ width: getWidth(i + 2) }, styles.borderRight]}
+                >
                     <Text style={styles.tableCell} />
                 </View>
             ))}
@@ -109,14 +144,28 @@ const MyDocument = ({ data }: { data: App[] }) => {
         <Document title="Quarterly Procurement Report">
             <Page size={[612, 936]} orientation="landscape" style={styles.page}>
                 {/* --- Header Section --- */}
-                <View fixed style={{ marginBottom: 10, textAlign: 'center' }}>
+                <View style={{ gap: 20 }}>
                     <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
-                        ANNUAL PROCUREMENT PLAN (QUARTERLY BREAKDOWN)
+                        FDP Form 4a - Annual Procurement Plan or Procurement
+                        List
                     </Text>
 
-                    <Text style={{ fontSize: 8 }}>
+                    <View
+                        fixed
+                        style={{ marginBottom: 10, textAlign: 'center' }}
+                    >
+                        <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
+                            ANNUAL PROCUREMENT PLAN
+                        </Text>
+
+                        <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
+                            FOR THE YEAR {fiscalYear.year}
+                        </Text>
+
+                        {/* <Text style={{ fontSize: 8 }}>
                         Province of Example - Information Technology Unit
-                    </Text>
+                    </Text> */}
+                    </View>
                 </View>
 
                 {/* --- Table Header --- */}
@@ -138,8 +187,40 @@ const MyDocument = ({ data }: { data: App[] }) => {
                                 justifyContent: 'center',
                             }}
                         >
-                            <Text style={styles.tableHeaderCell}>
-                                General Item Information
+                            <Text
+                                style={[
+                                    styles.tableHeaderCell,
+                                    {
+                                        textTransform: 'none',
+                                        textAlign: 'left',
+                                    },
+                                ]}
+                            >
+                                Province, City or Municipality: {'location'}
+                            </Text>
+
+                            <Text
+                                style={[
+                                    styles.tableHeaderCell,
+                                    {
+                                        textTransform: 'none',
+                                        textAlign: 'left',
+                                    },
+                                ]}
+                            >
+                                Plan Control No.
+                            </Text>
+
+                            <Text
+                                style={[
+                                    styles.tableHeaderCell,
+                                    {
+                                        textTransform: 'none',
+                                        textAlign: 'left',
+                                    },
+                                ]}
+                            >
+                                Department / Office: {'office'}
                             </Text>
                         </View>
 
@@ -418,73 +499,564 @@ const MyDocument = ({ data }: { data: App[] }) => {
 
                 {/* --- Data Rows --- */}
                 {/* {data.map((item, index) => ( */}
-                {Object.entries(data).map(([categoryName, chartOfAccounts]: [string, any]) => {
-                    
-                    const categoryItems = Object.values(chartOfAccounts).flat() as any[];
-                    const catTotalAmt = categoryItems.reduce((sum, item) => sum + (Number(item.total_amount) || 0), 0);
-                    const catQ1Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q1_amount) || 0), 0);
-                    const catQ2Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q2_amount) || 0), 0);
-                    const catQ3Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q3_amount) || 0), 0);
-                    const catQ4Amt = categoryItems.reduce((sum, item) => sum + (Number(item.q4_amount) || 0), 0);
+                {Object.entries(data).map(
+                    ([categoryName, chartOfAccounts]: [string, any]) => {
+                        const categoryItems = Object.values(
+                            chartOfAccounts,
+                        ).flat() as any[];
+                        const catTotalAmt = categoryItems.reduce(
+                            (sum, item) =>
+                                sum + (Number(item.total_amount) || 0),
+                            0,
+                        );
+                        const catQ1Amt = categoryItems.reduce(
+                            (sum, item) => sum + (Number(item.q1_amount) || 0),
+                            0,
+                        );
+                        const catQ2Amt = categoryItems.reduce(
+                            (sum, item) => sum + (Number(item.q2_amount) || 0),
+                            0,
+                        );
+                        const catQ3Amt = categoryItems.reduce(
+                            (sum, item) => sum + (Number(item.q3_amount) || 0),
+                            0,
+                        );
+                        const catQ4Amt = categoryItems.reduce(
+                            (sum, item) => sum + (Number(item.q4_amount) || 0),
+                            0,
+                        );
 
-                    return (
-                        <View key={categoryName} break={false}>
-                            {/* CATEGORY ROW (Title in Description Col) */}
-                            <TitleRow title={categoryName} isCategory={true} />
+                        return (
+                            <View key={categoryName} break={false}>
+                                {/* CATEGORY ROW (Title in Description Col) */}
+                                <TitleRow
+                                    title={categoryName}
+                                    isCategory={true}
+                                />
 
-                            {Object.entries(chartOfAccounts).map(([accountTitle, items]: [string, any]) => (
-                                <View key={accountTitle}>
-                                    {/* CHART OF ACCOUNT ROW (Title in Description Col) */}
-                                    <TitleRow title={accountTitle} isCategory={false} />
+                                {Object.entries(chartOfAccounts).map(
+                                    ([accountTitle, items]: [string, any]) => (
+                                        <View key={accountTitle}>
+                                            {/* CHART OF ACCOUNT ROW (Title in Description Col) */}
+                                            <TitleRow
+                                                title={accountTitle}
+                                                isCategory={false}
+                                            />
 
-                                    {/* ITEM ROWS */}
-                                    {items.map((item: any, index: number) => (
-                                        <View key={index} style={[styles.row, styles.borderBottom]} wrap={false}>
-                                            <View style={[{ width: getWidth(0) }, styles.borderLeft, styles.borderRight]}><Text style={styles.tableCell}>{index + 1}</Text></View>
-                                            <View style={[{ width: getWidth(1) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'left' }]}>{item.ppmp_price_list?.description}</Text></View>
-                                            <View style={[{ width: getWidth(2) }, styles.borderRight]}><Text style={styles.tableCell}>{item.ppmp_price_list?.unit_of_measurement}</Text></View>
-                                            <View style={[{ width: getWidth(3) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.ppmp_price_list?.price)}</Text></View>
-                                            <View style={[{ width: getWidth(4) }, styles.borderRight]}><Text style={styles.tableCell}>{item.total_qty}</Text></View>
-                                            <View style={[{ width: getWidth(5) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.total_amount)}</Text></View>
-                                            <View style={[{ width: getWidth(6) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q1_qty || '-'}</Text></View>
-                                            <View style={[{ width: getWidth(7) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q1_amount)}</Text></View>
-                                            <View style={[{ width: getWidth(8) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q2_qty || '-'}</Text></View>
-                                            <View style={[{ width: getWidth(9) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q2_amount)}</Text></View>
-                                            <View style={[{ width: getWidth(10) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q3_qty || '-'}</Text></View>
-                                            <View style={[{ width: getWidth(11) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q3_amount)}</Text></View>
-                                            <View style={[{ width: getWidth(12) }, styles.borderRight]}><Text style={styles.tableCell}>{item.q4_qty || '-'}</Text></View>
-                                            <View style={[{ width: getWidth(13) }, styles.borderRight]}><Text style={[styles.tableCell, { textAlign: 'right' }]}>{formatNumber(item.q4_amount)}</Text></View>
+                                            {/* ITEM ROWS */}
+                                            {items.map(
+                                                (item: any, index: number) => (
+                                                    <View
+                                                        key={index}
+                                                        style={[
+                                                            styles.row,
+                                                            styles.borderBottom,
+                                                        ]}
+                                                        wrap={false}
+                                                    >
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        0,
+                                                                    ),
+                                                                },
+                                                                styles.borderLeft,
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {index + 1}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        1,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'left',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {
+                                                                    item
+                                                                        .ppmp_price_list
+                                                                        ?.description
+                                                                }
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        2,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {
+                                                                    item
+                                                                        .ppmp_price_list
+                                                                        ?.unit_of_measurement
+                                                                }
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        3,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'right',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {formatNumber(
+                                                                    item
+                                                                        .ppmp_price_list
+                                                                        ?.price,
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        4,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {item.total_qty}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        5,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'right',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {formatNumber(
+                                                                    item.total_amount,
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        6,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {item.q1_qty ||
+                                                                    '-'}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        7,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'right',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {formatNumber(
+                                                                    item.q1_amount,
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        8,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {item.q2_qty ||
+                                                                    '-'}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        9,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'right',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {formatNumber(
+                                                                    item.q2_amount,
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        10,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {item.q3_qty ||
+                                                                    '-'}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        11,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'right',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {formatNumber(
+                                                                    item.q3_amount,
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        12,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={
+                                                                    styles.tableCell
+                                                                }
+                                                            >
+                                                                {item.q4_qty ||
+                                                                    '-'}
+                                                            </Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                {
+                                                                    width: getWidth(
+                                                                        13,
+                                                                    ),
+                                                                },
+                                                                styles.borderRight,
+                                                            ]}
+                                                        >
+                                                            <Text
+                                                                style={[
+                                                                    styles.tableCell,
+                                                                    {
+                                                                        textAlign:
+                                                                            'right',
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                {formatNumber(
+                                                                    item.q4_amount,
+                                                                )}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                ),
+                                            )}
                                         </View>
-                                    ))}
-                                </View>
-                            ))}
+                                    ),
+                                )}
 
-                            {/* CATEGORY FOOTER (Follows same col structure) */}
-                            <View style={[styles.row, styles.borderBottom, { backgroundColor: '#cbd5e1' }]} wrap={false}>
-                                <View style={[{ width: getWidth(0) }, styles.borderLeft, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(1) }, styles.borderRight]}>
-                                    <Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'left' }]}>TOTAL FOR {categoryName.toUpperCase()}</Text>
+                                {/* CATEGORY FOOTER (Follows same col structure) */}
+                                <View
+                                    style={[
+                                        styles.row,
+                                        styles.borderBottom,
+                                        { backgroundColor: '#cbd5e1' },
+                                    ]}
+                                    wrap={false}
+                                >
+                                    <View
+                                        style={[
+                                            { width: getWidth(0) },
+                                            styles.borderLeft,
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(1) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.tableCell,
+                                                {
+                                                    fontWeight: 'bold',
+                                                    textAlign: 'left',
+                                                },
+                                            ]}
+                                        >
+                                            {categoryName.toUpperCase()} - TOTAL
+                                        </Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(2) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(3) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(4) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+
+                                    <View
+                                        style={[
+                                            { width: getWidth(5) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.tableCell,
+                                                {
+                                                    fontWeight: 'bold',
+                                                    textAlign: 'right',
+                                                },
+                                            ]}
+                                        >
+                                            {formatNumber(catTotalAmt)}
+                                        </Text>
+                                    </View>
+
+                                    <View
+                                        style={[
+                                            { width: getWidth(6) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(7) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.tableCell,
+                                                {
+                                                    fontWeight: 'bold',
+                                                    textAlign: 'right',
+                                                },
+                                            ]}
+                                        >
+                                            {formatNumber(catQ1Amt)}
+                                        </Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(8) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(9) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.tableCell,
+                                                {
+                                                    fontWeight: 'bold',
+                                                    textAlign: 'right',
+                                                },
+                                            ]}
+                                        >
+                                            {formatNumber(catQ2Amt)}
+                                        </Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(10) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(11) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.tableCell,
+                                                {
+                                                    fontWeight: 'bold',
+                                                    textAlign: 'right',
+                                                },
+                                            ]}
+                                        >
+                                            {formatNumber(catQ3Amt)}
+                                        </Text>
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(12) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text style={styles.tableCell} />
+                                    </View>
+                                    <View
+                                        style={[
+                                            { width: getWidth(13) },
+                                            styles.borderRight,
+                                        ]}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.tableCell,
+                                                {
+                                                    fontWeight: 'bold',
+                                                    textAlign: 'right',
+                                                },
+                                            ]}
+                                        >
+                                            {formatNumber(catQ4Amt)}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={[{ width: getWidth(2) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(3) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(4) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                
-                                <View style={[{ width: getWidth(5) }, styles.borderRight]}>
-                                    <Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catTotalAmt)}</Text>
-                                </View>
-                                
-                                <View style={[{ width: getWidth(6) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(7) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ1Amt)}</Text></View>
-                                <View style={[{ width: getWidth(8) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(9) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ2Amt)}</Text></View>
-                                <View style={[{ width: getWidth(10) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(11) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ3Amt)}</Text></View>
-                                <View style={[{ width: getWidth(12) }, styles.borderRight]}><Text style={styles.tableCell} /></View>
-                                <View style={[{ width: getWidth(13) }, styles.borderRight]}><Text style={[styles.tableCell, { fontWeight: 'bold', textAlign: 'right' }]}>{formatNumber(catQ4Amt)}</Text></View>
                             </View>
-                        </View>
-                    );
-                })}
+                        );
+                    },
+                )}
 
                 {/* --- Footer / Pagination --- */}
                 <View
@@ -512,8 +1084,9 @@ export default function PdfPreviewDialog({
     open,
     onOpenChange,
     data,
+    fiscalYear,
 }: PdfPreviewDialogProps) {
-    console.log(data);
+    console.log({ data, fiscalYear });
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -525,7 +1098,7 @@ export default function PdfPreviewDialog({
 
                 <div className="h-full">
                     <PDFViewer width="100%" height="100%">
-                        <MyDocument data={data} />
+                        <MyDocument data={data} fiscalYear={fiscalYear} />
                     </PDFViewer>
                 </div>
             </DialogContent>

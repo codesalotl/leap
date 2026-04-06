@@ -17,18 +17,18 @@ const columns = [
         },
     }),
     columnHelper.accessor('office.name', {
-        header: 'Office',
+        header: 'Department / Office',
         cell: (info) => {
             return <div className="text-wrap">{info.getValue()}</div>;
         },
     }),
-    columnHelper.display({
-        id: 'action',
-        header: 'Action',
-        cell: () => {
-            return <div className="text-wrap">action</div>;
-        },
-    }),
+    // columnHelper.display({
+    //     id: 'action',
+    //     header: 'Action',
+    //     cell: () => {
+    //         return <div className="text-wrap">action</div>;
+    //     },
+    // }),
 ];
 
 export default columns;

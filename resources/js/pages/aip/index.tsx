@@ -27,6 +27,7 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
 
     const [openFormDialog, setOpenFormDialog] = useState(false);
     const [openPdfPreviewDialog, setOpenPdfPreviewDialog] = useState(false);
+    const [selectedYear, setSelectedYear] = useState<FiscalYear | null>(null);
 
     function onUpdateStatus(data: FiscalYear, status: FiscalYearStatus) {
         router.patch(
@@ -54,6 +55,8 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
 
     function handleGeneratePdf(selectedYearId: FiscalYear) {
         console.log(selectedYearId);
+
+        setSelectedYear(selectedYearId);
 
         router.reload({
             only: ['app'], // Request the optional prop
@@ -88,6 +91,7 @@ export default function AipPage({ fiscalYears, app }: AipProps) {
                 open={openPdfPreviewDialog}
                 onOpenChange={setOpenPdfPreviewDialog}
                 data={app}
+                fiscalYear={selectedYear}
             />
         </AppLayout>
     );
