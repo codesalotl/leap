@@ -22,6 +22,12 @@ const columns = [
             return <div className="text-wrap">{info.getValue()}</div>;
         },
     }),
+    columnHelper.accessor('status', {
+        header: 'Status',
+        cell: (info) => {
+            return <div className="text-wrap">{info.getValue()}</div>;
+        },
+    }),
     // columnHelper.display({
     //     id: 'action',
     //     header: 'Action',

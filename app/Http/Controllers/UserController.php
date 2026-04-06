@@ -15,20 +15,20 @@ class UserController extends Controller
      */
     public function index()
     {
-        $ppas = Ppa::whereNull('parent_id')
-            ->with([
-                'office',
+        // $ppas = Ppa::whereNull('parent_id')
+        //     ->with([
+        //         'office',
 
-                'children',
-                'children.office',
+        //         'children',
+        //         'children.office',
 
-                'children.children',
-                'children.children.office',
+        //         'children.children',
+        //         'children.children.office',
 
-                'children.children.children',
-                'children.children.children.office',
-            ])
-            ->get();
+        //         'children.children.children',
+        //         'children.children.children.office',
+        //     ])
+        //     ->get();
 
         // $yearId = 1;
         // $filter = fn($q) => $q->where('fiscal_year_id', $yearId);

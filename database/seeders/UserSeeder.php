@@ -17,6 +17,13 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
+                'name' => 'System Admin',
+                'email' => 'admin@example.com',
+                'password' => Hash::make('password'), // Change this!
+                'role' => 'admin',
+                'status' => 'active', // Admin must be active to log in!
+            ],
+            [
                 'name' => 'System Administrator',
                 'email' => 'admin@lgu.gov.ph',
                 'password' => Hash::make('password'),

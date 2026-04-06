@@ -26,6 +26,7 @@ use App\Http\Controllers\PpmpCategoryController;
 use App\Http\Controllers\OfficeTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TestDataTableController;
+use App\Http\Controllers\AdminUserController;
 
 Route::get(
     '/',
@@ -41,7 +42,17 @@ Route::middleware(['auth', 'verified'])->group(
 );
 
 // users
-Route::get('users', [UserController::class, 'index'])->name('users.index');
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+});
+
+// routes/web.php
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::patch('/admin/users/{user}/approve', [
+        AdminUserController::class,
+        'approve',
+    ])->name('admin.users.approve');
+});
 
 // test reusable table
 Route::get('test-table', [TestDataTableController::class, 'index'])->name(

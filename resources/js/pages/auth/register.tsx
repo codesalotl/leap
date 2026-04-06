@@ -10,7 +10,30 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/layouts/auth-layout';
 
+import { usePage } from '@inertiajs/react';
+
 export default function Register() {
+    const { flash } = usePage().props as any;
+
+    if (flash?.status === 'awaiting-approval') {
+        return (
+            <AuthLayout
+                title="Account Pending"
+                description="Your registration was successful."
+            >
+                <div className="space-y-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                        An administrator needs to approve your account before
+                        you can log in. You'll get an email once you're cleared!
+                    </p>
+                    <Button asChild className="w-full">
+                        <a href="/login">Back to Login</a>
+                    </Button>
+                </div>
+            </AuthLayout>
+        );
+    }
+
     return (
         <AuthLayout
             title="Create an account"
