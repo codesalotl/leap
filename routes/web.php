@@ -44,6 +44,10 @@ Route::middleware(['auth', 'verified'])->group(
 // users
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('users/{user}/status', [
+        UserController::class,
+        'update',
+    ])->name('users.update-status');
 });
 
 // routes/web.php

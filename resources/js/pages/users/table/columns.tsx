@@ -1,5 +1,7 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import type { User } from '@/types/global';
+import { Button } from '@/components/ui/button';
+import { Pencil } from 'lucide-react';
 
 const columnHelper = createColumnHelper<User>();
 
@@ -28,13 +30,23 @@ const columns = [
             return <div className="text-wrap">{info.getValue()}</div>;
         },
     }),
-    // columnHelper.display({
-    //     id: 'action',
-    //     header: 'Action',
-    //     cell: () => {
-    //         return <div className="text-wrap">action</div>;
-    //     },
-    // }),
+    columnHelper.display({
+        id: 'action',
+        cell: ({ row, table }) => {
+            return (
+                <div>
+                    <Button
+                        size="icon"
+                        onClick={() =>
+                            table.options.meta?.onEdit?.(row.original)
+                        }
+                    >
+                        <Pencil />
+                    </Button>
+                </div>
+            );
+        },
+    }),
 ];
 
 export default columns;

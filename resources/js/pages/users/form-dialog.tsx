@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -13,7 +13,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Field, FieldLabel, FieldError } from '@/components/ui/field';
+import { Field, FieldLabel, FieldError } from '@/components/ui/field'; // Adjust paths based on your project
 import {
     Select,
     SelectContent,
@@ -35,9 +35,11 @@ interface FormDialogProps {
     data: User | null;
 }
 
-export default function FormDialog({ open, onOpenChange, data }: FormDialogProps) {
-    const [isLoading, setIsLoading] = useState(false);
-
+export default function FormDialog({
+    open,
+    onOpenChange,
+    data,
+}: FormDialogProps) {
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -45,7 +47,7 @@ export default function FormDialog({ open, onOpenChange, data }: FormDialogProps
         },
     });
 
-    // Sync form with selected user data when dialog opens
+    // Sync form with selected user data
     useEffect(() => {
         if (data) {
             form.reset({
@@ -55,20 +57,20 @@ export default function FormDialog({ open, onOpenChange, data }: FormDialogProps
     }, [data, form]);
 
     function onSubmit(values: FormValues) {
-    if (!data) return;
+        if (!data) return;
 
-    // Using the URL string template instead of the route() helper
-    router.patch(`/users/${data.id}/status`, values, {
-        preserveState: true,
-        preserveScroll: true,
-        onStart: () => setIsLoading(true),
-        onFinish: () => setIsLoading(false),
-        onSuccess: () => {
-            onOpenChange(false);
-            form.reset();
-        },
-    });
-}
+        // We use backticks (``) to build the URL string with the user's ID
+        router.patch(`/users/${data.id}/status`, values, {
+            preserveState: true,
+            preserveScroll: true,
+            // onStart: () => setIsLoading(true),
+            // onFinish: () => setIsLoading(false),
+            onSuccess: () => {
+                onOpenChange(false);
+                form.reset();
+            },
+        });
+    }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -76,7 +78,8 @@ export default function FormDialog({ open, onOpenChange, data }: FormDialogProps
                 <DialogHeader>
                     <DialogTitle>Edit User Status</DialogTitle>
                     <DialogDescription>
-                        Update the account status for <strong>{data?.name}</strong>.
+                        Update the account status for{' '}
+                        <strong>{data?.name}</strong>.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -95,7 +98,6 @@ export default function FormDialog({ open, onOpenChange, data }: FormDialogProps
                                 <Select
                                     value={field.value}
                                     onValueChange={field.onChange}
-                                    disabled={isLoading}
                                 >
                                     <SelectTrigger
                                         id={field.name}
@@ -104,9 +106,15 @@ export default function FormDialog({ open, onOpenChange, data }: FormDialogProps
                                         <SelectValue placeholder="Select status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="active">Active</SelectItem>
-                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                        <SelectItem value="pending">
+                                            Pending
+                                        </SelectItem>
+                                        <SelectItem value="active">
+                                            Active
+                                        </SelectItem>
+                                        <SelectItem value="inactive">
+                                            Inactive
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 {fieldState.invalid && (
@@ -121,15 +129,14 @@ export default function FormDialog({ open, onOpenChange, data }: FormDialogProps
                             type="button"
                             variant="outline"
                             onClick={() => onOpenChange(false)}
-                            disabled={isLoading}
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
-                            disabled={isLoading || !form.formState.isDirty}
+                            disabled={form.formState.isSubmitting}
                         >
-                            {isLoading ? 'Saving...' : 'Save Changes'}
+                            Save Changes
                         </Button>
                     </DialogFooter>
                 </form>
