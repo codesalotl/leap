@@ -278,230 +278,247 @@ export default function PpaFormDialog({
                             <form
                                 id="ppa-form"
                                 onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-6"
+                                // className="space-y-6"
                             >
-                                {/* NAME FIELD */}
-                                <FormField
-                                    control={form.control}
-                                    name="name"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                PPA Description
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Textarea
-                                                    placeholder={`Enter the name of the ${targetType.toLowerCase()}...`}
-                                                    className="min-h-25 resize-none"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                {/* OFFICE SELECTION */}
-                                <div className="col-span-1 md:col-span-2">
+                                <div className="space-y-6">
+                                    {/* NAME FIELD */}
                                     <FormField
                                         control={form.control}
-                                        name="office_id"
+                                        name="name"
                                         render={({ field }) => (
-                                            <FormItem className="w-full">
-                                                <FormLabel className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
-                                                    Implementing Office
+                                            <FormItem>
+                                                <FormLabel>
+                                                    PPA Description
                                                 </FormLabel>
-
-                                                {isEditing || isAddingChild ? (
-                                                    // LOCKED STATE
-                                                    <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3 shadow-sm ring-1 ring-black/5 ring-inset">
-                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background shadow-sm">
-                                                            <span className="text-lg">
-                                                                🏢
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex min-w-0 flex-col">
-                                                            <span className="truncate text-sm font-semibold">
-                                                                {offices.find(
-                                                                    (o) =>
-                                                                        o.id.toString() ===
-                                                                        field.value,
-                                                                )?.name ||
-                                                                    'Loading...'}
-                                                            </span>
-                                                            <span className="text-[10px] text-muted-foreground uppercase italic">
-                                                                {isEditing
-                                                                    ? 'Locked during edit'
-                                                                    : 'Inherited from parent (Locked)'}
-                                                            </span>
-                                                        </div>
-                                                        <input
-                                                            type="hidden"
-                                                            {...field}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    // SELECTABLE STATE (New Program)
-                                                    <>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            role="combobox"
-                                                            aria-expanded={
-                                                                openOfficeCommand
-                                                            }
-                                                            className={cn(
-                                                                'w-full justify-between px-3 text-left font-normal',
-                                                                !field.value &&
-                                                                    'text-muted-foreground',
-                                                            )}
-                                                            onClick={() =>
-                                                                setOpenOfficeCommand(
-                                                                    true,
-                                                                )
-                                                            }
-                                                        >
-                                                            {field.value ? (
-                                                                <span className="truncate">
-                                                                    {
-                                                                        offices.find(
-                                                                            (
-                                                                                o,
-                                                                            ) =>
-                                                                                o.id.toString() ===
-                                                                                field.value,
-                                                                        )?.name
-                                                                    }
-                                                                </span>
-                                                            ) : (
-                                                                'Select implementing office...'
-                                                            )}
-                                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                        </Button>
-
-                                                        <CommandDialog
-                                                            open={
-                                                                openOfficeCommand
-                                                            }
-                                                            onOpenChange={
-                                                                setOpenOfficeCommand
-                                                            }
-                                                        >
-                                                            <Command>
-                                                                <CommandInput placeholder="Search office name..." />
-                                                                <CommandList>
-                                                                    <CommandEmpty>
-                                                                        No
-                                                                        office
-                                                                        found.
-                                                                    </CommandEmpty>
-                                                                    <CommandGroup heading="Offices">
-                                                                        {offices.map(
-                                                                            (
-                                                                                office,
-                                                                            ) => (
-                                                                                <CommandItem
-                                                                                    key={
-                                                                                        office.id
-                                                                                    }
-                                                                                    value={
-                                                                                        office.name
-                                                                                    }
-                                                                                    onSelect={() => {
-                                                                                        form.setValue(
-                                                                                            'office_id',
-                                                                                            office.id.toString(),
-                                                                                        );
-                                                                                        setOpenOfficeCommand(
-                                                                                            false,
-                                                                                        );
-                                                                                    }}
-                                                                                >
-                                                                                    <div className="flex w-full items-center justify-between">
-                                                                                        <span>
-                                                                                            {
-                                                                                                office.name
-                                                                                            }
-                                                                                        </span>
-                                                                                        {field.value ===
-                                                                                            office.id.toString() && (
-                                                                                            <Check className="ml-2 h-4 w-4 opacity-100" />
-                                                                                        )}
-                                                                                    </div>
-                                                                                </CommandItem>
-                                                                            ),
-                                                                        )}
-                                                                    </CommandGroup>
-                                                                </CommandList>
-                                                            </Command>
-                                                        </CommandDialog>
-                                                    </>
-                                                )}
+                                                <FormControl>
+                                                    <Textarea
+                                                        placeholder={`Enter the name of the ${targetType.toLowerCase()}...`}
+                                                        className="min-h-25 resize-none"
+                                                        {...field}
+                                                    />
+                                                </FormControl>
                                                 <FormMessage />
                                             </FormItem>
                                         )}
                                     />
-                                </div>
 
-                                {/* CODE SUFFIX & ACTIVE STATUS */}
-                                <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
-                                    <div className="md:col-span-2">
+                                    {/* OFFICE SELECTION */}
+                                    <div className="col-span-1 md:col-span-2">
                                         <FormField
                                             control={form.control}
-                                            name="code_suffix"
+                                            name="office_id"
                                             render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel>
-                                                        Suffix (Sequence)
+                                                <FormItem className="w-full">
+                                                    <FormLabel className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                                                        Implementing Office
                                                     </FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            placeholder="e.g. 001"
-                                                            {...field}
-                                                            maxLength={3}
-                                                            autoComplete="off"
-                                                        />
-                                                    </FormControl>
-                                                    <FormDescription>
-                                                        3-digit code for the
-                                                        reference ID.
-                                                    </FormDescription>
+
+                                                    {isEditing ||
+                                                    isAddingChild ? (
+                                                        // LOCKED STATE
+                                                        <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3 shadow-sm ring-1 ring-black/5 ring-inset">
+                                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background shadow-sm">
+                                                                <span className="text-lg">
+                                                                    🏢
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex min-w-0 flex-col">
+                                                                <span className="truncate text-sm font-semibold">
+                                                                    {offices.find(
+                                                                        (o) =>
+                                                                            o.id.toString() ===
+                                                                            field.value,
+                                                                    )?.name ||
+                                                                        'Loading...'}
+                                                                </span>
+                                                                <span className="text-[10px] text-muted-foreground uppercase italic">
+                                                                    {isEditing
+                                                                        ? 'Locked during edit'
+                                                                        : 'Inherited from parent (Locked)'}
+                                                                </span>
+                                                            </div>
+                                                            <input
+                                                                type="hidden"
+                                                                {...field}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        // SELECTABLE STATE (New Program)
+                                                        <>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                role="combobox"
+                                                                aria-expanded={
+                                                                    openOfficeCommand
+                                                                }
+                                                                className={cn(
+                                                                    'w-full justify-between px-3 text-left font-normal',
+                                                                    !field.value &&
+                                                                        'text-muted-foreground',
+                                                                )}
+                                                                onClick={() =>
+                                                                    setOpenOfficeCommand(
+                                                                        true,
+                                                                    )
+                                                                }
+                                                            >
+                                                                {field.value ? (
+                                                                    <span className="truncate">
+                                                                        {
+                                                                            offices.find(
+                                                                                (
+                                                                                    o,
+                                                                                ) =>
+                                                                                    o.id.toString() ===
+                                                                                    field.value,
+                                                                            )
+                                                                                ?.name
+                                                                        }
+                                                                    </span>
+                                                                ) : (
+                                                                    'Select implementing office...'
+                                                                )}
+                                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                            </Button>
+
+                                                            <CommandDialog
+                                                                open={
+                                                                    openOfficeCommand
+                                                                }
+                                                                onOpenChange={
+                                                                    setOpenOfficeCommand
+                                                                }
+                                                                className="flex max-h-125 flex-col"
+                                                            >
+                                                                <Command>
+                                                                    <CommandInput placeholder="Search office name..." />
+                                                                    <CommandList className="max-h-none flex-1">
+                                                                        <CommandEmpty>
+                                                                            No
+                                                                            office
+                                                                            found.
+                                                                        </CommandEmpty>
+                                                                        <CommandGroup heading="Offices">
+                                                                            {offices.map(
+                                                                                (
+                                                                                    office,
+                                                                                ) => (
+                                                                                    <CommandItem
+                                                                                        key={
+                                                                                            office.id
+                                                                                        }
+                                                                                        value={`${office.acronym} ${office.name}`}
+                                                                                        onSelect={() => {
+                                                                                            form.setValue(
+                                                                                                'office_id',
+                                                                                                office.id.toString(),
+                                                                                            );
+                                                                                            setOpenOfficeCommand(
+                                                                                                false,
+                                                                                            );
+                                                                                        }}
+                                                                                    >
+                                                                                        {/* Change 'flex' to 'grid'.
+                                                                                        'grid-cols-[80px_1fr_24px]' creates:
+                                                                                        1. A fixed 80px column for the acronym
+                                                                                        2. A flexible remaining space column for the name
+                                                                                        3. A fixed 24px column for the checkmark
+                                                                                    */}
+                                                                                        <div className="grid w-full grid-cols-[80px_1fr_24px] items-center gap-2">
+                                                                                            <span className="font-medium text-muted-foreground">
+                                                                                                {office.acronym ??
+                                                                                                    '-'}
+                                                                                            </span>
+
+                                                                                            <span className="truncate">
+                                                                                                {
+                                                                                                    office.name
+                                                                                                }
+                                                                                            </span>
+
+                                                                                            <div className="flex justify-end">
+                                                                                                {field.value ===
+                                                                                                    office.id.toString() && (
+                                                                                                    <Check className="h-4 w-4 opacity-100" />
+                                                                                                )}
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </CommandItem>
+                                                                                ),
+                                                                            )}
+                                                                        </CommandGroup>
+                                                                    </CommandList>
+                                                                </Command>
+                                                            </CommandDialog>
+                                                        </>
+                                                    )}
                                                     <FormMessage />
                                                 </FormItem>
                                             )}
                                         />
                                     </div>
 
-                                    <div className="md:col-span-3">
-                                        <FormField
-                                            control={form.control}
-                                            name="is_active"
-                                            render={({ field }) => (
-                                                <FormItem className="flex h-full flex-row items-start space-y-0 space-x-3 rounded-md border p-4 shadow-sm">
-                                                    <FormControl>
-                                                        <Checkbox
-                                                            checked={
-                                                                field.value
-                                                            }
-                                                            onCheckedChange={
-                                                                field.onChange
-                                                            }
-                                                        />
-                                                    </FormControl>
-                                                    <div className="space-y-1 leading-none">
-                                                        <FormLabel className="cursor-pointer">
-                                                            Active Entry
+                                    {/* CODE SUFFIX & ACTIVE STATUS */}
+                                    <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
+                                        <div className="md:col-span-2">
+                                            <FormField
+                                                control={form.control}
+                                                name="code_suffix"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel>
+                                                            Suffix (Sequence)
                                                         </FormLabel>
+                                                        <FormControl>
+                                                            <Input
+                                                                placeholder="e.g. 001"
+                                                                {...field}
+                                                                maxLength={3}
+                                                                autoComplete="off"
+                                                            />
+                                                        </FormControl>
                                                         <FormDescription>
-                                                            Only active PPAs can
-                                                            be selected for
-                                                            annual budget
-                                                            planning.
+                                                            3-digit code for the
+                                                            reference ID.
                                                         </FormDescription>
-                                                    </div>
-                                                </FormItem>
-                                            )}
-                                        />
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
+
+                                        <div className="md:col-span-3">
+                                            <FormField
+                                                control={form.control}
+                                                name="is_active"
+                                                render={({ field }) => (
+                                                    <FormItem className="flex h-full flex-row items-start space-y-0 space-x-3 rounded-md border p-4 shadow-sm">
+                                                        <FormControl>
+                                                            <Checkbox
+                                                                checked={
+                                                                    field.value
+                                                                }
+                                                                onCheckedChange={
+                                                                    field.onChange
+                                                                }
+                                                            />
+                                                        </FormControl>
+                                                        <div className="space-y-1 leading-none">
+                                                            <FormLabel className="cursor-pointer">
+                                                                Active Entry
+                                                            </FormLabel>
+                                                            <FormDescription>
+                                                                Only active PPAs
+                                                                can be selected
+                                                                for annual
+                                                                budget planning.
+                                                            </FormDescription>
+                                                        </div>
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
