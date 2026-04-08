@@ -34,7 +34,7 @@ const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 22,
+        size: 48,
         cell: ({ row, table }) => {
             return (
                 <div>
