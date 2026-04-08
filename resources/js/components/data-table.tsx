@@ -136,7 +136,16 @@ export function DataTable<TData>({
                 ref={tableContainerRef}
                 className="h-[calc(100vh-8rem)] rounded-md border"
             >
-                <Table style={{ tableLayout: 'fixed', width: '100%' }}>
+                {/* <Table style={{ tableLayout: 'fixed', width: '100%' }}> */}
+                <Table
+                    style={{
+                        tableLayout: 'fixed',
+                        // width: `${table.getCenterTotalSize()}px`,
+                        minWidth: `${table.getCenterTotalSize()}px`,
+                        width: '100%',
+                    }}
+                    // className="w-full"
+                >
                     <TableHeader className="sticky top-0 z-20 bg-background">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow
@@ -151,8 +160,10 @@ export function DataTable<TData>({
                                         className="shadow-[inset_0_-1px_0_0_var(--muted)]"
                                         style={{
                                             width: `${header.getSize()}px`,
+                                            // minWidth: `${header.getSize()}px`,
                                             ...getCommonPinningStyles(
                                                 header.column,
+                                                table,
                                             ),
                                         }}
                                     >
@@ -220,8 +231,10 @@ export function DataTable<TData>({
                                                     }
                                                     style={{
                                                         width: `${cell.column.getSize()}px`,
+                                                        // minWidth: `${cell.column.getSize()}px`,
                                                         ...getCommonPinningStyles(
                                                             cell.column,
+                                                            table,
                                                         ),
                                                     }}
                                                 >

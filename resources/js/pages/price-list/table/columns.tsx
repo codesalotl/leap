@@ -46,7 +46,7 @@ const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 84,
+        size: 82,
         cell: ({ row, table }) => (
             <div className="flex items-center gap-1">
                 <Button

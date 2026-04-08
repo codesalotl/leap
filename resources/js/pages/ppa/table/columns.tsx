@@ -9,14 +9,14 @@ const columnHelper = createColumnHelper<Ppa>();
 const columns = [
     columnHelper.accessor('full_code', {
         header: 'AIP Reference Code',
-        size: 100,
+        size: 200,
         cell: (value) => (
             <code className="font-mono text-xs">{`${value.getValue<string>()}`}</code>
         ),
     }),
     columnHelper.accessor('name', {
         header: 'Program/Project/Activity Description',
-        size: 300,
+        size: 400,
         cell: (info) => {
             const ppa = info.row.original;
             return (
@@ -64,7 +64,7 @@ const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 62,
+        size: 120,
         cell: ({ row, table }) => (
             <div className="flex items-center gap-1">
                 <Button

@@ -95,7 +95,7 @@ const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 60,
+        size: 120,
         cell: ({ row, table }) => {
             const initialStatus = row.original.status;
 
@@ -167,6 +167,7 @@ const columns = [
 
                     <Button
                         title="Generate APP"
+                        size="icon"
                         onClick={() => {
                             // console.log(row.original);
                             // router.reload({
