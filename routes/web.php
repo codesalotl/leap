@@ -27,6 +27,7 @@ use App\Http\Controllers\OfficeTypeController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TestDataTableController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\PpmpSummaryController;
 
 Route::get(
     '/',
@@ -117,6 +118,13 @@ Route::delete('ppmp-categories/{ppmpCategory}', [
     PpmpCategoryController::class,
     'destroy',
 ])->name('ppmp-categories.destroy');
+
+// ppmp-summary
+Route::prefix('aip/{fiscalYear}')->group(function () {
+    Route::get('ppmp-summaries', [PpmpSummaryController::class, 'index'])->name(
+        'ppmp-summaries.index',
+    );
+});
 
 // chart-of-account
 Route::get('chart-of-accounts', [

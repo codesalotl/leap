@@ -38,4 +38,10 @@ class PpmpPriceList extends Model
     {
         return $this->belongsTo(FundingSource::class);
     }
+
+    public function ppmps()
+    {
+        // Points to the ppmps table where the price_list_id is stored
+        return $this->hasMany(Ppmp::class, 'ppmp_price_list_id');
+    }
 }
