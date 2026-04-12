@@ -1,18 +1,11 @@
-import { createColumnHelper, RowData } from '@tanstack/react-table';
-import { PriceList } from '@/pages/types/types';
-import { Button } from '@/components/ui/button';
+import { createColumnHelper } from '@tanstack/react-table';
 import { Pencil, Trash } from 'lucide-react';
-
-declare module '@tanstack/table-core' {
-    interface TableMeta<TData extends RowData> {
-        onEdit?: (record: TData) => void;
-        onDelete?: (record: TData) => void;
-    }
-}
+import { Button } from '@/components/ui/button';
+import type { PriceList } from '@/types/global';
 
 const columnHelper = createColumnHelper<PriceList>();
 
-export const columns = [
+const columns = [
     columnHelper.accessor('item_number', {
         header: 'Item Number',
         size: 100,
@@ -53,9 +46,9 @@ export const columns = [
     }),
     columnHelper.display({
         id: 'action',
-        size: 84,
+        size: 82,
         cell: ({ row, table }) => (
-            <div className="flex gap-0.5">
+            <div className="flex items-center gap-1">
                 <Button
                     size="icon"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
@@ -74,3 +67,5 @@ export const columns = [
         ),
     }),
 ];
+
+export default columns;

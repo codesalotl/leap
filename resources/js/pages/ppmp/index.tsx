@@ -1,8 +1,5 @@
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
-
 import { Button } from '@/components/ui/button';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,19 +8,40 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Plus, FileDown, Sheet, FileText, Printer } from 'lucide-react';
-
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+    SelectLabel,
+} from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import DataTable from '@/pages/ppmp/ppmp-table/data-table';
-import PpmpFormDialog from '@/pages/ppmp/ppmp-form-dialog';
+import PpmpFormDialog from '@/pages/ppmp/form-dialog';
+import { DeleteDialog } from '@/components/delete-dialog';
+import { router } from '@inertiajs/react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
 
 import { type BreadcrumbItem } from '@/types';
-import {
+import type {
     FiscalYear,
     Ppmp,
     ChartOfAccount,
     AipEntry,
     PpmpCategory,
-} from '@/pages/types/types';
+    PpaFundingSource,
+} from '@/types/global';
 import {
     exportToExcel,
     exportToPDF,
@@ -36,6 +54,9 @@ interface PpmpPageProps {
     ppmpItems: Ppmp[];
     chartOfAccounts: ChartOfAccount[];
     ppmpCategories: PpmpCategory[];
+    fundingSources: PpaFundingSource[];
+    initialChoice: 'MOOE' | 'CO';
+    initialFund: number;
 }
 
 export default function PpmpPage({
@@ -44,9 +65,28 @@ export default function PpmpPage({
     ppmpItems,
     chartOfAccounts,
     ppmpCategories,
+    fundingSources,
+    initialChoice,
+    initialFund,
 }: PpmpPageProps) {
-    console.log(ppmpItems);
+    console.log(fundingSources);
+
     const [open, setOpen] = useState(false);
+    const [openAlert, setOpenAlert] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [selectedSource, setSelectedSource] = useState<Ppmp | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [selectedFundingSource, setSelectedFundingSource] = useState(
+        Number(initialFund) || 0,
+    );
+    const [selectedExpenseClass, setSelectedExpenseClass] = useState<string>(
+        initialChoice || 'ALL',
+    );
+
+    // console.log(aipEntry);
+    // console.log(ppmpItems);
+    // console.log(chartOfAccounts);
+    console.log(initialChoice);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
@@ -57,28 +97,176 @@ export default function PpmpPage({
         { title: `PPMP Management`, href: `#` },
     ];
 
+    function handleFundingSourceSelect(value: string) {
+        const id = Number(value);
+        setSelectedFundingSource(id);
+    }
+
+    const filteredPpmpItems = ppmpItems.filter((ppmpItem) => {
+        // 1. Check Funding Source (if 0, it passes everything)
+        const matchesFunding =
+            selectedFundingSource === 0 ||
+            ppmpItem.funding_source.id === selectedFundingSource;
+
+        // 2. Check Expense Class (if 'ALL', it passes everything)
+        const matchesExpenseClass =
+            selectedExpenseClass === 'ALL' ||
+            ppmpItem.ppmp_price_list?.chart_of_account?.expense_class ===
+                selectedExpenseClass;
+
+        // Item must satisfy both conditions
+        return matchesFunding && matchesExpenseClass;
+    });
+
+    const filteredChartOfAccounts =
+        selectedExpenseClass === 'ALL'
+            ? chartOfAccounts
+            : chartOfAccounts.filter(
+                  (acc) => acc.expense_class === selectedExpenseClass,
+              );
+
+    function handleDeleteDialogOpen(source: Ppmp) {
+        setSelectedSource(source);
+        setIsDeleteDialogOpen(true);
+    }
+
+    function handleDelete() {
+        router.delete(`/ppmp/${selectedSource?.id}`, {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => setIsLoading(true),
+            onSuccess: () => {
+                setIsDeleteDialogOpen(false);
+                setSelectedSource(null);
+            },
+            onFinish: () => setIsLoading(false),
+        });
+    }
+
+    const handleExpenseClassChange = (value: string) => {
+        setSelectedExpenseClass(value);
+
+        router.get(
+            window.location.pathname,
+            {
+                choice: value,
+                fund: selectedFundingSource,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
+    };
+
+    const handleFundingSourceChange = (value: string) => {
+        const id = Number(value);
+        setSelectedFundingSource(id);
+
+        router.get(
+            window.location.pathname,
+            {
+                choice: selectedExpenseClass,
+                fund: id,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="w-full flex-1 px-4 py-4">
-                <div className="mb-4 flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">PPMP Management</h1>
-
+                {/* <PpmpTablePage
+                    data={filteredPpmpItems}
+                    // onEdit={handleEdit}
+                    onDelete={handleDeleteDialogOpen}
+                    // text={<span>Showing all MOOE with All Funding Source</span>}
+                > */}
+                <DataTable
+                    columns={columns}
+                    data={filteredPpmpItems}
+                    withSearch={true}
+                    // onEdit={handleEdit}
+                    onDelete={handleDeleteDialogOpen}
+                    withFooter={true}
+                >
                     <div className="flex gap-2">
+                        <Select
+                            onValueChange={handleExpenseClassChange}
+                            value={selectedExpenseClass}
+                        >
+                            <SelectTrigger className="w-full max-w-40">
+                                <SelectValue placeholder="Expense Class" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectLabel>Expense Class</SelectLabel>
+                                    <SelectItem value="ALL">
+                                        All Classes
+                                    </SelectItem>
+                                    <SelectItem value="MOOE">
+                                        {/* Maintenance and Other Operating Expenses */}
+                                        (MOOE)
+                                    </SelectItem>
+                                    <SelectItem value="CO">
+                                        {/* Capital Outlay  */}
+                                        (CO)
+                                    </SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
+                        <Select
+                            onValueChange={handleFundingSourceChange}
+                            defaultValue={String(selectedFundingSource)}
+                        >
+                            <SelectTrigger className="w-full max-w-48">
+                                <SelectValue placeholder="Select funding source" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectLabel>Funding Sources</SelectLabel>
+
+                                    <SelectItem key="0" value="0">
+                                        Show All
+                                    </SelectItem>
+
+                                    {fundingSources.map((fs) => (
+                                        <SelectItem
+                                            key={fs.funding_source?.id}
+                                            value={String(
+                                                fs.funding_source?.id,
+                                            )}
+                                        >
+                                            {fs.funding_source?.title}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline">
                                     <FileDown /> Export
                                 </Button>
                             </DropdownMenuTrigger>
+
                             <DropdownMenuContent>
                                 <DropdownMenuGroup>
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToPrint({
-                                                ppmpItems,
-                                                ppmpCategories,
-                                                chartOfAccounts,
-                                            })
+                                            selectedFundingSource
+                                                ? exportToPrint({
+                                                      filteredPpmpItems,
+                                                      ppmpCategories,
+                                                      chartOfAccounts,
+                                                  })
+                                                : setOpenAlert(true)
                                         }
                                     >
                                         <Printer /> Print
@@ -86,11 +274,13 @@ export default function PpmpPage({
 
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToPDF({
-                                                ppmpItems,
-                                                ppmpCategories,
-                                                chartOfAccounts,
-                                            })
+                                            selectedFundingSource
+                                                ? exportToPDF({
+                                                      filteredPpmpItems,
+                                                      ppmpCategories,
+                                                      chartOfAccounts,
+                                                  })
+                                                : setOpenAlert(true)
                                         }
                                     >
                                         <FileText /> To PDF
@@ -98,11 +288,13 @@ export default function PpmpPage({
 
                                     <DropdownMenuItem
                                         onClick={() =>
-                                            exportToExcel({
-                                                ppmpItems,
-                                                ppmpCategories,
-                                                chartOfAccounts,
-                                            })
+                                            selectedFundingSource
+                                                ? exportToExcel({
+                                                      filteredPpmpItems,
+                                                      ppmpCategories,
+                                                      chartOfAccounts,
+                                                  })
+                                                : setOpenAlert(true)
                                         }
                                     >
                                         <Sheet /> To Excel
@@ -115,47 +307,58 @@ export default function PpmpPage({
                             <Plus /> Add Item
                         </Button>
                     </div>
-                </div>
-
-                <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
-                    <DataTable
-                        ppmpItems={ppmpItems}
-                        onDelete={(ppmp) => {
-                            if (
-                                confirm(
-                                    `Are you sure you want to delete "${ppmp.ppmp_price_list?.description}"? This action cannot be undone.`,
-                                )
-                            ) {
-                                router.delete(`/ppmp/${ppmp.id}`, {
-                                    onSuccess: () => {
-                                        console.log(
-                                            'PPMP item deleted successfully',
-                                        );
-                                    },
-                                    onError: (errors) => {
-                                        console.error(
-                                            'Error deleting PPMP item:',
-                                            errors,
-                                        );
-                                        alert('Failed to delete PPMP item');
-                                    },
-                                    preserveState: false,
-                                });
-                            }
-                        }}
-                    />
-                    <ScrollBar orientation="horizontal" />
-                </ScrollArea>
+                </DataTable>
             </div>
 
             <PpmpFormDialog
                 open={open}
                 onOpenChange={setOpen}
-                chartOfAccounts={chartOfAccounts}
+                chartOfAccounts={filteredChartOfAccounts}
                 ppmpCategories={ppmpCategories}
-                ppmpPriceList={[]}
                 selectedEntry={aipEntry}
-                ppmpItems={ppmpItems}
+                fundingSources={fundingSources}
+                selectedExpenseClass={selectedExpenseClass}
+            />
+
+            <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Funding Source Required
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You must select a valid funding source before you
+                            can export this document. Please choose one from the
+                            list and try again.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction onClick={() => setOpenAlert(false)}>
+                            Got it
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <DeleteDialog
+                isOpen={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title="Remove from AIP Summary?"
+                description={
+                    <>
+                        Are you sure you want to remove{' '}
+                        <span className="font-bold text-foreground">
+                            "{selectedSource?.ppmp_price_list?.description}"
+                        </span>
+                        ?
+                    </>
+                }
+                onConfirm={handleDelete}
+                onCancel={() => {
+                    setIsDeleteDialogOpen(false);
+                    setSelectedSource(null);
+                }}
+                isLoading={isLoading}
             />
         </AppLayout>
     );

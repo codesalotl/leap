@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePpaRequest;
+use App\Http\Requests\UpdatePpaRequest;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
+
 use App\Models\Ppa;
 use App\Models\Office;
 use App\Models\Sector;
-use App\Http\Requests\StorePpaRequest;
-use App\Http\Requests\UpdatePpaRequest;
 use App\Models\LguLevel;
 use App\Models\OfficeType;
-use Inertia\Inertia;
 
 class PpaController extends Controller
 {
@@ -18,9 +20,24 @@ class PpaController extends Controller
      */
     public function index()
     {
-        // Load children and their parents recursively
-        $ppaTree = Ppa::whereNull('parent_id')
-            ->with(['office', 'children', 'parent'])
+        $userOfficeId = Auth::user()->office_id;
+
+        // dd($userOfficeId);
+
+        $ppaTree = Ppa::where('office_id', $userOfficeId)
+            ->whereNull('parent_id')
+            ->with([
+                'office',
+
+                'children',
+                'children.office',
+
+                'children.children',
+                'children.children.office',
+
+                'children.children.children',
+                'children.children.children.office',
+            ])
             ->get();
 
         $offices = Office::with(['sector', 'lguLevel', 'officeType'])->get();
@@ -47,8 +64,6 @@ class PpaController extends Controller
         $validated = $request->validated();
 
         Ppa::create($validated);
-
-        return redirect()->back()->with('success', 'Entry created.');
     }
 
     /**
@@ -72,15 +87,9 @@ class PpaController extends Controller
      */
     public function update(UpdatePpaRequest $request, Ppa $ppa)
     {
-        $validated = $request->validate([
-            'title' => 'required|string',
-            'code_suffix' => 'required|string|max:3',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $ppa->update($validated);
-
-        return redirect()->back()->with('success', 'Entry updated.');
     }
 
     /**

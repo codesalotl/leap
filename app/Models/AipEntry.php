@@ -37,52 +37,66 @@ class AipEntry extends Model
 
     public function ppa(): BelongsTo
     {
-        return $this->belongsTo(Ppa::class);
+        return $this->belongsTo(Ppa::class, 'ppa_id');
     }
 
-    public function fundingSource()
+    public function ppaFundingSources()
     {
-        return $this->belongsToMany(
-            FundingSource::class,
-            'ppa_funding_sources',
-            'ppa_id',
-            'funding_source_id',
-        )->withTimestamps();
+        return $this->hasMany(PpaFundingSource::class, 'aip_entry_id');
     }
 
-    public function itemizedCosts()
-    {
-        return $this->hasMany(PpaItemizedCost::class, 'aip_entry_id');
-    }
+    // public function fundingSource()
+    // {
+    //     return $this->belongsToMany(
+    //         FundingSource::class,
+    //         'ppa_funding_sources',
+    //         'ppa_id',
+    //         'funding_source_id',
+    //     )
+    //         ->withPivot(
+    //             'ps_amount',
+    //             'mooe_amount',
+    //             'fe_amount',
+    //             'co_amount',
+    //             'ccet_adaptation',
+    //             'ccet_mitigation',
+    //         )
+    //         ->withTimestamps();
+    // }
 
-    public function calculateTotals()
-    {
-        // Important: Use the relationship to get the breakdown
-        $costs = $this->itemizedCosts()
-            ->join(
-                'chart_of_accounts',
-                'ppa_itemized_costs.account_code',
-                '=',
-                'chart_of_accounts.account_code',
-            )
-            ->selectRaw(
-                'expense_class, SUM(ppa_itemized_costs.amount) as total',
-            )
-            ->groupBy('expense_class')
-            ->pluck('total', 'expense_class');
+    // public function itemizedCosts()
+    // {
+    //     return $this->hasMany(PpaItemizedCost::class, 'aip_entry_id');
+    // }
 
-        // We use floatval to ensure it's a number
-        $this->ps_amount = $costs['PS'] ?? 0;
-        $this->mooe_amount = $costs['MOOE'] ?? 0;
-        $this->fe_amount = $costs['FE'] ?? 0;
-        $this->co_amount = $costs['CO'] ?? 0;
+    // public function calculateTotals()
+    // {
+    //     // Important: Use the relationship to get the breakdown
+    //     $costs = $this->itemizedCosts()
+    //         ->join(
+    //             'chart_of_accounts',
+    //             'ppa_itemized_costs.account_code',
+    //             '=',
+    //             'chart_of_accounts.account_code',
+    //         )
+    //         ->selectRaw(
+    //             'expense_class, SUM(ppa_itemized_costs.amount) as total',
+    //         )
+    //         ->groupBy('expense_class')
+    //         ->pluck('total', 'expense_class');
 
-        $this->total_amount =
-            $this->ps_amount +
-            $this->mooe_amount +
-            $this->fe_amount +
-            $this->co_amount;
+    //     // We use floatval to ensure it's a number
+    //     $this->ps_amount = $costs['PS'] ?? 0;
+    //     $this->mooe_amount = $costs['MOOE'] ?? 0;
+    //     $this->fe_amount = $costs['FE'] ?? 0;
+    //     $this->co_amount = $costs['CO'] ?? 0;
 
-        $this->save();
-    }
+    //     $this->total_amount =
+    //         $this->ps_amount +
+    //         $this->mooe_amount +
+    //         $this->fe_amount +
+    //         $this->co_amount;
+
+    //     $this->save();
+    // }
 }

@@ -8,7 +8,7 @@ import {
     DialogTitle,
     DialogClose,
 } from '@/components/ui/dialog';
-import { Office } from '@/pages/types/types';
+import type { Office } from '@/types/global';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -16,9 +16,9 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
-import { Sector, LguLevel, OfficeType } from '@/pages/types/types';
+import type { Sector, LguLevel, OfficeType } from '@/types/global';
 import { router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Select,
     SelectContent,
@@ -43,7 +43,10 @@ const formSchema = z.object({
     office_type_id: z.string().min(1, 'Office Type is required'),
     code: z.string().min(1).max(3, 'Suffix must be 1-3 characters'),
     name: z.string().min(1, 'Office name is required').max(100),
-    acronym: z.string().max(20, 'Acronym must be 20 characters or less').optional(),
+    acronym: z
+        .string()
+        .max(20, 'Acronym must be 20 characters or less')
+        .optional(),
     is_lee: z.boolean(),
 });
 
@@ -77,14 +80,18 @@ export default function FormDialog({
     useEffect(() => {
         if (open) {
             if (initialData) {
+                const rawCode = initialData.code
+                    ? String(parseInt(initialData.code, 10))
+                    : '';
+
                 form.reset({
                     sector_id: String(initialData.sector_id || ''),
                     lgu_level_id: String(initialData.lgu_level_id || ''),
                     office_type_id: String(initialData.office_type_id || ''),
-                    code: initialData.code || '',
+                    code: rawCode,
                     name: initialData.name || '',
                     acronym: initialData.acronym || '',
-                    is_lee: initialData.is_lee || false,
+                    is_lee: Boolean(initialData.is_lee || false),
                 });
             } else {
                 form.reset({
@@ -100,92 +107,33 @@ export default function FormDialog({
         }
     }, [initialData, open, form]);
 
-    // Live Preview Logic
-    const watchedValues = form.watch();
-    const generatedCode = useMemo(() => {
-        const sector =
-            sectors.find((s) => String(s.id) === watchedValues.sector_id)
-                ?.code ?? '0000';
-        const lgu =
-            lguLevels.find((l) => String(l.id) === watchedValues.lgu_level_id)
-                ?.code ?? '0';
-        const type =
-            officeTypes.find(
-                (t) => String(t.id) === watchedValues.office_type_id,
-            )?.code ?? '00';
-        const suffix = watchedValues.code.padStart(3, '0');
+    function onSubmit(data: FormValues) {
+        const paddedCode = data.code.padStart(3, '0');
+        const payload = { ...data, code: paddedCode };
 
-        return `${sector}-${lgu}-${type}-${suffix}`;
-    }, [watchedValues, sectors, lguLevels, officeTypes]);
-
-    function onSubmit(values: FormValues) {
-        isEditing
-            ? router.visit(`/offices/${initialData.id}`, {
-                  method: 'patch',
-                  data: values,
-                  onStart: () => setIsLoading(true),
-                  onFinish: () => setIsLoading(false),
-                  onSuccess: () => onOpenChange(false),
-                  onError: (errors) => {
-                      console.error('Backend errors:', errors);
-                      
-                      // Handle validation errors from backend
-                      Object.keys(errors).forEach((field) => {
-                          const errorMessage = Array.isArray(errors[field]) 
-                              ? errors[field][0] 
-                              : errors[field];
-                          
-                          console.log(`Setting error for field: ${field}, message: ${errorMessage}`);
-                          
-                          // Set the error directly without forcing validation
-                          form.setError(field as any, {
-                              type: 'manual',
-                              message: errorMessage,
-                          });
-                      });
-                      
-                      // Log the form state after setting all errors
-                      setTimeout(() => {
-                          console.log('All form errors:', form.formState.errors);
-                      }, 100);
-                  },
-              })
-            : router.visit('/offices', {
-                  method: 'post',
-                  data: values,
-                  onStart: () => setIsLoading(true),
-                  onFinish: () => setIsLoading(false),
-                  onSuccess: () => onOpenChange(false),
-                  onError: (errors) => {
-                      console.error('Backend errors:', errors);
-                      
-                      // Handle validation errors from backend
-                      Object.keys(errors).forEach((field) => {
-                          const errorMessage = Array.isArray(errors[field]) 
-                              ? errors[field][0] 
-                              : errors[field];
-                          
-                          console.log(`Setting error for field: ${field}, message: ${errorMessage}`);
-                          
-                          // Set the error directly without forcing validation
-                          form.setError(field as any, {
-                              type: 'manual',
-                              message: errorMessage,
-                          });
-                      });
-                      
-                      // Log the form state after setting all errors
-                      setTimeout(() => {
-                          console.log('All form errors:', form.formState.errors);
-                      }, 100);
-                  },
-              });
+        if (isEditing) {
+            router.patch(`/offices/${initialData.id}`, payload, {
+                preserveState: true,
+                preserveScroll: true,
+                onStart: () => setIsLoading(true),
+                onFinish: () => setIsLoading(false),
+                onSuccess: () => onOpenChange(false),
+            });
+        } else {
+            router.post('/offices', data, {
+                preserveState: true,
+                preserveScroll: true,
+                onStart: () => setIsLoading(true),
+                onFinish: () => setIsLoading(false),
+                onSuccess: () => onOpenChange(false),
+            });
+        }
     }
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
-                className="flex-col gap-0 overflow-hidden"
+                className="flex max-h-[90vh] flex-col gap-0 overflow-hidden"
                 onPointerDownOutside={(e) => isLoading && e.preventDefault()}
                 onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
             >
@@ -205,14 +153,49 @@ export default function FormDialog({
                         <form
                             id="office-form"
                             onSubmit={form.handleSubmit(onSubmit)}
-                            className="space-y-4"
+                            className="space-y-6"
                         >
                             <div className="rounded-lg bg-muted p-3 text-center">
                                 <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Generated Account Code
                                 </span>
+
                                 <div className="font-mono text-xl font-bold text-primary">
-                                    {generatedCode}
+                                    {(() => {
+                                        const sectorId =
+                                            form.watch('sector_id');
+                                        const lguLevelId =
+                                            form.watch('lgu_level_id');
+                                        const officeTypeId =
+                                            form.watch('office_type_id');
+                                        const suffixRaw = form.watch('code');
+
+                                        const selectedSector = sectors.find(
+                                            (s) => String(s.id) === sectorId,
+                                        );
+                                        const selectedLguLevel = lguLevels.find(
+                                            (l) => String(l.id) === lguLevelId,
+                                        );
+                                        const selectedOfficeType =
+                                            officeTypes.find(
+                                                (ot) =>
+                                                    String(ot.id) ===
+                                                    officeTypeId,
+                                            );
+
+                                        const sectorCode =
+                                            selectedSector?.code || '0000';
+                                        const lguLevelCode =
+                                            selectedLguLevel?.code || '0';
+                                        const officeTypeCode =
+                                            selectedOfficeType?.code || '00';
+                                        // Pad suffix to 3 digits for preview
+                                        const suffixCode = suffixRaw?.trim()
+                                            ? suffixRaw.padStart(3, '0')
+                                            : '000';
+
+                                        return `${sectorCode}-${lguLevelCode}-${officeTypeCode}-${suffixCode}`;
+                                    })()}
                                 </div>
                             </div>
 
@@ -241,7 +224,7 @@ export default function FormDialog({
                                                         value={String(item.id)}
                                                     >
                                                         {item.code} -{' '}
-                                                        {item.sector}
+                                                        {item.name}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
@@ -255,7 +238,7 @@ export default function FormDialog({
                                 )}
                             />
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-2 gap-6">
                                 <Controller
                                     name="lgu_level_id"
                                     control={form.control}
@@ -284,7 +267,7 @@ export default function FormDialog({
                                                                 item.id,
                                                             )}
                                                         >
-                                                            {item.level}
+                                                            {item.name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -327,7 +310,7 @@ export default function FormDialog({
                                                             )}
                                                         >
                                                             {item.code} -{' '}
-                                                            {item.type}
+                                                            {item.name}
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
@@ -342,7 +325,7 @@ export default function FormDialog({
                                 />
                             </div>
 
-                            <div className="grid grid-cols-4 gap-4">
+                            <div className="grid grid-cols-4 gap-6">
                                 <div className="col-span-3">
                                     <Controller
                                         name="name"
@@ -379,6 +362,7 @@ export default function FormDialog({
                                         )}
                                     />
                                 </div>
+
                                 <div className="col-span-1">
                                     <Controller
                                         name="code"
@@ -403,6 +387,21 @@ export default function FormDialog({
                                                     }
                                                     placeholder="001"
                                                     autoComplete="off"
+                                                    onChange={(e) => {
+                                                        // Allow only digits, max 3 chars
+                                                        const raw =
+                                                            e.target.value;
+                                                        const digits =
+                                                            raw.replace(
+                                                                /\D/g,
+                                                                '',
+                                                            );
+                                                        const truncated =
+                                                            digits.slice(0, 3);
+                                                        field.onChange(
+                                                            truncated,
+                                                        );
+                                                    }}
                                                 />
                                                 {fieldState.invalid && (
                                                     <FieldError
@@ -421,9 +420,7 @@ export default function FormDialog({
                                 name="acronym"
                                 control={form.control}
                                 render={({ field, fieldState }) => (
-                                    <Field
-                                        data-invalid={fieldState.invalid}
-                                    >
+                                    <Field data-invalid={fieldState.invalid}>
                                         <FieldLabel htmlFor="office-form-acronym">
                                             Acronym
                                         </FieldLabel>
@@ -483,7 +480,9 @@ export default function FormDialog({
 
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button variant="outline" disabled={isLoading}>Cancel</Button>
+                        <Button variant="outline" disabled={isLoading}>
+                            Cancel
+                        </Button>
                     </DialogClose>
 
                     <Button

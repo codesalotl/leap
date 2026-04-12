@@ -22,23 +22,21 @@ class UpdateAipEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'ppa_id' => 'required|integer',
-            'aipRefCode' => 'required|string',
-            'ppaDescription' => 'required|string',
-            'implementingOfficeDepartmentLocation' => 'required|string',
-            'fundingSource' => 'required|array|min:1',
-            'fundingSource.*' => 'integer|exists:funding_sources,id',
-            'scheduleOfImplementation.startingDate' => 'required|date',
-            'scheduleOfImplementation.completionDate' => 'required|date',
-            'expectedOutputs' => 'required|string',
-            'amount.ps' => 'required|numeric',
-            'amount.mooe' => 'required|numeric',
-            'amount.fe' => 'required|numeric',
-            'amount.co' => 'required|numeric',
-            'amount.total' => 'nullable|string',
-            'amountOfCcExpenditure.ccAdaptation' => 'required|numeric',
-            'amountOfCcExpenditure.ccMitigation' => 'required|numeric',
-            'ccTypologyCode' => 'required|string',
+            'office_id' => 'required|exists:offices,id',
+            'expected_output' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'ppa_funding_sources' => 'nullable|array',
+            'ppa_funding_sources.*.funding_source_id' =>
+                'required|exists:funding_sources,id',
+            // Validate amounts are numeric even if sent as strings
+            'ppa_funding_sources.*.ps_amount' => 'required|numeric',
+            'ppa_funding_sources.*.mooe_amount' => 'required|numeric',
+            'ppa_funding_sources.*.fe_amount' => 'required|numeric',
+            'ppa_funding_sources.*.co_amount' => 'required|numeric',
+            'ppa_funding_sources.*.ccet_adaptation' => 'nullable|numeric',
+            'ppa_funding_sources.*.ccet_mitigation' => 'nullable|numeric',
+            'ppa_funding_sources.*.cc_typology_code' => 'nullable|string',
         ];
     }
 }

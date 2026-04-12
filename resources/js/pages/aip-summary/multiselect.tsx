@@ -17,7 +17,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
-import { FundingSource } from '@/pages/types/types';
+import type { FundingSource } from '@/types/global';
 
 interface MultiSelectProps {
     options: FundingSource[];
@@ -52,6 +52,7 @@ export function MultiSelect({
         <>
             <div className="flex flex-col gap-2">
                 <Button
+                    type="button"
                     variant="outline"
                     role="combobox"
                     className="h-auto w-full justify-between py-2"

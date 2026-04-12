@@ -11,7 +11,7 @@ class UpdateChartOfAccountRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,18 @@ class UpdateChartOfAccountRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'account_number' =>
+                'required|string|max:255|unique:chart_of_accounts,account_number,' .
+                $this->route('chartOfAccount')->id,
+            'account_title' => 'required|string|max:255',
+            'account_type' =>
+                'required|in:ASSET,LIABILITY,EQUITY,REVENUE,EXPENSE',
+            'expense_class' => 'nullable|in:PS,MOOE,FE,CO',
+            'account_series' => 'nullable|string|max:50',
+            'is_postable' => 'required|boolean',
+            'is_active' => 'required|boolean',
+            'normal_balance' => 'required|in:DEBIT,CREDIT',
+            'description' => 'nullable|string',
         ];
     }
 }

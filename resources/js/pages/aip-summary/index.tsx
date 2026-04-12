@@ -1,42 +1,36 @@
-import { useState, useMemo, useCallback } from 'react';
-
-import {
-    Library,
-    FileDown,
-    FileSpreadsheet,
-    FileText,
-    Search,
-} from 'lucide-react';
-
+import { useState, useCallback } from 'react';
+import { Library, FileDown, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
 import AppLayout from '@/layouts/app-layout';
-import DataTable from '@/pages/aip-summary/table/data-table';
 import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
-import DeleteDialog from '@/pages/aip-summary/delete-dialog';
+import { DeleteDialog } from '@/components/delete-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
-import { useAipColumns } from '@/pages/aip-summary/table/columns';
-// import { exportToPrint } from '@/pages/aip-summary/utils/export-utils';
-
 import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
-
-import { FiscalYear, Ppa, FundingSource } from '@/pages/types/types';
+import type {
+    FiscalYear,
+    Ppa,
+    FundingSource,
+    Office,
+    FlattenedPpa,
+} from '@/types/global';
 import { type BreadcrumbItem } from '@/types';
+import { router } from '@inertiajs/react';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
+import ExportSummaryToPdfDialog from '@/pages/aip-summary/export-summary-to-pdf-dialog';
 
 interface AipSummaryTableProp {
     fiscalYear: FiscalYear;
     aipEntries: Ppa[];
-    masterPpas: Ppa[];
     fundingSources: FundingSource[];
+    offices: Office[];
+    masterPpas: Ppa[];
 }
 
 const existingPpaIds = (aipEntries: Ppa[]) => {
@@ -81,49 +75,34 @@ const findPpaInTree = (ppas: Ppa[], targetId: number) => {
     return null;
 };
 
-// const findEntryInTree = (nodes: Ppa[], targetId: number) => {
-//     for (const node of nodes) {
-//         if (node.id === targetId) return node;
-
-//         if (node.children && node.children.length > 0) {
-//             const found = findEntryInTree(node.children, targetId);
-//             if (found) return found;
-//         }
-//     }
-
-//     return null;
-// };
-
 export default function AipSummaryTable({
     fiscalYear,
     aipEntries,
-    masterPpas,
     fundingSources,
+    offices,
+    masterPpas,
 }: AipSummaryTableProp) {
     console.log(aipEntries);
-    // console.log(fundingSources);
 
-    const [searchValue, setSearchValue] = useState('');
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState<Ppa | null>(null);
+    const [isExportOpen, setIsExportOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [selectorState, setSelectorState] = useState({
         isOpen: false,
         data: [] as Ppa[],
         title: '',
         description: '',
     });
-    const [isEditOpen, setIsEditOpen] = useState(false);
-    const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-    const [selectedEntryId, setSelectedEntryId] = useState<number | null>(null);
-    const [isExportOpen, setIsExportOpen] = useState(false);
+    const [isSummaryExportOpen, setIsSummaryExportOpen] = useState(false);
+
+    console.log(selectedEntry);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
         { title: `AIP Summary FY ${fiscalYear.year}`, href: '#' },
     ];
-
-    const selectedEntry = useMemo(() => {
-        if (!selectedEntryId) return null;
-        return findPpaInTree(aipEntries, selectedEntryId);
-    }, [aipEntries, selectedEntryId]);
 
     const handleImportLibrary = () => {
         setSelectorState({
@@ -131,123 +110,205 @@ export default function AipSummaryTable({
             data: masterPpas,
             title: 'Import from Library',
             description:
-                'Select Programs, Projects, and Activities to import. Items already in the AIP are disabled.',
+                'Select Programs, Projects, and Activities to import into this Fiscal Year.',
         });
     };
 
-    const handleAddEntry = (entry: Ppa) => {
-        const masterNode = findPpaInTree(masterPpas, entry.aip_entry.ppa_id);
+    const handleAddEntry = useCallback(
+        (entry: Ppa) => {
+            const masterNode = findPpaInTree(masterPpas, entry.id);
 
-        if (!masterNode) {
-            console.warn('Master PPA not found');
-            return;
-        }
+            if (!masterNode) {
+                console.warn('This PPA does not exist in the Master Library');
+                return;
+            }
 
-        setSelectorState({
-            isOpen: true,
-            data: masterNode.children || [],
-            title: `Add Sub-entries to: ${masterNode.title}`,
-            description: `Select items to add under ${masterNode.type} ${masterNode.full_code}`,
+            setSelectorState({
+                isOpen: true,
+                data: masterNode.children || [],
+                title: `Add Sub-entries to: ${masterNode.name}`,
+                description: `Select items to add under ${masterNode.type} ${masterNode.full_code}`,
+            });
+        },
+        [masterPpas],
+    );
+
+    const handleEditDialogOpen = (data: Ppa) => {
+        setSelectedEntry(data);
+        setIsEditDialogOpen(true);
+    };
+
+    function handleDeleteDialogOpen(data: Ppa) {
+        setSelectedEntry(data);
+        setIsDeleteDialogOpen(true);
+    }
+
+    function handleDelete() {
+        const entryId = selectedEntry?.aip_entries?.[0]?.id;
+
+        router.delete(`/aip-entries/${entryId}`, {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => setIsLoading(true),
+            onSuccess: () => {
+                setIsDeleteDialogOpen(false);
+                setSelectedEntry(null);
+            },
+            onFinish: () => setIsLoading(false),
         });
-    };
-
-    const handleEdit = useCallback((entry) => {
-        setSelectedEntryId(entry.id);
-        setIsEditOpen(true);
-    }, []);
-
-    const handleOpenDeleteDialog = useCallback((entry) => {
-        setSelectedEntryId(entry.id);
-        setIsDeleteAlertOpen(true);
-    }, []);
-
-    const columns = useAipColumns({
-        onAddEntry: handleAddEntry,
-        onEdit: handleEdit,
-        onDelete: handleOpenDeleteDialog,
-        masterPpas,
-    });
-
-    const handleExportExcel = () => {
-        exportToExcel(aipEntries, fiscalYear);
-    };
-
-    const handleExportPDF = () => {
-        exportToPrint({ aipEntries, fiscalYear });
-
-        // import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
-    };
+    }
 
     function handlePrintPreview() {
         setIsExportOpen(true);
     }
 
+    // const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
+    //     return ppas.flatMap((ppa): FlattenedPpa[] => {
+    //         // 1. Recursively process children, incrementing depth for the next level
+    //         const expandedChildren = ppa.children
+    //             ? expandPpaByFundingSource(ppa.children, depth + 1)
+    //             : [];
+
+    //         const sources = ppa.ppa_funding_sources || [];
+
+    //         // 2. If no funding sources, return the PPA once with its children
+    //         if (sources.length === 0) {
+    //             return [
+    //                 {
+    //                     ...ppa,
+    //                     current_fs: null,
+    //                     children: expandedChildren,
+    //                     isFirstInGroup: true,
+    //                     isLastInGroup: true,
+    //                     groupSize: 1,
+    //                     depth, // <--- Added depth
+    //                 },
+    //             ];
+    //         }
+
+    //         // 3. Duplicate PPA for each funding source
+    //         return sources.map((fs, index) => {
+    //             const isLast = index === sources.length - 1;
+
+    //             return {
+    //                 ...ppa,
+    //                 current_fs: fs,
+    //                 // Only the last duplicate retains the children array
+    //                 children: isLast ? expandedChildren : [],
+    //                 isFirstInGroup: index === 0,
+    //                 isLastInGroup: isLast,
+    //                 groupSize: sources.length,
+    //                 depth, // <--- Added depth
+    //             };
+    //         });
+    //     });
+    // };
+
+    const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
+        return ppas.flatMap((ppa): FlattenedPpa[] => {
+            // 1. Recursively process children
+            const expandedChildren = ppa.children
+                ? expandPpaByFundingSource(ppa.children, depth + 1)
+                : [];
+
+            // 2. NEW SCHEMA NAVIGATION:
+            // Find the AIP Entry for this year, then get its funding sources.
+            // We assume 'aip_entries' is pre-filtered by your Laravel controller.
+            const activeAip = ppa.aip_entries?.[0] || null;
+            const sources = activeAip?.ppa_funding_sources || [];
+
+            // 3. If no funding sources or no AIP entry, return the PPA once with its children
+            if (sources.length === 0) {
+                return [
+                    {
+                        ...ppa,
+                        current_fs: null,
+                        aip_entry: activeAip, // Helpful for the frontend to see dates/outputs
+                        children: expandedChildren,
+                        isFirstInGroup: true,
+                        isLastInGroup: true,
+                        groupSize: 1,
+                        depth,
+                    },
+                ];
+            }
+
+            // 4. Duplicate PPA for each funding source found in the AIP Entry
+            return sources.map((fs, index) => {
+                const isLast = index === sources.length - 1;
+
+                return {
+                    ...ppa,
+                    current_fs: fs,
+                    aip_entry: activeAip,
+                    // Only the last row in the duplicate group carries the nested children
+                    children: isLast ? expandedChildren : [],
+                    isFirstInGroup: index === 0,
+                    isLastInGroup: isLast,
+                    groupSize: sources.length,
+                    depth,
+                };
+            });
+        });
+    };
+
+    console.log(expandPpaByFundingSource(aipEntries));
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <div className="w-full px-4 pb-4">
-                <div className="w-full">
-                    <div className="flex items-center justify-between py-4">
-                        <div className="relative">
-                            <Search className="absolute top-2.5 left-2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search projects or activities..."
-                                value={searchValue}
-                                onChange={(event) =>
-                                    setSearchValue(event.target.value)
-                                }
-                                className="max-w-sm pl-8"
-                            />
-                        </div>
+            <div className="flex flex-col gap-4 p-4">
+                <DataTable
+                    columns={columns}
+                    data={expandPpaByFundingSource(aipEntries)}
+                    withSearch={true}
+                    withRowSpan={true}
+                    onAdd={handleAddEntry}
+                    onEdit={handleEditDialogOpen}
+                    onDelete={handleDeleteDialogOpen}
+                    withFooter={true}
+                >
+                    <div className="flex gap-2">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline">
+                                    <FileDown className="mr-2 h-4 w-4" /> Export
+                                </Button>
+                            </DropdownMenuTrigger>
 
-                        <div className="ml-auto flex gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
-                                        <FileDown className="mr-2 h-4 w-4" />{' '}
-                                        Export
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    {/*<DropdownMenuItem
-                                        onClick={handleExportExcel}
-                                    >
-                                        <FileSpreadsheet className="mr-2 h-4 w-4 text-green-600" />{' '}
-                                        Excel (.xlsx)
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleExportPDF}>
-                                        <FileText className="mr-2 h-4 w-4 text-red-600" />{' '}
-                                        PDF (.pdf)
-                                    </DropdownMenuItem>*/}
-                                    <DropdownMenuItem
-                                        onClick={handlePrintPreview}
-                                    >
-                                        <div className="flex items-center">
-                                            <FileText className="mr-2 h-4 w-4" />
-                                            <span>Print Preview</span>
-                                        </div>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                            <DropdownMenuContent
+                                align="end"
+                                className="w-max min-w-[max-content]"
+                            >
+                                <DropdownMenuItem onClick={handlePrintPreview}>
+                                    <div className="flex items-center">
+                                        <FileText className="mr-2 h-4 w-4" />
 
-                            <Button onClick={handleImportLibrary}>
-                                <Library className="mr-2 h-4 w-4" /> Import from
-                                Library
-                            </Button>
-                        </div>
+                                        <span className="whitespace-nowrap">
+                                            Print Preview
+                                        </span>
+                                    </div>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                    onClick={() => setIsSummaryExportOpen(true)}
+                                >
+                                    <div className="flex items-center">
+                                        <FileText className="mr-2 h-4 w-4" />
+
+                                        <span className="whitespace-nowrap">
+                                            Export Summary (Totals)
+                                        </span>
+                                    </div>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <Button onClick={handleImportLibrary}>
+                            <Library className="mr-2 h-4 w-4" /> Import from
+                            Library
+                        </Button>
                     </div>
-
-                    <ScrollArea className="h-[calc(100vh-8rem)] rounded-md border">
-                        <DataTable
-                            data={aipEntries}
-                            columns={columns}
-                            searchKey="title"
-                            searchValue={searchValue}
-                            onSearchChange={setSearchValue}
-                            getSubRows={(row) => row.children}
-                        />
-                        <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
-                </div>
+                </DataTable>
             </div>
 
             <PpaSelectorDialog
@@ -263,24 +324,52 @@ export default function AipSummaryTable({
             />
 
             <AipEntryFormDialog
-                open={isEditOpen}
-                onOpenChange={setIsEditOpen}
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
                 data={selectedEntry}
                 fiscalYear={fiscalYear}
                 fundingSources={fundingSources}
+                offices={offices}
             />
 
-            {/*alert dialog*/}
             <DeleteDialog
-                isDeleteAlertOpen={isDeleteAlertOpen}
-                setIsDeleteAlertOpen={setIsDeleteAlertOpen}
-                selectedEntry={selectedEntry}
-                setSelectedEntryId={setSelectedEntryId}
+                isOpen={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title="Remove from AIP Summary?"
+                description={
+                    <>
+                        Are you sure you want to remove{' '}
+                        <span className="font-bold text-foreground">
+                            "{selectedEntry?.name}"
+                        </span>
+                        ?
+                        {selectedEntry?.children &&
+                            selectedEntry.children.length > 0 && (
+                                <span className="mt-2 block font-semibold text-destructive italic">
+                                    Warning: This will also remove all nested
+                                    sub-projects and activities.
+                                </span>
+                            )}
+                    </>
+                }
+                onConfirm={handleDelete}
+                onCancel={() => {
+                    setIsDeleteDialogOpen(false);
+                    setSelectedEntry(null);
+                }}
+                isLoading={isLoading}
             />
 
             <ExportToPdfDialog
                 open={isExportOpen}
                 onOpenChange={setIsExportOpen}
+                aipEntries={aipEntries}
+                fiscalYear={fiscalYear}
+            />
+
+            <ExportSummaryToPdfDialog
+                open={isSummaryExportOpen}
+                onOpenChange={setIsSummaryExportOpen}
                 aipEntries={aipEntries}
                 fiscalYear={fiscalYear}
             />

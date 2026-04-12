@@ -1,0 +1,38 @@
+import { createColumnHelper } from '@tanstack/react-table';
+import { Pencil, Trash } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import type { PpmpCategory } from '@/types/global';
+
+const columnHelper = createColumnHelper<PpmpCategory>();
+
+const columns = [
+    columnHelper.accessor('name', {
+        header: 'Name',
+        size: 300,
+        cell: (value) => <span className="text-wrap">{value.getValue()}</span>,
+    }),
+    columnHelper.display({
+        id: 'action',
+        size: 82,
+        cell: ({ row, table }) => (
+            <div className="flex items-center gap-1">
+                <Button
+                    size="icon"
+                    onClick={() => table.options.meta?.onEdit?.(row.original)}
+                >
+                    <Pencil />
+                </Button>
+
+                <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => table.options.meta?.onDelete?.(row.original)}
+                >
+                    <Trash />
+                </Button>
+            </div>
+        ),
+    }),
+];
+
+export default columns;

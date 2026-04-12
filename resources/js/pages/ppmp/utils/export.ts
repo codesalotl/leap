@@ -4,16 +4,16 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-import { Ppmp, PpmpCategory, ChartOfAccount } from '@/pages/types/types';
+import type { Ppmp, PpmpCategory, ChartOfAccount } from '@/types/global';
 
 interface ExportToExcelProps {
-    ppmpItems: Ppmp[];
+    filteredPpmpItems: Ppmp[];
     ppmpCategories: PpmpCategory[];
     chartOfAccounts: ChartOfAccount[];
 }
 
 export async function exportToExcel({
-    ppmpItems,
+    filteredPpmpItems,
     ppmpCategories,
     chartOfAccounts,
 }: ExportToExcelProps) {
@@ -72,7 +72,7 @@ export async function exportToExcel({
     let currentRow = firstRowCount;
 
     // processing data
-    const groupedByCategory = ppmpItems.reduce(
+    const groupedByCategory = filteredPpmpItems.reduce(
         (acc, item) => {
             const key =
                 item.ppmp_price_list?.category?.id?.toString() || 'undefined';
@@ -82,7 +82,7 @@ export async function exportToExcel({
             acc[key].push(item);
             return acc;
         },
-        {} as Record<string, typeof ppmpItems>,
+        {} as Record<string, typeof filteredPpmpItems>,
     );
     const groupedByExpenseAccount = Object.fromEntries(
         Object.entries(groupedByCategory).map(([key, value]) => {
@@ -367,7 +367,7 @@ export async function exportToExcel({
     ppaDesc.value = 'PPA DESCRIPTION';
     headerTitle.value = 'PROVINCIAL GOVERNMENT OF LA UNION';
     headerSubTitle.value = 'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026';
-    
+
     [
         fundingSource,
         aipRefCode,
@@ -412,10 +412,10 @@ import { centuryGothicBase64 } from '@/fonts/CenturyGothic';
 import { centuryGothicBoldBase64 } from '@/fonts/CenturyGothicBold';
 
 export async function exportToPrint({
-    ppmpItems,
+    filteredPpmpItems,
     ppmpCategories,
     chartOfAccounts,
-}) {
+}: ExportToExcelProps) {
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
 
@@ -433,7 +433,7 @@ export async function exportToPrint({
     const tableBody = [];
 
     // --- DATA PREPARATION ---
-    const groupedByCategory = ppmpItems.reduce((acc, item) => {
+    const groupedByCategory = filteredPpmpItems.reduce((acc, item) => {
         const key =
             item.ppmp_price_list?.category?.id?.toString() || 'undefined';
         if (!acc[key]) acc[key] = [];
@@ -780,10 +780,10 @@ export async function exportToPrint({
 }
 
 export async function exportToPDF({
-    ppmpItems,
+    filteredPpmpItems,
     ppmpCategories,
     chartOfAccounts,
-}) {
+}: ExportToExcelProps) {
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
 
@@ -801,7 +801,7 @@ export async function exportToPDF({
     const tableBody = [];
 
     // --- DATA PREPARATION ---
-    const groupedByCategory = ppmpItems.reduce((acc, item) => {
+    const groupedByCategory = filteredPpmpItems.reduce((acc, item) => {
         const key =
             item.ppmp_price_list?.category?.id?.toString() || 'undefined';
         if (!acc[key]) acc[key] = [];

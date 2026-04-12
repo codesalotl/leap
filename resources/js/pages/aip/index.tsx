@@ -1,37 +1,91 @@
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
+import FormDialog from '@/pages/aip/form-dialog';
 import { type BreadcrumbItem } from '@/types';
-import FiscalYearFormDialog from '@/pages/aip/fiscal-year-form-dialog';
-import { columns } from '@/pages/aip/fiscal-year-table/columns';
-import { FiscalYearDataTable } from '@/pages/aip/fiscal-year-table/data-table';
-import { FiscalYear } from '@/pages/types/types';
-// import { index } from '@/routes/aip';
+import type { FiscalYear, FiscalYearStatus, App, Office } from '@/types/global';
+import { router } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
+import PdfPreviewDialog from './pdf-preview-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Annual Investment Programs',
-        // href: index().url,
         href: '#',
     },
 ];
 
 interface AipProps {
     fiscalYears: FiscalYear[];
+    app: App[];
+    offices: Office[]; // Add this line
 }
 
-export default function AipPage({ fiscalYears }: AipProps) {
-    // console.log(fiscalYears);
+export default function AipPage({ fiscalYears, app, offices = [] }: AipProps) {
+    console.log(app);
+
+    const [openFormDialog, setOpenFormDialog] = useState(false);
+    const [openPdfPreviewDialog, setOpenPdfPreviewDialog] = useState(false);
+    const [selectedYear, setSelectedYear] = useState<FiscalYear | null>(null);
+
+    // Standard Handlers (Ensure these exist if DataTable uses them)
+    function onUpdateStatus(data: FiscalYear, status: FiscalYearStatus) {
+        router.patch(
+            `/aip/${data.id}/status`,
+            { status },
+            { preserveScroll: true },
+        );
+    }
+
+    function handleOpenAipSummary(data: FiscalYear) {
+        router.get(`/aip/${data.id}/summary`);
+    }
+
+    function handleOpenFormDialog() {
+        setOpenFormDialog(true);
+    }
+
+    /**
+     * Trigger PDF generation
+     * This loads the initial data (Consolidated for BACSU, Office-only for others)
+     */
+    function handleGeneratePdf(selectedYearId: FiscalYear) {
+        setSelectedYear(selectedYearId);
+
+        router.reload({
+            only: ['app'],
+            data: { fiscal_year_id: selectedYearId.id },
+            onSuccess: () => setOpenPdfPreviewDialog(true),
+        });
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
-                <FiscalYearDataTable
+                <DataTable
                     columns={columns}
                     data={fiscalYears}
-                    searchKey="year"
+                    onUpdateStatus={onUpdateStatus}
+                    onOpen={handleOpenAipSummary}
+                    onGeneratePdf={handleGeneratePdf}
+                    withSearch={true}
                 >
-                    <FiscalYearFormDialog />
-                </FiscalYearDataTable>
+                    <Button onClick={handleOpenFormDialog}>
+                        Initialize AIP
+                    </Button>
+                </DataTable>
             </div>
+
+            <FormDialog open={openFormDialog} setOpen={setOpenFormDialog} />
+
+            <PdfPreviewDialog
+                open={openPdfPreviewDialog}
+                onOpenChange={setOpenPdfPreviewDialog}
+                data={app}
+                fiscalYear={selectedYear}
+                offices={offices} // Verified: Passed to Dialog
+            />
         </AppLayout>
     );
 }

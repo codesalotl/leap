@@ -1,12 +1,13 @@
-import { createColumnHelper, type ColumnDef } from '@tanstack/react-table';
-import { useMemo } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
 import { Plus, Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Ppa } from '@/pages/types/types';
+import { Badge } from '@/components/ui/badge';
+import { Decimal } from 'decimal.js';
+import type { Ppa, FlattenedPpa } from '@/types/global';
 
-export const formatNumber = (val: string) => {
+export const formatNumber = (val: string | null) => {
+    if (!val) return '-';
     const num = parseFloat(val);
-
     return num
         ? num.toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -30,232 +31,303 @@ export const formatDate = (dateString: string) => {
         'Nov',
         'Dec',
     ];
-
     const dateSplit = dateString.split('-');
-
     return `${months[Number(dateSplit[1]) - 1]}-${dateSplit[2]}`;
 };
 
-interface ColumnActions {
-    onAddEntry: (entry: Ppa) => void;
-    onEdit: (entry: Ppa) => void;
-    onDelete: (entry: Ppa) => void;
-    masterPpas: Ppa[];
-}
-
-const columnHelper = createColumnHelper<Ppa>();
-
-const findPpaInTree = (nodes: Ppa[], targetId: number): Ppa | null => {
-    for (const node of nodes) {
-        if (node.id === targetId) return node;
-        if (node.children && node.children.length > 0) {
-            const found = findPpaInTree(node.children, targetId);
-            if (found) return found;
-        }
-    }
-    return null;
+const sumField = (rows: any[], field: keyof FlattenedPpa['current_fs']) => {
+    return rows.reduce((sum, row) => {
+        const value = row.original.current_fs?.[field];
+        const num =
+            typeof value === 'string' ? parseFloat(value) : (value ?? 0);
+        return sum + (isNaN(num) ? 0 : num);
+    }, 0);
 };
 
-export const useAipColumns = (actions: ColumnActions) => {
-    return useMemo(() => getColumns(actions), [actions]);
-};
+const columnHelper = createColumnHelper<FlattenedPpa>();
 
-export const getColumns = ({
-    onAddEntry,
-    onEdit,
-    onDelete,
-    masterPpas,
-}: ColumnActions): ColumnDef<Ppa, string>[] => [
+const columns = [
     columnHelper.accessor('full_code', {
-        header: 'AIP Reference Code',
-        size: 300,
-        cell: (info) => (
-            <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-[12px]">
-                {info.getValue()}
-            </code>
-        ),
+        id: 'full_code',
+        header: () => <div className="text-left">AIP Reference Code</div>,
+        size: 200,
+        cell: (info) => <code>{info.getValue()}</code>,
+        meta: { rowSpan: true },
     }),
-    columnHelper.accessor('title', {
-        header: 'Program/Project/Activity Description',
-        filterFn: (row, _columnId, value) => {
-            const description = row.getValue('title') as string;
-            const refCode = row.getValue('full_code') as string;
-            const searchValue = (value as string)?.toLowerCase() || '';
-
-            return (
-                description.toLowerCase().includes(searchValue) ||
-                refCode.toLowerCase().includes(searchValue)
-            );
-        },
-        size: 600,
+    columnHelper.accessor('name', {
+        id: 'name',
+        header: () => (
+            <div className="text-left">
+                Program/Project/Activity Description
+            </div>
+        ),
+        size: 400,
         cell: ({ row, getValue }) => (
             <div
-                style={{ paddingLeft: `${row.depth * 20}px` }}
+                style={{ paddingLeft: `${row.original.depth * 20}px` }}
                 className="flex gap-2"
             >
-                {row.depth > 0 && (
+                {row.original.depth > 0 && (
                     <span className="text-muted-foreground opacity-50">↳</span>
                 )}
-                <span className="break-words whitespace-normal">
-                    {getValue()}
-                </span>
+
+                <span className="text-wrap">{getValue()}</span>
             </div>
         ),
+        meta: { rowSpan: true },
     }),
     columnHelper.accessor('office.acronym', {
-        header: 'Implementing Office/Department',
-        size: 300,
-        cell: (info) => (
-            <div className="break-words whitespace-normal">
-                {info.getValue()}
-            </div>
-        ),
+        id: 'office_acronym',
+        header: () => <div className="text-left">Implementing Office</div>,
+        size: 150,
+        cell: (info) => info.getValue(),
+        meta: { rowSpan: true },
     }),
     columnHelper.group({
-        header: 'Schedule of Implementation',
+        id: 'schedule',
+        header: () => <div className="text-left">Schedule</div>,
         columns: [
-            columnHelper.accessor('aip_entry.start_date', {
-                header: 'Start Date',
-                cell: (info) => formatDate(info.getValue()),
+            columnHelper.accessor('aip_entries', {
+                id: 'start_date',
+                header: () => <div className="text-left">Start</div>,
+                cell: (info) =>
+                    info.getValue()?.[0]
+                        ? formatDate(info.getValue()[0].start_date)
+                        : '—',
+                meta: { rowSpan: true },
             }),
-            columnHelper.accessor('aip_entry.end_date', {
-                header: 'Completion Date',
-                cell: (info) => formatDate(info.getValue()),
+            columnHelper.accessor('aip_entries', {
+                id: 'end_date',
+                header: () => <div className="text-left">End</div>,
+                cell: (info) =>
+                    info.getValue()?.[0]
+                        ? formatDate(info.getValue()[0].end_date)
+                        : '—',
+                meta: { rowSpan: true },
             }),
         ],
     }),
-    columnHelper.accessor('aip_entry.expected_output', {
-        header: 'Expected Outputs',
-        size: 600,
+    columnHelper.accessor('aip_entries', {
+        id: 'expected_output',
+        header: () => <div className="text-left">Expected Outputs</div>,
+        size: 400,
         cell: (info) => (
-            <div className="break-words whitespace-normal">
-                {info.getValue()}
+            <div className="text-wrap">
+                {info.getValue()?.[0]?.expected_output || '—'}
             </div>
         ),
+        meta: { rowSpan: true },
     }),
-    columnHelper.accessor('aip_entry.funding_source.title', {
-        header: 'Funding Source',
-        cell: (info) => {
-            const value = info.getValue();
-
-            if (value === undefined)
-                return <span className="bg-yellow items-center">-</span>;
-
-            return value;
-        },
+    // columnHelper.accessor('current_fs.funding_source.code', {
+    columnHelper.accessor('current_fs.funding_source.code', {
+        id: 'funding_sources',
+        header: () => <div className="text-left">Funding Source</div>,
+        size: 250,
+        cell: (info) =>
+            info.getValue() ? <Badge>{info.getValue()}</Badge> : '-',
     }),
+
+    // --- GROUPED AMOUNTS ---
     columnHelper.group({
-        header: 'Amount (in thousand pesos)',
+        id: 'amount',
+        header: () => (
+            <div className="text-left">Amount (in thousand pesos)</div>
+        ),
+        size: 400,
         columns: [
-            columnHelper.accessor('aip_entry.ps_amount', {
+            columnHelper.accessor('current_fs.ps_amount', {
+                id: 'ps_amount',
                 header: () => <div className="text-right">PS</div>,
                 cell: (info) => (
-                    <span className="block text-right">
+                    <div className="text-right">
                         {formatNumber(info.getValue())}
-                    </span>
+                    </div>
                 ),
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = sumField(rows, 'ps_amount');
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
+                    );
+                },
             }),
-            columnHelper.accessor('aip_entry.mooe_amount', {
+            columnHelper.accessor('current_fs.mooe_amount', {
+                id: 'mooe_amount',
                 header: () => <div className="text-right">MOOE</div>,
                 cell: (info) => (
-                    <span className="block text-right">
+                    <div className="text-right">
                         {formatNumber(info.getValue())}
-                    </span>
+                    </div>
                 ),
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = sumField(rows, 'mooe_amount');
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
+                    );
+                },
             }),
-            columnHelper.accessor('aip_entry.fe_amount', {
+            columnHelper.accessor('current_fs.fe_amount', {
+                id: 'fe_amount',
                 header: () => <div className="text-right">FE</div>,
                 cell: (info) => (
-                    <span className="block text-right">
+                    <div className="text-right">
                         {formatNumber(info.getValue())}
-                    </span>
+                    </div>
                 ),
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = sumField(rows, 'fe_amount');
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
+                    );
+                },
             }),
-            columnHelper.accessor('aip_entry.co_amount', {
+            columnHelper.accessor('current_fs.co_amount', {
+                id: 'co_amount',
                 header: () => <div className="text-right">CO</div>,
                 cell: (info) => (
-                    <span className="block text-right">
+                    <div className="text-right">
                         {formatNumber(info.getValue())}
-                    </span>
+                    </div>
                 ),
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = sumField(rows, 'co_amount');
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
+                    );
+                },
             }),
             columnHelper.display({
-                id: 'amount.total',
-                header: () => <div className="text-right">Total</div>,
+                id: 'amount_total',
+                header: () => <div className="text-right font-bold">Total</div>,
                 cell: ({ row }) => {
-                    const total =
-                        parseFloat(row.original.aip_entry?.ps_amount || '0') +
-                        parseFloat(row.original.aip_entry?.mooe_amount || '0') +
-                        parseFloat(row.original.aip_entry?.fe_amount || '0') +
-                        parseFloat(row.original.aip_entry?.co_amount || '0');
+                    const fs = row.original.current_fs;
+                    if (!fs) return <div className="text-right">-</div>;
+                    const total = new Decimal(fs.co_amount || 0)
+                        .plus(fs.fe_amount || 0)
+                        .plus(fs.mooe_amount || 0)
+                        .plus(fs.ps_amount || 0);
                     return (
-                        <span className="block text-right font-bold">
+                        <div className="text-right font-bold">
                             {formatNumber(total.toString())}
-                        </span>
+                        </div>
+                    );
+                },
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = rows.reduce((sum, row) => {
+                        const fs = row.original.current_fs;
+                        if (!fs) return sum;
+                        const rowTotal = new Decimal(fs.co_amount || 0)
+                            .plus(fs.fe_amount || 0)
+                            .plus(fs.mooe_amount || 0)
+                            .plus(fs.ps_amount || 0);
+                        return sum + rowTotal.toNumber();
+                    }, 0);
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
                     );
                 },
             }),
         ],
     }),
+
+    // --- GROUPED CLIMATE CHANGE ---
     columnHelper.group({
-        header: 'CC Expenditure',
+        id: 'climateChange',
+        header: () => (
+            <div className="text-left">Climate Change Expenditure</div>
+        ),
+        size: 250,
         columns: [
-            columnHelper.accessor('aip_entry.ccet_adaptation', {
+            columnHelper.accessor('current_fs.ccet_adaptation', {
+                id: 'cc_adaptation',
                 header: () => <div className="text-right">Adaptation</div>,
-                cell: (i) => (
-                    <span className="block text-right">
-                        {formatNumber(i.getValue())}
-                    </span>
+                cell: (info) => (
+                    <div className="text-right">
+                        {formatNumber(info.getValue())}
+                    </div>
                 ),
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = sumField(rows, 'ccet_adaptation');
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
+                    );
+                },
             }),
-            columnHelper.accessor('aip_entry.ccet_mitigation', {
+            columnHelper.accessor('current_fs.ccet_mitigation', {
+                id: 'cc_mitigation',
                 header: () => <div className="text-right">Mitigation</div>,
-                cell: (i) => (
-                    <span className="block text-right">
-                        {formatNumber(i.getValue())}
-                    </span>
+                cell: (info) => (
+                    <div className="text-right">
+                        {formatNumber(info.getValue())}
+                    </div>
                 ),
+                footer: ({ table }) => {
+                    const rows = table.getFilteredRowModel().rows;
+                    const total = sumField(rows, 'ccet_mitigation');
+                    return (
+                        <div className="text-right font-bold">
+                            {formatNumber(total.toString())}
+                        </div>
+                    );
+                },
             }),
         ],
     }),
+
     columnHelper.display({
-        id: 'actions',
-        size: 116,
-        cell: ({ row }) => {
-            const entry = row.original;
-            const ppaId = entry.aip_entry?.ppa_id;
-            const masterNode = ppaId ? findPpaInTree(masterPpas, ppaId) : null;
-            const isSubActivity = masterNode?.type === 'Sub-Activity';
+        id: 'cc_typology_code',
+        header: 'Typology',
+        cell: () => <div className="text-right">-</div>,
+        footer: () => <div className="text-right font-medium">-</div>, // optional label
+    }),
+    columnHelper.display({
+        id: 'action',
+        size: 120,
+        cell: ({ row, table }) => (
+            <div className="flex items-center gap-1">
+                <Button
+                    size="icon"
+                    onClick={() => table.options.meta?.onAdd?.(row.original)}
+                    disabled={row.original.type === 'Sub-Activity'}
+                >
+                    <Plus className="h-4 w-4" />
+                </Button>
 
-            return (
-                <div className="flex justify-between">
-                    <Button
-                        title="Add PPA"
-                        size="icon"
-                        onClick={() => onAddEntry(entry)}
-                        disabled={isSubActivity}
-                    >
-                        <Plus />
-                    </Button>
+                <Button
+                    size="icon"
+                    onClick={() => table.options.meta?.onEdit?.(row.original)}
+                >
+                    <Pencil className="h-4 w-4" />
+                </Button>
 
-                    <Button
-                        title="Edit"
-                        size="icon"
-                        onClick={() => onEdit(entry)}
-                    >
-                        <Pencil />
-                    </Button>
-
-                    <Button
-                        title="Delete"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => onDelete(entry)}
-                    >
-                        <Trash />
-                    </Button>
-                </div>
-            );
-        },
+                <Button
+                    size="icon"
+                    variant="destructive"
+                    onClick={() => table.options.meta?.onDelete?.(row.original)}
+                >
+                    <Trash className="h-4 w-4" />
+                </Button>
+            </div>
+        ),
+        meta: { rowSpan: true },
     }),
 ];
+
+export default columns;

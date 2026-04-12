@@ -31,21 +31,17 @@ class PpmpPriceList extends Model
 
     public function category()
     {
-        return $this->belongsTo(PpmpCategory::class, "ppmp_category_id");
+        return $this->belongsTo(PpmpCategory::class, 'ppmp_category_id');
     }
 
-    public function itemizedCosts()
+    public function fundingSource()
     {
-        return $this->hasMany(PpaItemizedCost::class, 'ppmp_price_list_id');
+        return $this->belongsTo(FundingSource::class);
     }
 
-    // public function scopeByExpenseClass($query, $expenseClass)
-    // {
-    //     return $query->where('expense_class', $expenseClass);
-    // }
-
-    // public function scopeByAccountCode($query, $accountCode)
-    // {
-    //     return $query->where('account_code', $accountCode);
-    // }
+    public function ppmps()
+    {
+        // Points to the ppmps table where the price_list_id is stored
+        return $this->hasMany(Ppmp::class, 'ppmp_price_list_id');
+    }
 }

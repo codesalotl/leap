@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { FundingSource } from '@/pages/types/types';
-import FundingSourceTablePage from '@/pages/funding-source/table/page';
+import type { FundingSource } from '@/types/global';
 import { Button } from '@/components/ui/button';
 import FormDialog from '@/pages/funding-source/form-dialog';
-import DeleteDialog from '@/pages/funding-source/delete-dialog';
+import { DeleteDialog } from '@/components/delete-dialog';
+import { router } from '@inertiajs/react';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Funding Source', href: '#' }];
 
@@ -16,22 +18,26 @@ interface FundingSourcePageProps {
 export default function FundingSourcePage({
     fundingSources,
 }: FundingSourcePageProps) {
-    console.log(fundingSources);
-
     const [open, setOpen] = useState(false);
-    const [openDelete, setOpenDelete] = useState(false);
     const [selectedSource, setSelectedSource] = useState<FundingSource | null>(
         null,
     );
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    console.log(selectedSource);
 
     function handleAdd() {
         setSelectedSource(null);
         setOpen(true);
     }
 
-    function handleEdit(source: FundingSource) {
-        console.log(source);
+    function handleDialogOpenChange(isOpen: boolean) {
+        setOpen(isOpen);
+        if (!isOpen) setSelectedSource(null);
+    }
 
+    function handleEdit(source: FundingSource) {
         const newSource = {
             ...source,
             allow_typhoon: source.allow_typhoon ? true : false,
@@ -41,35 +47,65 @@ export default function FundingSourcePage({
         setOpen(true);
     }
 
-    function handleDelete(source: FundingSource) {
+    function handleDeleteDialogOpen(source: FundingSource) {
         setSelectedSource(source);
-        setOpenDelete(true);
+        setIsDeleteDialogOpen(true);
+    }
+
+    function handleDelete() {
+        router.delete(`/funding-sources/${selectedSource?.id}`, {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => setIsLoading(true),
+            onSuccess: () => {
+                setIsDeleteDialogOpen(false);
+                setSelectedSource(null);
+            },
+            onFinish: () => setIsLoading(false),
+        });
     }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
-                <FundingSourceTablePage
+                <DataTable
+                    columns={columns}
                     data={fundingSources}
+                    withSearch={true}
                     onEdit={handleEdit}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteDialogOpen}
                 >
                     <div className="flex justify-end">
                         <Button onClick={handleAdd}>Add Funding Source</Button>
                     </div>
-                </FundingSourceTablePage>
+                </DataTable>
             </div>
 
             <FormDialog
                 open={open}
-                setOpen={setOpen}
+                setOpen={handleDialogOpenChange}
                 initialData={selectedSource}
             />
 
             <DeleteDialog
-                open={openDelete}
-                setOpen={setOpenDelete}
-                initialData={selectedSource}
+                isOpen={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+                title="Delete Funding Source?"
+                description={
+                    <>
+                        Are you sure you want to remove{' '}
+                        <span className="font-bold text-foreground">
+                            "{selectedSource?.title}"
+                        </span>
+                        ?
+                    </>
+                }
+                onConfirm={handleDelete}
+                onCancel={() => {
+                    setIsDeleteDialogOpen(false);
+                    setSelectedSource(null);
+                }}
+                isLoading={isLoading}
             />
         </AppLayout>
     );

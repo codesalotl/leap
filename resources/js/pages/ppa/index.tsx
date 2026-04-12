@@ -1,133 +1,131 @@
-import * as React from 'react';
 import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import type { Ppa, Office } from '@/types/global';
+import PpaFormDialog from '@/pages/ppa/form-dialog';
+import { DeleteDialog } from '@/components/delete-dialog';
+import { router } from '@inertiajs/react';
+import { DataTable } from '@/components/data-table';
+import columns from './table/columns';
 
-import { columns, Ppa } from '@/pages/ppa/ppa-masterlist-table/columns';
-import PpaTablePage from '@/pages/ppa/ppa-masterlist-table/page';
-import PpaFormDialog from '@/pages/ppa/form';
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'PPA Master Library', href: '#' },
+];
 
 export default function PpaPage({
     ppaTree,
     offices,
 }: {
     ppaTree: Ppa[];
-    offices: any[];
+    offices: Office[];
 }) {
-    console.log(ppaTree);
-    // console.log(offices);
-
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [dialogMode, setDialogMode] = useState<'add' | 'edit'>('add');
-    const [activePpa, setActivePpa] = useState<Ppa | null>(null);
+    // Form Dialog States
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
     const [targetType, setTargetType] = useState<Ppa['type']>('Program');
-    const [ppaToDelete, setPpaToDelete] = useState<Ppa | null>(null);
 
-    const confirmDelete = () => {
-        if (!ppaToDelete) return;
-        router.delete(`/ppas/${ppaToDelete.id}`, {
-            onSuccess: () => setIsDeleteDialogOpen(false),
+    // Explicitly separated states for "Parent" (Add) and "Self" (Edit)
+    const [parentPpa, setParentPpa] = useState<Ppa | null>(null);
+    const [editPpa, setEditPpa] = useState<Ppa | null>(null);
+
+    // Delete Dialog States
+    const [deletePpa, setDeletePpa] = useState<Ppa | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    console.log({ parentPpa, editPpa });
+
+    // Handlers
+    function handleAddRoot() {
+        setFormMode('add');
+        setTargetType('Program');
+        setParentPpa(null);
+        setEditPpa(null);
+        setIsFormOpen(true);
+    }
+
+    function handleAddChild(parent: Ppa, childType: Ppa['type']) {
+        setFormMode('add');
+        setTargetType(childType);
+        setParentPpa(parent);
+        setEditPpa(null);
+        setIsFormOpen(true);
+    }
+
+    function handleDialogOpenChange(isOpen: boolean) {
+        setIsFormOpen(isOpen);
+        if (!isOpen) {
+            setParentPpa(null);
+            setEditPpa(null);
+        }
+    }
+
+    function handleEdit(item: Ppa) {
+        setFormMode('edit');
+        setTargetType(item.type);
+        setEditPpa(item);
+        setParentPpa(null);
+        setIsFormOpen(true);
+    }
+
+    function handleDeleteOpen(item: Ppa) {
+        setDeletePpa(item);
+    }
+
+    function handleDelete() {
+        if (!deletePpa) return;
+
+        router.delete(`/ppas/${deletePpa.id}`, {
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => setIsDeleting(true),
+            onSuccess: () => setDeletePpa(null),
+            onFinish: () => setIsDeleting(false),
         });
-    };
+    }
 
     return (
-        <AppLayout
-            breadcrumbs={[{ title: 'PPA Master Library', href: '/offices' }]}
-        >
-            <div className="w-full px-4 pt-4">
-                <PpaTablePage
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <div className="flex flex-col gap-4 p-4">
+                <DataTable
+                    columns={columns}
                     data={ppaTree}
-                    meta={{
-                        onAdd: (parent: Ppa, childType: Ppa['type']) => {
-                            setDialogMode('add');
-                            setActivePpa(parent);
-                            setTargetType(childType);
-                            setIsDialogOpen(true);
-                        },
-                        onEdit: (ppa: Ppa) => {
-                            setDialogMode('edit');
-                            setActivePpa(ppa);
-                            setTargetType(ppa.type);
-                            setIsDialogOpen(true);
-                        },
-                        onDelete: (ppa: Ppa) => {
-                            setPpaToDelete(ppa);
-                            setIsDeleteDialogOpen(true);
-                        },
-                    }}
+                    withSearch={true}
+                    onAdd={handleAddChild}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteOpen}
                 >
-                    <Button
-                        onClick={() => {
-                            setDialogMode('add');
-                            setActivePpa(null);
-                            setTargetType('Program');
-                            setIsDialogOpen(true);
-                        }}
-                    >
-                        New Program
-                    </Button>
-                </PpaTablePage>
-
-                <PpaFormDialog
-                    mode={dialogMode}
-                    data={activePpa}
-                    type={targetType}
-                    onSuccess={() => setIsDialogOpen(false)}
-                    offices={offices}
-                    isDialogOpen={isDialogOpen}
-                    setIsDialogOpen={setIsDialogOpen}
-                    dialogMode={dialogMode}
-                    targetType={targetType}
-                    activePpa={activePpa}
-                />
-
-                <AlertDialog
-                    open={isDeleteDialogOpen}
-                    onOpenChange={setIsDeleteDialogOpen}
-                >
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                Delete {ppaToDelete?.type}?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                This will permanently remove{' '}
-                                <span className="font-semibold">
-                                    {ppaToDelete?.title}
-                                </span>
-                                .
-                                {ppaToDelete?.type !== 'Activity' && (
-                                    <span className="mt-2 block text-xs font-medium text-destructive uppercase">
-                                        Warning: All nested items will be
-                                        deleted.
-                                    </span>
-                                )}
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={confirmDelete}
-                                className="bg-destructive text-white hover:bg-destructive/90"
-                            >
-                                Delete Permanently
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                    <Button onClick={handleAddRoot}>New Program</Button>
+                </DataTable>
             </div>
+
+            <PpaFormDialog
+                isOpen={isFormOpen}
+                onOpenChange={handleDialogOpenChange}
+                mode={formMode}
+                targetType={targetType}
+                parentPpa={parentPpa}
+                editPpa={editPpa}
+                offices={offices}
+            />
+
+            <DeleteDialog
+                isOpen={!!deletePpa}
+                onOpenChange={(open) => !open && setDeletePpa(null)}
+                title="Delete PPA?"
+                description={
+                    <>
+                        Are you sure you want to remove{' '}
+                        <span className="font-bold text-foreground">
+                            "{deletePpa?.name}"
+                        </span>
+                        ?
+                    </>
+                }
+                onConfirm={handleDelete}
+                onCancel={() => setDeletePpa(null)}
+                isLoading={isDeleting}
+            />
         </AppLayout>
     );
 }

@@ -15,6 +15,8 @@ use App\Models\PpmpPriceList;
 use App\Models\Ppmp;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Request;
 
 class AipEntryController extends Controller
 {
@@ -23,41 +25,94 @@ class AipEntryController extends Controller
      */
     public function index(FiscalYear $fiscalYear)
     {
-        $ppaMasterList = Ppa::whereNull('parent_id')
-            ->with(['office', 'children', 'parent'])
-            ->get();
-
+        $officeId = auth()->user()->office_id;
         $yearId = $fiscalYear->id;
 
-        $loadAipTree = function ($query) use ($yearId, &$loadAipTree) {
-            $query
-                ->whereHas(
-                    'aipEntry',
-                    fn($q) => $q->where('fiscal_year_id', $yearId),
-                )
-                ->with([
-                    'office',
-                    'parent',
-                    'aipEntry' => fn($q) => $q
-                        ->where('fiscal_year_id', $yearId)
-                        ->with('fundingSource'),
-                    'children' => $loadAipTree,
-                ]);
-        };
-        $aipEntries = Ppa::whereNull('parent_id')->where($loadAipTree)->get();
+        $yearFilter = fn($q) => $q->where('fiscal_year_id', $yearId);
+        $hasAipFilter = fn($q) => $q->whereHas('aipEntries', $yearFilter);
+
+        $aipEntries = Ppa::where('office_id', $officeId)
+            ->whereNull('parent_id')
+            ->whereHas('aipEntries', $yearFilter)
+            ->with([
+                // programs
+                'aipEntries' => function ($query) use ($yearFilter) {
+                    $yearFilter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'ppaFundingSources.fundingSource',
+                'office.sector',
+                'office.lguLevel',
+                'office.officeType',
+
+                // projects
+                'children' => $hasAipFilter,
+                'children.aipEntries' => function ($query) use ($yearFilter) {
+                    $yearFilter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'children.ppaFundingSources.fundingSource',
+                'children.office.sector',
+                'children.office.lguLevel',
+                'children.office.officeType',
+
+                // activities
+                'children.children' => $hasAipFilter,
+                'children.children.aipEntries' => function ($query) use (
+                    $yearFilter,
+                ) {
+                    $yearFilter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'children.children.ppaFundingSources.fundingSource',
+                'children.children.office.sector',
+                'children.children.office.lguLevel',
+                'children.children.office.officeType',
+
+                // sub-activities
+                'children.children.children' => $hasAipFilter,
+                'children.children.children.aipEntries' => function (
+                    $query,
+                ) use ($yearFilter) {
+                    $yearFilter($query);
+                    $query->with('ppaFundingSources.fundingSource');
+                },
+                // 'children.children.children.ppaFundingSources.fundingSource',
+                'children.children.children.office.sector',
+                'children.children.children.office.lguLevel',
+                'children.children.children.office.officeType',
+            ])
+            ->get();
+
+        $ppaMasterList = Ppa::where('office_id', $officeId)
+            ->whereNull('parent_id')
+            ->with([
+                'office.sector',
+                'office.lguLevel',
+                'office.officeType',
+
+                'children.office.sector',
+                'children.office.lguLevel',
+                'children.office.officeType',
+
+                'children.children.office.sector',
+                'children.children.office.lguLevel',
+                'children.children.office.officeType',
+
+                'children.children.children.office.sector',
+                'children.children.children.office.lguLevel',
+                'children.children.children.office.officeType',
+            ])
+            ->get();
 
         $offices = Office::all();
 
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipEntries,
-            'masterPpas' => $ppaMasterList,
             'fundingSources' => FundingSource::all(),
-
             'offices' => $offices,
-            'chartOfAccounts' => ChartOfAccount::all(),
-            'ppmpPriceList' => PpmpPriceList::all(),
-            'ppmpItems' => Ppmp::with(['ppmpPriceList'])->get(),
+            'masterPpas' => $ppaMasterList,
         ]);
     }
 
@@ -92,6 +147,36 @@ class AipEntryController extends Controller
         return back()->with('success', 'PPAs imported successfully!');
     }
 
+    public function import(Request $request, FiscalYear $fiscalYear)
+    {
+        $validated = $request->validate([
+            'ppa_ids' => 'required|array',
+            'ppa_ids.*' => 'exists:ppas,id',
+        ]);
+
+        DB::transaction(function () use ($validated, $fiscalYear) {
+            foreach ($validated['ppa_ids'] as $ppaId) {
+                // Use -> to access the id property of the fiscalYear object
+                AipEntry::firstOrCreate(
+                    [
+                        'ppa_id' => $ppaId,
+                        'fiscal_year_id' => $fiscalYear->id, // Fixed here
+                    ],
+                    [
+                        'start_date' => $fiscalYear->year . '-01-01',
+                        'end_date' => $fiscalYear->year . '-12-31',
+                        'expected_output' => 'To be defined.',
+                    ],
+                );
+            }
+        });
+
+        return back()->with(
+            'success',
+            'Selected items imported to AIP Summary.',
+        );
+    }
+
     /**
      * Display the specified resource.
      */
@@ -115,29 +200,78 @@ class AipEntryController extends Controller
     {
         $validated = $request->validated();
 
-        $aipEntry->fundingSource()->sync($validated['fundingSource']);
+        // 1. Get the PPA associated with this entry
+        $ppa = $aipEntry->ppa;
 
-        $aipEntry->update([
-            'start_date' =>
-                $validated['scheduleOfImplementation']['startingDate'],
-            'end_date' =>
-                $validated['scheduleOfImplementation']['completionDate'],
-            'expected_output' => $validated['expectedOutputs'],
-            'ps_amount' => $validated['amount']['ps'],
-            'mooe_amount' => $validated['amount']['mooe'],
-            'fe_amount' => $validated['amount']['fe'],
-            'co_amount' => $validated['amount']['co'],
-            'ccet_adaptation' =>
-                $validated['amountOfCcExpenditure']['ccAdaptation'],
-            'ccet_mitigation' =>
-                $validated['amountOfCcExpenditure']['ccMitigation'],
-        ]);
+        if (!$ppa) {
+            abort(404, 'Associated PPA not found.');
+        }
 
-        PPA::where('id', $validated['ppa_id'])->update([
-            'title' => $validated['ppaDescription'],
-        ]);
+        // 2. Identify removed funding sources (Using CamelCase method with parentheses)
+        $currentFundingSourceIds = $aipEntry
+            ->ppaFundingSources()
+            ->pluck('funding_source_id')
+            ->toArray();
+
+        $newFundingSourceIds = collect($validated['ppa_funding_sources'])
+            ->pluck('funding_source_id')
+            ->toArray();
+
+        $idsToRemove = array_diff(
+            $currentFundingSourceIds,
+            $newFundingSourceIds,
+        );
+
+        // 3. PPMP Usage Check
+        if (!empty($idsToRemove)) {
+            $isUsedInPpmp = \App\Models\Ppmp::where(
+                'aip_entry_id',
+                $aipEntry->id,
+            )
+                ->whereIn('funding_source_id', $idsToRemove)
+                ->exists();
+
+            if ($isUsedInPpmp) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'ppa_funding_sources' =>
+                        'Cannot remove a funding source that is already being used by PPMP items for this project.',
+                ]);
+            }
+        }
+
+        // 4. Execute Update Transaction
+        \DB::transaction(function () use ($validated, $aipEntry, $ppa) {
+            // Update AIP Entry Metadata
+            $aipEntry->update([
+                'expected_output' => $validated['expected_output'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+            ]);
+
+            // Update PPA Office (Since you made it editable)
+            $ppa->update([
+                'office_id' => $validated['office_id'],
+            ]);
+
+            // Sync PPA Funding Sources: Delete old, Create new
+            $aipEntry->ppaFundingSources()->delete();
+
+            foreach ($validated['ppa_funding_sources'] as $source) {
+                $aipEntry->ppaFundingSources()->create([
+                    'funding_source_id' => $source['funding_source_id'],
+                    'ps_amount' => $source['ps_amount'],
+                    'mooe_amount' => $source['mooe_amount'],
+                    'fe_amount' => $source['fe_amount'],
+                    'co_amount' => $source['co_amount'],
+                    'ccet_adaptation' => $source['ccet_adaptation'] ?? 0,
+                    'ccet_mitigation' => $source['ccet_mitigation'] ?? 0,
+                    // 'cc_typology_code' => $source['cc_typology_code'] ?? null,
+                ]);
+            }
+        });
+
+        return back()->with('success', 'AIP Entry updated successfully.');
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -146,21 +280,18 @@ class AipEntryController extends Controller
         try {
             DB::beginTransaction();
 
-            // We only care about the PPA hierarchy to know WHICH entries to remove
+            // Capture the context of the deletion
             $fiscalYearId = $aipEntry->fiscal_year_id;
             $targetPpaId = $aipEntry->ppa_id;
 
-            // 1. We look at the 'ppas' table ONLY to find the IDs of the children.
-            // No PPA records are deleted here.
-            $descendantPpaIds = $this->getDescendantPpaIds($targetPpaId);
-
-            // 2. We combine the clicked PPA ID with all its child PPA IDs.
+            // 1. Get all child PPA IDs recursively from the library
+            // This ensures if we remove a "Program", all its "Activities" are also removed from this AIP year
             $ppaIdsToRemoveFromAip = array_merge(
                 [$targetPpaId],
-                $descendantPpaIds,
+                $this->getDescendantPpaIds($targetPpaId),
             );
 
-            // 3. Get the AIP entry IDs that will be deleted to handle PPMP constraints
+            // 2. Identify all AIP Entry IDs for these PPAs within this specific Fiscal Year
             $aipEntryIdsToDelete = AipEntry::where(
                 'fiscal_year_id',
                 $fiscalYearId,
@@ -169,22 +300,23 @@ class AipEntryController extends Controller
                 ->pluck('id')
                 ->toArray();
 
-            // 4. Delete PPMP records that reference these AIP entries first
             if (!empty($aipEntryIdsToDelete)) {
+                // 3. Delete dependent PPMP records first to satisfy foreign key constraints
                 \App\Models\Ppmp::whereIn(
                     'aip_entry_id',
                     $aipEntryIdsToDelete,
                 )->delete();
-            }
 
-            // 5. Now delete the AIP entries
-            AipEntry::where('fiscal_year_id', $fiscalYearId)
-                ->whereIn('ppa_id', $ppaIdsToRemoveFromAip)
-                ->delete();
+                // 4. Delete the AIP entries themselves
+                AipEntry::whereIn('id', $aipEntryIdsToDelete)->delete();
+            }
 
             DB::commit();
 
-            return back()->with('success', 'Removed from AIP summary.');
+            return back()->with(
+                'success',
+                'Successfully removed from AIP summary.',
+            );
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors([
@@ -193,9 +325,11 @@ class AipEntryController extends Controller
         }
     }
 
+    /**
+     * Recursively find all child PPA IDs from the library table.
+     */
     private function getDescendantPpaIds($parentId)
     {
-        // Querying the Library to find sub-projects/activities
         $children = DB::table('ppas')
             ->where('parent_id', $parentId)
             ->pluck('id')

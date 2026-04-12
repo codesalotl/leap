@@ -15,7 +15,7 @@ class Ppa extends Model
     protected $fillable = [
         'office_id',
         'parent_id',
-        'title',
+        'name',
         'type',
         'code_suffix',
         'is_active',
@@ -27,53 +27,54 @@ class Ppa extends Model
     {
         return Attribute::make(
             get: function () {
-                $suffix = $this->code_suffix ?? '000';
+                $suffix = $this->code_suffix ?? '0000';
 
-                // 1. Check for Parent FIRST
+                // 1. If this PPA has a parent, get the parent's full code first
                 if ($this->parent_id) {
-                    // Use relationLoaded to ensure we aren't triggering new queries
-                    // and use the actual parent object
-                    $parent = $this->parent;
+                    // Use the loaded relation if available to prevent N+1 queries
+                    $parent = $this->relationLoaded('parent')
+                        ? $this->parent
+                        : $this->parent()->first();
 
                     if ($parent) {
                         return $parent->full_code . '-' . $suffix;
                     }
                 }
 
-                // 2. If no parent_id, then it's a Top-Level Program
-                // Get the Office prefix (Sector-LGU-Type-Office)
-                $officePrefix = $this->office?->full_code ?? '0000-0-00-000';
+                // 2. If no parent, we are at the top level (Program).
+                // We start with the Office Code.
+                $office = $this->relationLoaded('office')
+                    ? $this->office
+                    : $this->office()->first();
+                $officePrefix = $office?->full_code ?? '0000-0-00-000';
 
                 return $officePrefix . '-' . $suffix;
             },
         );
     }
 
-    public function office()
-    {
-        return $this->belongsTo(Office::class)->with(
-            'sector',
-            'lguLevel',
-            'officeType',
-        );
-    }
-
-    public function children()
-    {
-        return $this->hasMany(Ppa::class, 'parent_id')->with(
-            'children',
-            'office',
-        );
-    }
-
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Ppa::class, 'parent_id');
     }
 
-    public function aipEntry()
+    public function children()
     {
-        // We use hasOne because you confirmed there's only one per year
-        return $this->hasOne(AipEntry::class);
+        return $this->hasMany(Ppa::class, 'parent_id');
     }
+
+    public function aipEntries()
+    {
+        return $this->hasMany(AipEntry::class, 'ppa_id');
+    }
+
+    public function office()
+    {
+        return $this->belongsTo(Office::class);
+    }
+
+    // public function ppaFundingSources()
+    // {
+    //     return $this->hasMany(PpaFundingSource::class, 'ppa_id');
+    // }
 }

@@ -23,7 +23,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ChartOfAccount, PpmpCategory, PriceList } from '@/pages/types/types';
+import type { ChartOfAccount, PpmpCategory, PriceList } from '@/types/global';
 import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
 import { Check, ChevronsUpDown } from 'lucide-react';
@@ -128,24 +128,36 @@ export default function FormDialog({
                 price: '0.00',
             });
         }
-    }, [selectedPriceList]);
+    }, [selectedPriceList, form]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
         if (selectedPriceList) {
-            router.visit(`/price-lists/${selectedPriceList.id}`, {
-                method: 'patch',
-                data,
+            router.patch(`/price-lists/${selectedPriceList.id}`, data, {
+                preserveState: true,
+                preserveScroll: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => onOpenChange(false),
+                onError: (errors) => {
+                    console.error('Patch Validation Errors:', errors);
+                },
+                // onInvalid: (response) => {
+                //     console.error('Patch Server Error:', response);
+                // },
+                onFinish: () => setIsLoading(false),
             });
         } else {
-            router.visit('/price-lists', {
-                method: 'post',
-                data,
+            router.post('/price-lists', data, {
+                preserveState: true,
+                preserveScroll: true,
                 onStart: () => setIsLoading(true),
-                onFinish: () => setIsLoading(false),
                 onSuccess: () => onOpenChange(false),
+                onError: (errors) => {
+                    console.error('Post Validation Errors:', errors);
+                },
+                // onInvalid: (response) => {
+                //     console.error('Post Server Error:', response);
+                // },
+                onFinish: () => setIsLoading(false),
             });
         }
     }
