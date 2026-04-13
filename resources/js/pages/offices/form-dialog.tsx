@@ -12,7 +12,15 @@ import type { Office } from '@/types/global';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldError,
+    FieldLabel,
+    FieldGroup,
+    FieldContent,
+    FieldSet,
+    FieldLegend,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
@@ -135,7 +143,7 @@ export default function FormDialog({
             <DialogContent
                 onPointerDownOutside={(e) => isLoading && e.preventDefault()}
                 onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
-                className="flex max-h-[90vh] flex-col gap-0 overflow-hidden"
+                className="flex max-h-[90vh] flex-col overflow-hidden"
             >
                 <DialogHeader>
                     <DialogTitle>
@@ -149,209 +157,115 @@ export default function FormDialog({
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex min-h-0 flex-1 py-4">
+                <div className="flex min-h-0 flex-1">
                     <ScrollArea className="w-full flex-1 pr-3">
                         <form
                             id="office-form"
                             onSubmit={form.handleSubmit(onSubmit)}
-                            className="space-y-6"
                         >
-                            <div className="rounded-lg bg-muted p-3 text-center">
-                                <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Generated Account Code
-                                </span>
+                            <FieldGroup>
+                                <div className="rounded-lg bg-muted p-3 text-center">
+                                    <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                        Generated Account Code
+                                    </span>
 
-                                <div className="font-mono text-xl font-bold text-primary">
-                                    {(() => {
-                                        const sectorId =
-                                            form.watch('sector_id');
-                                        const lguLevelId =
-                                            form.watch('lgu_level_id');
-                                        const officeTypeId =
-                                            form.watch('office_type_id');
-                                        const suffixRaw = form.watch('code');
+                                    <div className="font-mono text-xl font-bold text-primary">
+                                        {(() => {
+                                            const sectorId =
+                                                form.watch('sector_id');
+                                            const lguLevelId =
+                                                form.watch('lgu_level_id');
+                                            const officeTypeId =
+                                                form.watch('office_type_id');
+                                            const suffixRaw =
+                                                form.watch('code');
 
-                                        const selectedSector = sectors.find(
-                                            (s) => String(s.id) === sectorId,
-                                        );
-                                        const selectedLguLevel = lguLevels.find(
-                                            (l) => String(l.id) === lguLevelId,
-                                        );
-                                        const selectedOfficeType =
-                                            officeTypes.find(
-                                                (ot) =>
-                                                    String(ot.id) ===
-                                                    officeTypeId,
+                                            const selectedSector = sectors.find(
+                                                (s) =>
+                                                    String(s.id) === sectorId,
                                             );
+                                            const selectedLguLevel =
+                                                lguLevels.find(
+                                                    (l) =>
+                                                        String(l.id) ===
+                                                        lguLevelId,
+                                                );
+                                            const selectedOfficeType =
+                                                officeTypes.find(
+                                                    (ot) =>
+                                                        String(ot.id) ===
+                                                        officeTypeId,
+                                                );
 
-                                        const sectorCode =
-                                            selectedSector?.code || '0000';
-                                        const lguLevelCode =
-                                            selectedLguLevel?.code || '0';
-                                        const officeTypeCode =
-                                            selectedOfficeType?.code || '00';
-                                        // Pad suffix to 3 digits for preview
-                                        const suffixCode = suffixRaw?.trim()
-                                            ? suffixRaw.padStart(3, '0')
-                                            : '000';
+                                            const sectorCode =
+                                                selectedSector?.code || '0000';
+                                            const lguLevelCode =
+                                                selectedLguLevel?.code || '0';
+                                            const officeTypeCode =
+                                                selectedOfficeType?.code ||
+                                                '00';
+                                            // Pad suffix to 3 digits for preview
+                                            const suffixCode = suffixRaw?.trim()
+                                                ? suffixRaw.padStart(3, '0')
+                                                : '000';
 
-                                        return `${sectorCode}-${lguLevelCode}-${officeTypeCode}-${suffixCode}`;
-                                    })()}
+                                            return `${sectorCode}-${lguLevelCode}-${officeTypeCode}-${suffixCode}`;
+                                        })()}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <Controller
-                                name="sector_id"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="office-form-sector">
-                                            Sector
-                                            <span className="text-red-500">
-                                                *
-                                            </span>
-                                        </FieldLabel>
-                                        <Select
-                                            onValueChange={field.onChange}
-                                            value={field.value}
+                                {/* final select controller */}
+                                <Controller
+                                    name="sector_id"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            orientation="responsive"
+                                            data-invalid={fieldState.invalid}
                                         >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Sector" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {sectors.map((item) => (
-                                                    <SelectItem
-                                                        key={item.id}
-                                                        value={String(item.id)}
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Sector
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+
+                                                <Select
+                                                    name={field.name}
+                                                    value={field.value}
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                >
+                                                    <SelectTrigger
+                                                        id={field.name}
+                                                        aria-invalid={
+                                                            fieldState.invalid
+                                                        }
+                                                        className="w-full"
                                                     >
-                                                        {item.code} -{' '}
-                                                        {item.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
-                                        )}
-                                    </Field>
-                                )}
-                            />
+                                                        <SelectValue placeholder="Select Sector" />
+                                                    </SelectTrigger>
 
-                            <div className="grid grid-cols-2 gap-6">
-                                <Controller
-                                    name="lgu_level_id"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor="office-form-lgu-level">
-                                                LGU Level
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                value={field.value}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Level" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {lguLevels.map((item) => (
-                                                        <SelectItem
-                                                            key={item.id}
-                                                            value={String(
-                                                                item.id,
-                                                            )}
-                                                        >
-                                                            {item.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
+                                                    <SelectContent position="item-aligned">
+                                                        {sectors.map((item) => (
+                                                            <SelectItem
+                                                                key={item.id}
+                                                                value={String(
+                                                                    item.id,
+                                                                )}
+                                                            >
+                                                                {item.code} -{' '}
+                                                                {item.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
 
-                                <Controller
-                                    name="office_type_id"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldLabel htmlFor="office-form-office-type">
-                                                Office Type
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                value={field.value}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Type" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {officeTypes.map((item) => (
-                                                        <SelectItem
-                                                            key={item.id}
-                                                            value={String(
-                                                                item.id,
-                                                            )}
-                                                        >
-                                                            {item.code} -{' '}
-                                                            {item.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </Field>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-4 gap-6">
-                                <div className="col-span-3">
-                                    <Controller
-                                        name="name"
-                                        control={form.control}
-                                        render={({ field, fieldState }) => (
-                                            <Field
-                                                data-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            >
-                                                <FieldLabel htmlFor="office-form-name">
-                                                    Office Name
-                                                    <span className="text-red-500">
-                                                        *
-                                                    </span>
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id="office-form-name"
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Office of the Mayor"
-                                                    autoComplete="off"
-                                                />
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -359,122 +273,367 @@ export default function FormDialog({
                                                         ]}
                                                     />
                                                 )}
-                                            </Field>
-                                        )}
-                                    />
-                                </div>
+                                            </FieldContent>
+                                        </Field>
+                                    )}
+                                />
 
-                                <div className="col-span-1">
+                                <div className="grid grid-cols-2 gap-6">
+                                    {/* final select controller */}
                                     <Controller
-                                        name="code"
+                                        name="lgu_level_id"
                                         control={form.control}
                                         render={({ field, fieldState }) => (
                                             <Field
+                                                orientation="responsive"
                                                 data-invalid={
                                                     fieldState.invalid
                                                 }
                                             >
-                                                <FieldLabel htmlFor="office-form-code">
-                                                    Suffix
-                                                    <span className="text-red-500">
-                                                        *
-                                                    </span>
-                                                </FieldLabel>
-                                                <Input
-                                                    {...field}
-                                                    id="office-form-code"
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="001"
-                                                    autoComplete="off"
-                                                    onChange={(e) => {
-                                                        // Allow only digits, max 3 chars
-                                                        const raw =
-                                                            e.target.value;
-                                                        const digits =
-                                                            raw.replace(
-                                                                /\D/g,
-                                                                '',
-                                                            );
-                                                        const truncated =
-                                                            digits.slice(0, 3);
-                                                        field.onChange(
-                                                            truncated,
-                                                        );
-                                                    }}
-                                                />
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </Field>
-                                        )}
-                                    />
-                                </div>
-                            </div>
+                                                <FieldContent>
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                        className="gap-1"
+                                                    >
+                                                        LGU Level
+                                                        <span className="text-red-500">
+                                                            *
+                                                        </span>
+                                                    </FieldLabel>
 
-                            <Controller
-                                name="acronym"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="office-form-acronym">
-                                            Acronym
-                                        </FieldLabel>
-                                        <Input
-                                            {...field}
-                                            id="office-form-acronym"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder="PTO"
-                                            autoComplete="off"
-                                        />
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
-                                        )}
-                                    </Field>
-                                )}
-                            />
-
-                            <Controller
-                                name="is_lee"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <div className="flex flex-col gap-1">
-                                            <FieldLabel htmlFor="is_lee">
-                                                Local Economic Enterprise (LEE)
-                                            </FieldLabel>
-                                            <label htmlFor="is_lee">
-                                                <div className="flex items-center gap-2 rounded-md border p-2">
-                                                    <Checkbox
-                                                        id="is_lee"
-                                                        checked={field.value}
-                                                        onCheckedChange={
+                                                    <Select
+                                                        name={field.name}
+                                                        value={field.value}
+                                                        onValueChange={
                                                             field.onChange
                                                         }
-                                                    />
-                                                    <span>
-                                                        {field.value
-                                                            ? 'True'
-                                                            : 'False'}
-                                                    </span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
+                                                    >
+                                                        <SelectTrigger
+                                                            id={field.name}
+                                                            aria-invalid={
+                                                                fieldState.invalid
+                                                            }
+                                                            className="w-full"
+                                                        >
+                                                            <SelectValue placeholder="Select Level" />
+                                                        </SelectTrigger>
+
+                                                        <SelectContent position="item-aligned">
+                                                            {lguLevels.map(
+                                                                (item) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            item.id
+                                                                        }
+                                                                        value={String(
+                                                                            item.id,
+                                                                        )}
+                                                                    >
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </FieldContent>
+                                            </Field>
                                         )}
-                                    </Field>
-                                )}
-                            />
+                                    />
+
+                                    {/* final select controller */}
+                                    <Controller
+                                        name="office_type_id"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                orientation="responsive"
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldContent>
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                        className="gap-1"
+                                                    >
+                                                        Office Type
+                                                        <span className="text-red-500">
+                                                            *
+                                                        </span>
+                                                    </FieldLabel>
+
+                                                    <Select
+                                                        name={field.name}
+                                                        value={field.value}
+                                                        onValueChange={
+                                                            field.onChange
+                                                        }
+                                                    >
+                                                        <SelectTrigger
+                                                            id={field.name}
+                                                            aria-invalid={
+                                                                fieldState.invalid
+                                                            }
+                                                            className="w-full"
+                                                        >
+                                                            <SelectValue placeholder="Select Type" />
+                                                        </SelectTrigger>
+
+                                                        <SelectContent position="item-aligned">
+                                                            {officeTypes.map(
+                                                                (item) => (
+                                                                    <SelectItem
+                                                                        key={
+                                                                            item.id
+                                                                        }
+                                                                        value={String(
+                                                                            item.id,
+                                                                        )}
+                                                                    >
+                                                                        {
+                                                                            item.code
+                                                                        }{' '}
+                                                                        -{' '}
+                                                                        {
+                                                                            item.name
+                                                                        }
+                                                                    </SelectItem>
+                                                                ),
+                                                            )}
+                                                        </SelectContent>
+                                                    </Select>
+
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </FieldContent>
+                                            </Field>
+                                        )}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-4 gap-6">
+                                    <div className="col-span-3">
+                                        {/* final text input controller */}
+                                        <Controller
+                                            name="name"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldContent>
+                                                        <FieldLabel
+                                                            htmlFor={field.name}
+                                                            className="gap-1"
+                                                        >
+                                                            Office Name
+                                                            <span className="text-red-500">
+                                                                *
+                                                            </span>
+                                                        </FieldLabel>
+
+                                                        <Input
+                                                            {...field}
+                                                            id={field.name}
+                                                            aria-invalid={
+                                                                fieldState.invalid
+                                                            }
+                                                            placeholder="Office of the Mayor"
+                                                            autoComplete="off"
+                                                        />
+
+                                                        {fieldState.invalid && (
+                                                            <FieldError
+                                                                errors={[
+                                                                    fieldState.error,
+                                                                ]}
+                                                            />
+                                                        )}
+                                                    </FieldContent>
+                                                </Field>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="col-span-1">
+                                        {/* final text input controller */}
+                                        <Controller
+                                            name="code"
+                                            control={form.control}
+                                            render={({ field, fieldState }) => (
+                                                <Field
+                                                    data-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                >
+                                                    <FieldContent>
+                                                        <FieldLabel
+                                                            htmlFor={field.name}
+                                                            className="gap-1"
+                                                        >
+                                                            Suffix
+                                                            <span className="text-red-500">
+                                                                *
+                                                            </span>
+                                                        </FieldLabel>
+
+                                                        <Input
+                                                            {...field}
+                                                            id={field.name}
+                                                            aria-invalid={
+                                                                fieldState.invalid
+                                                            }
+                                                            placeholder="001"
+                                                            autoComplete="off"
+                                                            // maxLength={3}
+                                                            onChange={(e) => {
+                                                                const raw =
+                                                                    e.target
+                                                                        .value;
+                                                                const digits =
+                                                                    raw.replace(
+                                                                        /\D/g,
+                                                                        '',
+                                                                    );
+                                                                const truncated =
+                                                                    digits.slice(
+                                                                        0,
+                                                                        3,
+                                                                    );
+                                                                field.onChange(
+                                                                    truncated,
+                                                                );
+                                                            }}
+                                                        />
+
+                                                        {fieldState.invalid && (
+                                                            <FieldError
+                                                                errors={[
+                                                                    fieldState.error,
+                                                                ]}
+                                                            />
+                                                        )}
+                                                    </FieldContent>
+                                                </Field>
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* final text input controller */}
+                                <Controller
+                                    name="acronym"
+                                    control={form.control}
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Acronym
+                                                    {/* <span className="text-destructive">
+                                                        *
+                                                    </span> */}
+                                                </FieldLabel>
+
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="PTO"
+                                                    autoComplete="off"
+                                                />
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
+                                        </Field>
+                                    )}
+                                />
+
+                                <div className="rounded bg-card p-4">
+                                    {/* final checkbox controller */}
+                                    <Controller
+                                        name="is_lee"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <FieldSet>
+                                                <FieldContent>
+                                                    <FieldLegend variant="label">
+                                                        Local Economic
+                                                        Enterprise (LEE)
+                                                    </FieldLegend>
+
+                                                    <FieldGroup>
+                                                        <Field
+                                                            orientation="horizontal"
+                                                            data-invalid={
+                                                                fieldState.invalid
+                                                            }
+                                                        >
+                                                            <Checkbox
+                                                                id="is_lee"
+                                                                checked={
+                                                                    field.value
+                                                                }
+                                                                onCheckedChange={
+                                                                    field.onChange
+                                                                }
+                                                            />
+
+                                                            <FieldLabel
+                                                                htmlFor={
+                                                                    field.name
+                                                                }
+                                                                className="font-normal"
+                                                            >
+                                                                {field.value
+                                                                    ? 'True'
+                                                                    : 'False'}
+                                                            </FieldLabel>
+                                                        </Field>
+                                                    </FieldGroup>
+
+                                                    {fieldState.invalid && (
+                                                        <FieldError
+                                                            errors={[
+                                                                fieldState.error,
+                                                            ]}
+                                                        />
+                                                    )}
+                                                </FieldContent>
+                                            </FieldSet>
+                                        )}
+                                    />
+                                </div>
+                            </FieldGroup>
                         </form>
                     </ScrollArea>
                 </div>
