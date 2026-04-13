@@ -318,275 +318,420 @@ export default function ExportToPdfDialog({
         return result;
     };
 
-    const MyDocument = ({ data }: { data: Ppa[] }) => (
-        <Document>
-            <Page size={[612, 936]} orientation="landscape" style={styles.page}>
-                <View fixed>
-                    <View
-                        style={{
-                            marginBottom: 10,
-                            marginTop: 5,
-                            textAlign: 'center',
-                        }}
-                    >
-                        <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
-                            CY {fiscalYear.year} Annual Investment Program (AIP)
-                        </Text>
-                        <Text style={{ fontSize: 9, fontWeight: 'bold' }}>
-                            By Program / Project / Activity - by Sector
-                        </Text>
-                    </View>
-                    <View style={{ marginBottom: 5, textAlign: 'left' }}>
-                        <Text style={{ fontSize: 8, fontWeight: 'bold' }}>
-                            {`OFFICE: `}
-                            <Text
-                                style={{ textDecoration: 'underline' }}
-                            >{`${office}`}</Text>
-                        </Text>
-                    </View>
+    const calculateTotals = (data: Ppa[]) => {
+        let totals = {
+            ps: 0,
+            mooe: 0,
+            fe: 0,
+            co: 0,
+            adaptation: 0,
+            mitigation: 0,
+        };
 
-                    {/* Table Headers */}
-                    <View
-                        style={{
-                            flexDirection: 'row',
-                            borderTopWidth: 1,
-                            borderBottomWidth: 1,
-                        }}
-                    >
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[0]}%`,
-                                borderLeftWidth: 1,
-                                borderRightWidth: 1,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={styles.tableHeaderCell}>
-                                AIP REF. CODE
-                            </Text>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[1]}%`,
-                                borderRightWidth: 1,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={styles.tableHeaderCell}>
-                                PROGRAM / PROJECT / ACTIVITY DESCRIPTION
-                            </Text>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[2]}%`,
-                                borderRightWidth: 1,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={styles.tableHeaderCell}>
-                                IMPLEMENTING OFFICE / DEPARTMENT / LOCATION
-                            </Text>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[3] + COLUMN_WIDTHS[4]}%`,
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <View
-                                style={{
-                                    borderBottomWidth: 1,
-                                    borderRightWidth: 1,
-                                    flex: 1,
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <Text style={styles.tableHeaderCell}>
-                                    SCHEDULE OF IMPLEMENTATION
-                                </Text>
-                            </View>
-                            <View style={{ flexDirection: 'row', flex: 1 }}>
-                                <View
-                                    style={{
-                                        width: '50%',
-                                        borderRightWidth: 1,
-                                    }}
-                                >
-                                    <Text style={styles.tableHeaderCell}>
-                                        STARTING DATE
-                                    </Text>
-                                </View>
-                                <View
-                                    style={{
-                                        width: '50%',
-                                        borderRightWidth: 1,
-                                    }}
-                                >
-                                    <Text style={styles.tableHeaderCell}>
-                                        COMPLETION DATE
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[5]}%`,
-                                borderRightWidth: 1,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={styles.tableHeaderCell}>
-                                EXPECTED OUTPUTS
-                            </Text>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[6]}%`,
-                                borderRightWidth: 1,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={styles.tableHeaderCell}>
-                                FUNDING SOURCE
-                            </Text>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)}%`,
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <View
-                                style={{
-                                    borderRightWidth: 1,
-                                    borderBottomWidth: 1,
-                                    justifyContent: 'center',
-                                    flex: 1,
-                                }}
-                            >
-                                <Text style={styles.tableHeaderCell}>
-                                    AMOUNT (In thousand pesos)
-                                </Text>
-                            </View>
-                            <View style={{ flexDirection: 'row' }}>
-                                {[
-                                    'PERSONAL SERVICES (PS)',
-                                    'MAINTENANCE & OTHER OPERATING EXPENSES (MOOE)',
-                                    'FINANCIAL EPENCES (FE)',
-                                    'CAPITAL OUTALY (CO)',
-                                    'TOTAL',
-                                ].map((label, i) => (
-                                    <View
-                                        key={label}
-                                        style={{
-                                            width: `${(COLUMN_WIDTHS[7 + i] / COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)) * 100}%`,
-                                            borderRightWidth: 1,
-                                        }}
-                                    >
-                                        <Text style={styles.tableHeaderCell}>
-                                            {label}
-                                        </Text>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)}%`,
-                                flexDirection: 'column',
-                            }}
-                        >
-                            <View
-                                style={{
-                                    borderRightWidth: 1,
-                                    borderBottomWidth: 1,
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <Text style={styles.tableHeaderCell}>
-                                    AMOUNT of Climate Change Expenditure (in
-                                    thousand pesos)
-                                </Text>
-                            </View>
-                            <View style={{ flexDirection: 'row' }}>
-                                {[
-                                    'Climate Change Adaptation',
-                                    'Climate Change Mitigation',
-                                ].map((label, i) => (
-                                    <View
-                                        key={label}
-                                        style={{
-                                            width: `${(COLUMN_WIDTHS[12 + i] / COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)) * 100}%`,
-                                            borderRightWidth: 1,
-                                        }}
-                                    >
-                                        <Text style={styles.tableHeaderCell}>
-                                            {label}
-                                        </Text>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                        <View
-                            style={{
-                                width: `${COLUMN_WIDTHS[14]}%`,
-                                borderRightWidth: 1,
-                                justifyContent: 'center',
-                            }}
-                        >
-                            <Text style={styles.tableHeaderCell}>
-                                CC Typology Code
-                            </Text>
-                        </View>
-                    </View>
+        const traverse = (items: Ppa[]) => {
+            items.forEach((item) => {
+                const entry = item.aip_entries?.[0];
+                entry?.ppa_funding_sources?.forEach((fs) => {
+                    totals.ps += parseFloat(fs.ps_amount || '0');
+                    totals.mooe += parseFloat(fs.mooe_amount || '0');
+                    totals.fe += parseFloat(fs.fe_amount || '0');
+                    totals.co += parseFloat(fs.co_amount || '0');
+                    totals.adaptation += parseFloat(fs.ccet_adaptation || '0');
+                    totals.mitigation += parseFloat(fs.ccet_mitigation || '0');
+                });
 
-                    {/* Column Numbers */}
-                    <View
-                        style={{ flexDirection: 'row', borderBottomWidth: 1 }}
+                if (item.children) traverse(item.children);
+            });
+        };
+
+        traverse(data);
+        const grandTotal = totals.ps + totals.mooe + totals.fe + totals.co;
+        return { ...totals, grandTotal };
+    };
+
+    const RenderTotalRow = ({
+        totals,
+    }: {
+        totals: ReturnType<typeof calculateTotals>;
+    }) => {
+        // Width for the label side (Cols 1-7)
+        const labelWidth = COLUMN_WIDTHS.slice(0, 7).reduce((a, b) => a + b, 0);
+
+        return (
+            <View
+                style={{
+                    flexDirection: 'row',
+                    borderTopWidth: 1,
+                    borderBottomWidth: 1,
+                }}
+                wrap={false}
+            >
+                {/* Label Column */}
+                <View
+                    style={[
+                        styles.tableCellContainer,
+                        { width: `${labelWidth}%`, borderLeftWidth: 1 },
+                    ]}
+                >
+                    <Text
+                        style={[
+                            styles.tableCellText,
+                            {
+                                fontWeight: 'bold',
+                                textAlign: 'right',
+                                paddingRight: 10,
+                            },
+                        ]}
                     >
-                        {COLUMN_WIDTHS.map((width, index) => (
-                            <View
-                                key={index}
-                                style={{
-                                    width: `${width}%`,
-                                    borderRightWidth: 1,
-                                    borderLeftWidth: index === 0 ? 1 : 0,
-                                }}
-                            >
-                                <Text style={styles.tableHeaderCell}>
-                                    {index + 1}
-                                </Text>
-                            </View>
-                        ))}
-                    </View>
+                        GRAND TOTAL
+                    </Text>
                 </View>
 
-                {/* Data Rows */}
-                {renderOrderedRows(data)}
+                {/* Financial Columns */}
+                {[
+                    totals.ps,
+                    totals.mooe,
+                    totals.fe,
+                    totals.co,
+                    totals.grandTotal,
+                    totals.adaptation,
+                    totals.mitigation,
+                ].map((val, i) => (
+                    <View
+                        key={i}
+                        style={[
+                            styles.tableCellContainer,
+                            {
+                                width: `${COLUMN_WIDTHS[7 + i]}%`,
+                                alignItems: 'flex-end',
+                            },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.tableCellText,
+                                { fontWeight: 'bold' },
+                            ]}
+                        >
+                            {formatNumber(val)}
+                        </Text>
+                    </View>
+                ))}
 
-                {/* Closing Border */}
+                {/* Empty space for Typology Code col */}
                 <View
-                    fixed
-                    style={{
-                        borderTopWidth: 1,
-                        borderColor: 'black',
-                        width: '100%',
-                        marginTop: -1, // Pulls it up to touch the vertical lines perfectly
-                    }}
-                />
+                    style={[
+                        styles.tableCellContainer,
+                        { width: `${COLUMN_WIDTHS[14]}%` },
+                    ]}
+                >
+                    <Text style={styles.tableCellText}>-</Text>
+                </View>
+            </View>
+        );
+    };
 
-                <Text
-                    fixed
-                    style={{
-                        fontSize: 10,
-                        textAlign: 'center',
-                        paddingTop: 10,
-                    }}
-                    render={({ pageNumber }) => `${pageNumber}`}
-                />
-            </Page>
-        </Document>
-    );
+    const MyDocument = ({ data }: { data: Ppa[] }) => {
+        const totals = calculateTotals(data);
+
+        return (
+            <Document>
+                <Page
+                    size={[612, 936]}
+                    orientation="landscape"
+                    style={styles.page}
+                >
+                    <View fixed>
+                        <View
+                            style={{
+                                marginBottom: 10,
+                                marginTop: 5,
+                                textAlign: 'center',
+                            }}
+                        >
+                            <Text style={{ fontSize: 10, fontWeight: 'bold' }}>
+                                CY {fiscalYear.year} Annual Investment Program
+                                (AIP)
+                            </Text>
+
+                            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>
+                                By Program / Project / Activity - by Sector
+                            </Text>
+                        </View>
+
+                        <View style={{ marginBottom: 5, textAlign: 'left' }}>
+                            <Text style={{ fontSize: 8, fontWeight: 'bold' }}>
+                                {`OFFICE: `}
+                                <Text
+                                    style={{ textDecoration: 'underline' }}
+                                >{`${office}`}</Text>
+                            </Text>
+                        </View>
+
+                        {/* Table Headers */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                borderTopWidth: 1,
+                                borderBottomWidth: 1,
+                            }}
+                        >
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[0]}%`,
+                                    borderLeftWidth: 1,
+                                    borderRightWidth: 1,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={styles.tableHeaderCell}>
+                                    AIP REF. CODE
+                                </Text>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[1]}%`,
+                                    borderRightWidth: 1,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={styles.tableHeaderCell}>
+                                    PROGRAM / PROJECT / ACTIVITY DESCRIPTION
+                                </Text>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[2]}%`,
+                                    borderRightWidth: 1,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={styles.tableHeaderCell}>
+                                    IMPLEMENTING OFFICE / DEPARTMENT / LOCATION
+                                </Text>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[3] + COLUMN_WIDTHS[4]}%`,
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        borderBottomWidth: 1,
+                                        borderRightWidth: 1,
+                                        flex: 1,
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Text style={styles.tableHeaderCell}>
+                                        SCHEDULE OF IMPLEMENTATION
+                                    </Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row', flex: 1 }}>
+                                    <View
+                                        style={{
+                                            width: '50%',
+                                            borderRightWidth: 1,
+                                        }}
+                                    >
+                                        <Text style={styles.tableHeaderCell}>
+                                            STARTING DATE
+                                        </Text>
+                                    </View>
+
+                                    <View
+                                        style={{
+                                            width: '50%',
+                                            borderRightWidth: 1,
+                                        }}
+                                    >
+                                        <Text style={styles.tableHeaderCell}>
+                                            COMPLETION DATE
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[5]}%`,
+                                    borderRightWidth: 1,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={styles.tableHeaderCell}>
+                                    EXPECTED OUTPUTS
+                                </Text>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[6]}%`,
+                                    borderRightWidth: 1,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={styles.tableHeaderCell}>
+                                    FUNDING SOURCE
+                                </Text>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)}%`,
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        borderRightWidth: 1,
+                                        borderBottomWidth: 1,
+                                        justifyContent: 'center',
+                                        flex: 1,
+                                    }}
+                                >
+                                    <Text style={styles.tableHeaderCell}>
+                                        AMOUNT (In thousand pesos)
+                                    </Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row' }}>
+                                    {[
+                                        'PERSONAL SERVICES (PS)',
+                                        'MAINTENANCE & OTHER OPERATING EXPENSES (MOOE)',
+                                        'FINANCIAL EPENCES (FE)',
+                                        'CAPITAL OUTALY (CO)',
+                                        'TOTAL',
+                                    ].map((label, i) => (
+                                        <View
+                                            key={label}
+                                            style={{
+                                                width: `${(COLUMN_WIDTHS[7 + i] / COLUMN_WIDTHS.slice(7, 12).reduce((a, b) => a + b, 0)) * 100}%`,
+                                                borderRightWidth: 1,
+                                            }}
+                                        >
+                                            <Text
+                                                style={styles.tableHeaderCell}
+                                            >
+                                                {label}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)}%`,
+                                    flexDirection: 'column',
+                                }}
+                            >
+                                <View
+                                    style={{
+                                        borderRightWidth: 1,
+                                        borderBottomWidth: 1,
+                                        justifyContent: 'center',
+                                    }}
+                                >
+                                    <Text style={styles.tableHeaderCell}>
+                                        AMOUNT of Climate Change Expenditure (in
+                                        thousand pesos)
+                                    </Text>
+                                </View>
+
+                                <View style={{ flexDirection: 'row' }}>
+                                    {[
+                                        'Climate Change Adaptation',
+                                        'Climate Change Mitigation',
+                                    ].map((label, i) => (
+                                        <View
+                                            key={label}
+                                            style={{
+                                                width: `${(COLUMN_WIDTHS[12 + i] / COLUMN_WIDTHS.slice(12, 14).reduce((a, b) => a + b, 0)) * 100}%`,
+                                                borderRightWidth: 1,
+                                            }}
+                                        >
+                                            <Text
+                                                style={styles.tableHeaderCell}
+                                            >
+                                                {label}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View
+                                style={{
+                                    width: `${COLUMN_WIDTHS[14]}%`,
+                                    borderRightWidth: 1,
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <Text style={styles.tableHeaderCell}>
+                                    CC Typology Code
+                                </Text>
+                            </View>
+                        </View>
+
+                        {/* Column Numbers */}
+                        <View
+                            style={{
+                                flexDirection: 'row',
+                                borderBottomWidth: 1,
+                            }}
+                        >
+                            {COLUMN_WIDTHS.map((width, index) => (
+                                <View
+                                    key={index}
+                                    style={{
+                                        width: `${width}%`,
+                                        borderRightWidth: 1,
+                                        borderLeftWidth: index === 0 ? 1 : 0,
+                                    }}
+                                >
+                                    <Text style={styles.tableHeaderCell}>
+                                        {index + 1}
+                                    </Text>
+                                </View>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Data Rows */}
+                    {renderOrderedRows(data)}
+
+                    <RenderTotalRow totals={totals} />
+
+                    {/* Closing Border */}
+                    <View
+                        fixed
+                        style={{
+                            borderTopWidth: 1,
+                            borderColor: 'black',
+                            width: '100%',
+                            marginTop: -1, // Pulls it up to touch the vertical lines perfectly
+                        }}
+                    />
+
+                    <Text
+                        fixed
+                        style={{
+                            fontSize: 10,
+                            textAlign: 'center',
+                            paddingTop: 10,
+                        }}
+                        render={({ pageNumber }) => `${pageNumber}`}
+                    />
+                </Page>
+            </Document>
+        );
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
