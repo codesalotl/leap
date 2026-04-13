@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import type { PriceList, ChartOfAccount, PpmpCategory } from '@/types/global';
 import FormDialog from '@/pages/price-list/form-dialog';
 import { DeleteDialog } from '@/components/delete-dialog';
+import { AlertErrorDialog } from '@/components/alert-error-dialog';
 import { router } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
 import columns from './table/columns';
@@ -27,6 +28,8 @@ export default function PriceListPage({
         useState<PriceList | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
 
     console.log(selectedPriceList);
 
@@ -63,10 +66,11 @@ export default function PriceListPage({
                 setSelectedPriceList(null);
             },
             onError: (errors) => {
-                console.error(
-                    'Delete Error:',
-                    errors.database || 'An unknown error occurred',
-                );
+                const errorMessage =
+                    errors.database || 'An unknown error occurred';
+                console.error('Delete Error:', errorMessage);
+                setError(errorMessage);
+                setIsErrorDialogOpen(true);
             },
             onFinish: () => setIsLoading(false),
         });
@@ -113,6 +117,12 @@ export default function PriceListPage({
                     setSelectedPriceList(null);
                 }}
                 isLoading={isLoading}
+            />
+
+            <AlertErrorDialog
+                open={isErrorDialogOpen}
+                onOpenChange={setIsErrorDialogOpen}
+                error={error}
             />
         </AppLayout>
     );

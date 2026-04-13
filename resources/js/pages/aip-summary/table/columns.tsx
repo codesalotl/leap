@@ -62,18 +62,34 @@ const columns = [
             </div>
         ),
         size: 400,
-        cell: ({ row, getValue }) => (
-            <div
-                style={{ paddingLeft: `${row.original.depth * 20}px` }}
-                className="flex gap-2"
-            >
-                {row.original.depth > 0 && (
-                    <span className="text-muted-foreground opacity-50">↳</span>
-                )}
+        cell: ({ row }) => {
+            const ppa = row.original;
+            return (
+                <div
+                    style={{ paddingLeft: `${ppa.depth * 20}px` }}
+                    className="flex gap-2"
+                >
+                    {row.original.depth > 0 && (
+                        <span className="text-muted-foreground opacity-50">
+                            ↳
+                        </span>
+                    )}
 
-                <span className="text-wrap">{getValue()}</span>
-            </div>
-        ),
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                            {ppa.type}
+                        </span>
+                        <span
+                            className={`leading-tight break-words whitespace-normal ${
+                                ppa.depth === 0 ? 'font-bold' : 'font-medium'
+                            }`}
+                        >
+                            {ppa.name}
+                        </span>
+                    </div>
+                </div>
+            );
+        },
         meta: { rowSpan: true },
     }),
     columnHelper.accessor('office.acronym', {

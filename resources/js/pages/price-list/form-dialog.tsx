@@ -31,6 +31,7 @@ import * as z from 'zod';
 import type { ChartOfAccount, PpmpCategory, PriceList } from '@/types/global';
 import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
+import { AlertErrorDialog } from '@/components/alert-error-dialog';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -88,6 +89,8 @@ export default function FormDialog({
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
     const [openCategoryCommand, setOpenCategoryCommand] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -143,7 +146,12 @@ export default function FormDialog({
                 onStart: () => setIsLoading(true),
                 onSuccess: () => onOpenChange(false),
                 onError: (errors) => {
+                    const errorMessage =
+                        Object.values(errors).join(', ') ||
+                        'An unknown error occurred';
                     console.error('Patch Validation Errors:', errors);
+                    setError(errorMessage);
+                    setIsErrorDialogOpen(true);
                 },
                 // onInvalid: (response) => {
                 //     console.error('Patch Server Error:', response);
@@ -157,7 +165,12 @@ export default function FormDialog({
                 onStart: () => setIsLoading(true),
                 onSuccess: () => onOpenChange(false),
                 onError: (errors) => {
+                    const errorMessage =
+                        Object.values(errors).join(', ') ||
+                        'An unknown error occurred';
                     console.error('Post Validation Errors:', errors);
+                    setError(errorMessage);
+                    setIsErrorDialogOpen(true);
                 },
                 // onInvalid: (response) => {
                 //     console.error('Post Server Error:', response);
@@ -656,6 +669,12 @@ export default function FormDialog({
                     </Button>
                 </DialogFooter>
             </DialogContent>
+
+            <AlertErrorDialog
+                open={isErrorDialogOpen}
+                onOpenChange={setIsErrorDialogOpen}
+                error={error}
+            />
         </Dialog>
     );
 }
