@@ -17,6 +17,7 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldContent,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -137,7 +138,7 @@ export default function FormDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogDescription></DialogDescription>
             <DialogContent
-                className="flex max-h-[90vh] flex-col gap-0 overflow-hidden"
+                className="flex max-h-[90vh] flex-col overflow-hidden"
                 onPointerDownOutside={(e) => isLoading && e.preventDefault()}
                 onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
             >
@@ -148,12 +149,12 @@ export default function FormDialog({
                 </DialogHeader>
 
                 <div className="flex min-h-0 flex-1 pt-2">
-                    <ScrollArea className="w-full flex-1 pr-3">
+                    <ScrollArea className="w-full pr-4">
                         <form
                             id="chart-of-account-form"
                             onSubmit={form.handleSubmit(onSubmit)}
                         >
-                            <FieldGroup className="pb-4">
+                            <div className="flex flex-col gap-6">
                                 <Controller
                                     name="account_number"
                                     control={form.control}
@@ -161,21 +162,35 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel>
-                                                Account Number{' '}
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                placeholder="e.g., 5-02-03-010"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Account Number{' '}
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="e.g., 5-02-03-010"
+                                                    autoComplete="off"
                                                 />
-                                            )}
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -187,21 +202,35 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel>
-                                                Account Title{' '}
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                placeholder="e.g., Office Supplies"
-                                            />
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Account Title{' '}
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="e.g., Office Supplies"
+                                                    autoComplete="off"
                                                 />
-                                            )}
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -213,41 +242,53 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel>
-                                                Account Type{' '}
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                value={field.value}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {[
-                                                        'ASSET',
-                                                        'LIABILITY',
-                                                        'EQUITY',
-                                                        'REVENUE',
-                                                        'EXPENSE',
-                                                    ].map((v) => (
-                                                        <SelectItem
-                                                            key={v}
-                                                            value={v}
-                                                        >
-                                                            {v}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Account Type{' '}
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+
+                                                <Select
+                                                    value={field.value}
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+
+                                                    <SelectContent>
+                                                        {[
+                                                            'ASSET',
+                                                            'LIABILITY',
+                                                            'EQUITY',
+                                                            'REVENUE',
+                                                            'EXPENSE',
+                                                        ].map((v) => (
+                                                            <SelectItem
+                                                                key={v}
+                                                                value={v}
+                                                            >
+                                                                {v}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -259,40 +300,52 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel>
-                                                Expense Class{' '}
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                value={field.value}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {[
-                                                        'PS',
-                                                        'MOOE',
-                                                        'FE',
-                                                        'CO',
-                                                    ].map((v) => (
-                                                        <SelectItem
-                                                            key={v}
-                                                            value={v}
-                                                        >
-                                                            {v}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Expense Class
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+
+                                                <Select
+                                                    value={field.value}
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+
+                                                    <SelectContent>
+                                                        {[
+                                                            'PS',
+                                                            'MOOE',
+                                                            'FE',
+                                                            'CO',
+                                                        ].map((v) => (
+                                                            <SelectItem
+                                                                key={v}
+                                                                value={v}
+                                                            >
+                                                                {v}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -300,15 +353,35 @@ export default function FormDialog({
                                 <Controller
                                     name="account_series"
                                     control={form.control}
-                                    render={({ field }) => (
-                                        <Field>
-                                            <FieldLabel>
-                                                Account Series (Optional)
-                                            </FieldLabel>
-                                            <Input
-                                                {...field}
-                                                value={field.value ?? ''}
-                                            />
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Account Series
+                                                </FieldLabel>
+
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    value={field.value ?? ''}
+                                                    autoComplete="off"
+                                                />
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -320,33 +393,46 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel>
-                                                Normal Balance{' '}
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
-                                            <Select
-                                                onValueChange={field.onChange}
-                                                value={field.value}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="DEBIT">
-                                                        DEBIT
-                                                    </SelectItem>
-                                                    <SelectItem value="CREDIT">
-                                                        CREDIT
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Normal Balance
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
+
+                                                <Select
+                                                    value={field.value}
+                                                    onValueChange={
+                                                        field.onChange
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-full">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+
+                                                    <SelectContent>
+                                                        <SelectItem value="DEBIT">
+                                                            DEBIT
+                                                        </SelectItem>
+
+                                                        <SelectItem value="CREDIT">
+                                                            CREDIT
+                                                        </SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -354,15 +440,36 @@ export default function FormDialog({
                                 <Controller
                                     name="description"
                                     control={form.control}
-                                    render={({ field }) => (
-                                        <Field>
-                                            <FieldLabel>
-                                                Description (Optional)
-                                            </FieldLabel>
-                                            <Textarea
-                                                {...field}
-                                                value={field.value ?? ''}
-                                            />
+                                    render={({ field, fieldState }) => (
+                                        <Field
+                                            data-invalid={fieldState.invalid}
+                                        >
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                >
+                                                    Description
+                                                </FieldLabel>
+
+                                                <Textarea
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    value={field.value ?? ''}
+                                                    autoComplete="off"
+                                                    className="min-h-15"
+                                                />
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -372,21 +479,24 @@ export default function FormDialog({
                                     control={form.control}
                                     render={({ field }) => (
                                         <Field>
-                                            <div className="mt-2 flex items-center gap-2 rounded-md border p-2">
-                                                <Checkbox
-                                                    id="is_postable"
-                                                    checked={field.value}
-                                                    onCheckedChange={
-                                                        field.onChange
-                                                    }
-                                                />
-                                                <label
-                                                    htmlFor="is_postable"
-                                                    className="text-sm"
-                                                >
-                                                    Is Postable
-                                                </label>
-                                            </div>
+                                            <FieldContent>
+                                                <div className="mt-2 flex items-center gap-2 rounded-md border p-2">
+                                                    <Checkbox
+                                                        id={field.name}
+                                                        checked={field.value}
+                                                        onCheckedChange={
+                                                            field.onChange
+                                                        }
+                                                    />
+
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                        className="text-sm"
+                                                    >
+                                                        Is Postable
+                                                    </FieldLabel>
+                                                </div>
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
@@ -396,25 +506,27 @@ export default function FormDialog({
                                     control={form.control}
                                     render={({ field }) => (
                                         <Field>
-                                            <div className="mt-2 flex items-center gap-2 rounded-md border p-2">
-                                                <Checkbox
-                                                    id="is_active"
-                                                    checked={field.value}
-                                                    onCheckedChange={
-                                                        field.onChange
-                                                    }
-                                                />
-                                                <label
-                                                    htmlFor="is_active"
-                                                    className="text-sm"
-                                                >
-                                                    Is Active
-                                                </label>
-                                            </div>
+                                            <FieldContent>
+                                                <div className="mt-2 flex items-center gap-2 rounded-md border p-2">
+                                                    <Checkbox
+                                                        id={field.name}
+                                                        checked={field.value}
+                                                        onCheckedChange={
+                                                            field.onChange
+                                                        }
+                                                    />
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                        className="text-sm"
+                                                    >
+                                                        Is Active
+                                                    </FieldLabel>
+                                                </div>
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />
-                            </FieldGroup>
+                            </div>
                         </form>
                     </ScrollArea>
                 </div>

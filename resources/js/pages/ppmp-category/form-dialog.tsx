@@ -17,6 +17,7 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldContent,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
@@ -113,28 +114,35 @@ export default function FormDialog({
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel htmlFor="ppmp-category-form-name">
-                                                Name
-                                                <span className="text-red-500">
-                                                    *
-                                                </span>
-                                            </FieldLabel>
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Name
+                                                    <span className="text-red-500">
+                                                        *
+                                                    </span>
+                                                </FieldLabel>
 
-                                            <Input
-                                                {...field}
-                                                id="ppmp-category-form-name"
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                placeholder="Category name..."
-                                                autoComplete="off"
-                                            />
-
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
+                                                <Input
+                                                    {...field}
+                                                    id={field.name}
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                    placeholder="Category name..."
+                                                    autoComplete="off"
                                                 />
-                                            )}
+
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     )}
                                 />

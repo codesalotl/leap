@@ -8,7 +8,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import {
+    Field,
+    FieldError,
+    FieldLabel,
+    FieldContent,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { InputGroup, InputGroupTextarea } from '@/components/ui/input-group';
 import {
@@ -191,119 +196,136 @@ export default function FormDialog({
                                         chartOfAccounts.find(
                                             (acc) => acc.id === field.value,
                                         );
+
                                     return (
                                         <Field
                                             data-invalid={fieldState.invalid}
                                         >
-                                            <FieldLabel htmlFor="expense-select">
-                                                Expense Account
-                                            </FieldLabel>
-
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                role="combobox"
-                                                aria-expanded={
-                                                    openExpenseCommand
-                                                }
-                                                className={cn(
-                                                    'w-full justify-between px-3 text-left font-normal',
-                                                    !field.value &&
-                                                        'text-muted-foreground',
-                                                    fieldState.invalid &&
-                                                        'border-destructive ring-destructive',
-                                                )}
-                                                onClick={() =>
-                                                    setOpenExpenseCommand(true)
-                                                }
-                                            >
-                                                {selectedAccount ? (
-                                                    <span className="truncate">
-                                                        <code className="mr-2 rounded bg-muted p-0.5 text-xs">
-                                                            {
-                                                                selectedAccount.account_number
-                                                            }
-                                                        </code>
-                                                        {
-                                                            selectedAccount.account_title
+                                            <FieldContent>
+                                                <FieldLabel
+                                                    htmlFor={field.name}
+                                                    className="gap-1"
+                                                >
+                                                    Expense Account
+                                                </FieldLabel>
+                                                <>
+                                                    <Button
+                                                        id={field.name}
+                                                        type="button"
+                                                        variant="outline"
+                                                        role="combobox"
+                                                        aria-expanded={
+                                                            openExpenseCommand
                                                         }
-                                                    </span>
-                                                ) : (
-                                                    'Select expense account'
-                                                )}
-                                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                            </Button>
+                                                        className={cn(
+                                                            'w-full justify-between px-3 text-left font-normal',
+                                                            !field.value &&
+                                                                'text-muted-foreground',
+                                                            fieldState.invalid &&
+                                                                'border-destructive ring-destructive',
+                                                        )}
+                                                        onClick={() =>
+                                                            setOpenExpenseCommand(
+                                                                true,
+                                                            )
+                                                        }
+                                                    >
+                                                        {selectedAccount ? (
+                                                            <span className="truncate">
+                                                                <code className="mr-2 rounded bg-muted p-0.5 text-xs">
+                                                                    {
+                                                                        selectedAccount.account_number
+                                                                    }
+                                                                </code>
+                                                                {
+                                                                    selectedAccount.account_title
+                                                                }
+                                                            </span>
+                                                        ) : (
+                                                            'Select expense account'
+                                                        )}
+                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                    </Button>
 
-                                            <CommandDialog
-                                                open={openExpenseCommand}
-                                                onOpenChange={
-                                                    setOpenExpenseCommand
-                                                }
-                                                className="sm:max-w-[600px]"
-                                            >
-                                                <Command>
-                                                    <CommandInput placeholder="Search account number or title..." />
+                                                    <CommandDialog
+                                                        open={
+                                                            openExpenseCommand
+                                                        }
+                                                        onOpenChange={
+                                                            setOpenExpenseCommand
+                                                        }
+                                                        className="sm:max-w-[600px]"
+                                                    >
+                                                        <Command>
+                                                            <CommandInput placeholder="Search account number or title..." />
 
-                                                    <CommandList>
-                                                        <CommandEmpty>
-                                                            No account found.
-                                                        </CommandEmpty>
+                                                            <CommandList>
+                                                                <CommandEmpty>
+                                                                    No account
+                                                                    found.
+                                                                </CommandEmpty>
 
-                                                        <CommandGroup heading="Chart of Accounts">
-                                                            {chartOfAccounts.map(
-                                                                (account) => (
-                                                                    <CommandItem
-                                                                        key={
-                                                                            account.id
-                                                                        }
-                                                                        value={`${account.account_number} ${account.account_title}`}
-                                                                        onSelect={() => {
-                                                                            field.onChange(
-                                                                                account.id,
-                                                                            );
-                                                                            setOpenExpenseCommand(
-                                                                                false,
-                                                                            );
-                                                                        }}
-                                                                    >
-                                                                        <div className="flex w-full items-center justify-between">
-                                                                            <div>
-                                                                                <code className="mr-2 rounded bg-muted p-1 text-xs">
-                                                                                    {
-                                                                                        account.account_number
-                                                                                    }
-                                                                                </code>
-                                                                                {
-                                                                                    account.account_title
+                                                                <CommandGroup heading="Chart of Accounts">
+                                                                    {chartOfAccounts.map(
+                                                                        (
+                                                                            account,
+                                                                        ) => (
+                                                                            <CommandItem
+                                                                                key={
+                                                                                    account.id
                                                                                 }
-                                                                            </div>
+                                                                                value={`${account.account_number} ${account.account_title}`}
+                                                                                onSelect={() => {
+                                                                                    field.onChange(
+                                                                                        account.id,
+                                                                                    );
+                                                                                    setOpenExpenseCommand(
+                                                                                        false,
+                                                                                    );
+                                                                                }}
+                                                                            >
+                                                                                <div className="flex w-full items-center justify-between">
+                                                                                    <div>
+                                                                                        <code className="mr-2 rounded bg-muted p-1 text-xs">
+                                                                                            {
+                                                                                                account.account_number
+                                                                                            }
+                                                                                        </code>
+                                                                                        {
+                                                                                            account.account_title
+                                                                                        }
+                                                                                    </div>
 
-                                                                            {field.value ===
-                                                                                account.id && (
-                                                                                <Check className="ml-2 h-4 w-4 opacity-100" />
-                                                                            )}
-                                                                        </div>
-                                                                    </CommandItem>
-                                                                ),
-                                                            )}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </CommandDialog>
+                                                                                    {field.value ===
+                                                                                        account.id && (
+                                                                                        <Check className="ml-2 h-4 w-4 opacity-100" />
+                                                                                    )}
+                                                                                </div>
+                                                                            </CommandItem>
+                                                                        ),
+                                                                    )}
+                                                                </CommandGroup>
+                                                            </CommandList>
+                                                        </Command>
+                                                    </CommandDialog>
+                                                </>
 
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
+                                                {fieldState.invalid && (
+                                                    <FieldError
+                                                        errors={[
+                                                            fieldState.error,
+                                                        ]}
+                                                    />
+                                                )}
+                                            </FieldContent>
                                         </Field>
                                     );
                                 }}
                             />
                         </div>
 
-                        <div className="">
-                            <Field>
+                        <Field>
+                            <FieldContent>
                                 <FieldLabel htmlFor="category-select">
                                     Category
                                 </FieldLabel>
@@ -321,6 +343,7 @@ export default function FormDialog({
                                                         fieldState.invalid
                                                     }
                                                 />
+
                                                 {fieldState.invalid && (
                                                     <FieldError
                                                         errors={[
@@ -340,91 +363,96 @@ export default function FormDialog({
                                                 ppmpCategories.find(
                                                     (c) => c.id === field.value,
                                                 );
+
                                             return (
                                                 <>
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        role="combobox"
-                                                        aria-expanded={
-                                                            openCategoryCommand
-                                                        }
-                                                        className={cn(
-                                                            'w-full justify-between px-3 text-left font-normal',
-                                                            !field.value &&
-                                                                'text-muted-foreground',
-                                                            fieldState.invalid &&
-                                                                'border-destructive ring-destructive',
-                                                        )}
-                                                        onClick={() =>
-                                                            setOpenCategoryCommand(
-                                                                true,
-                                                            )
-                                                        }
-                                                    >
-                                                        {selectedCat
-                                                            ? selectedCat.name
-                                                            : 'Select category'}
+                                                    <>
+                                                        <Button
+                                                            // id={form.control}
+                                                            type="button"
+                                                            variant="outline"
+                                                            role="combobox"
+                                                            aria-expanded={
+                                                                openCategoryCommand
+                                                            }
+                                                            className={cn(
+                                                                'w-full justify-between px-3 text-left font-normal',
+                                                                !field.value &&
+                                                                    'text-muted-foreground',
+                                                                fieldState.invalid &&
+                                                                    'border-destructive ring-destructive',
+                                                            )}
+                                                            onClick={() =>
+                                                                setOpenCategoryCommand(
+                                                                    true,
+                                                                )
+                                                            }
+                                                        >
+                                                            {selectedCat
+                                                                ? selectedCat.name
+                                                                : 'Select category'}
 
-                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                    </Button>
+                                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                        </Button>
 
-                                                    <CommandDialog
-                                                        open={
-                                                            openCategoryCommand
-                                                        }
-                                                        onOpenChange={
-                                                            setOpenCategoryCommand
-                                                        }
-                                                        className="sm:max-w-[600px]"
-                                                    >
-                                                        <Command>
-                                                            <CommandInput placeholder="Search category..." />
+                                                        <CommandDialog
+                                                            open={
+                                                                openCategoryCommand
+                                                            }
+                                                            onOpenChange={
+                                                                setOpenCategoryCommand
+                                                            }
+                                                            className="sm:max-w-[600px]"
+                                                        >
+                                                            <Command>
+                                                                <CommandInput placeholder="Search category..." />
 
-                                                            <CommandList>
-                                                                <CommandEmpty>
-                                                                    No category
-                                                                    found.
-                                                                </CommandEmpty>
+                                                                <CommandList>
+                                                                    <CommandEmpty>
+                                                                        No
+                                                                        category
+                                                                        found.
+                                                                    </CommandEmpty>
 
-                                                                <CommandGroup heading="Categories">
-                                                                    {ppmpCategories.map(
-                                                                        (
-                                                                            category,
-                                                                        ) => (
-                                                                            <CommandItem
-                                                                                key={
-                                                                                    category.id
-                                                                                }
-                                                                                value={
-                                                                                    category.name
-                                                                                }
-                                                                                onSelect={() => {
-                                                                                    field.onChange(
-                                                                                        category.id,
-                                                                                    );
-                                                                                    setOpenCategoryCommand(
-                                                                                        false,
-                                                                                    );
-                                                                                }}
-                                                                            >
-                                                                                <div className="flex w-full items-center justify-between">
-                                                                                    {
+                                                                    <CommandGroup heading="Categories">
+                                                                        {ppmpCategories.map(
+                                                                            (
+                                                                                category,
+                                                                            ) => (
+                                                                                <CommandItem
+                                                                                    key={
+                                                                                        category.id
+                                                                                    }
+                                                                                    value={
                                                                                         category.name
                                                                                     }
+                                                                                    onSelect={() => {
+                                                                                        field.onChange(
+                                                                                            category.id,
+                                                                                        );
+                                                                                        setOpenCategoryCommand(
+                                                                                            false,
+                                                                                        );
+                                                                                    }}
+                                                                                >
+                                                                                    <div className="flex w-full items-center justify-between">
+                                                                                        {
+                                                                                            category.name
+                                                                                        }
 
-                                                                                    {field.value ===
-                                                                                        category.id && (
-                                                                                        <Check className="ml-2 h-4 w-4 opacity-100" />
-                                                                                    )}
-                                                                                </div>
-                                                                            </CommandItem>
-                                                                        ),
-                                                                    )}
-                                                                </CommandGroup>
-                                                            </CommandList>
-                                                        </Command>
-                                                    </CommandDialog>
+                                                                                        {field.value ===
+                                                                                            category.id && (
+                                                                                            <Check className="ml-2 h-4 w-4 opacity-100" />
+                                                                                        )}
+                                                                                    </div>
+                                                                                </CommandItem>
+                                                                            ),
+                                                                        )}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                        </CommandDialog>
+                                                    </>
 
                                                     {fieldState.invalid && (
                                                         <FieldError
@@ -438,33 +466,8 @@ export default function FormDialog({
                                         }}
                                     />
                                 )}
-
-                                {/* {isCustomItem && (
-                                    <div className="flex items-center space-x-2">
-                                        <Switch
-                                            id="custom-category-toggle"
-                                            checked={isCustomCategory}
-                                            onCheckedChange={(checked) =>
-                                                form.setValue(
-                                                    'isCustomCategory',
-                                                    checked,
-                                                )
-                                            }
-                                            size="sm"
-                                        />
-
-                                        <label
-                                            htmlFor="custom-category-toggle"
-                                            className="text-sm font-medium"
-                                        >
-                                            {isCustomCategory
-                                                ? 'Custom Category'
-                                                : 'Predefined Category'}
-                                        </label>
-                                    </div>
-                                )} */}
-                            </Field>
-                        </div>
+                            </FieldContent>
+                        </Field>
 
                         <div className="md:col-span-1">
                             <Controller
@@ -472,27 +475,35 @@ export default function FormDialog({
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="form-rhf-demo-item-no">
-                                            Item No.
-                                        </FieldLabel>
+                                        <FieldContent>
+                                            <FieldLabel
+                                                htmlFor={field.name}
+                                                className="gap-1"
+                                            >
+                                                Item No.
+                                            </FieldLabel>
 
-                                        <Input
-                                            {...field}
-                                            id="form-rhf-demo-item-no"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder="Enter item number"
-                                            autoComplete="off"
-                                            type="number"
-                                            value={
-                                                field.value?.toString() || ''
-                                            }
-                                        />
-
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
+                                            <Input
+                                                {...field}
+                                                id={field.name}
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                                placeholder="Enter item number"
+                                                autoComplete="off"
+                                                type="number"
+                                                value={
+                                                    field.value?.toString() ||
+                                                    ''
+                                                }
                                             />
-                                        )}
+
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </FieldContent>
                                     </Field>
                                 )}
                             />
@@ -504,28 +515,33 @@ export default function FormDialog({
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="form-rhf-demo-description">
-                                            Procurement Item
-                                        </FieldLabel>
+                                        <FieldContent>
+                                            <FieldLabel
+                                                htmlFor={field.name}
+                                                className="gap-1"
+                                            >
+                                                Procurement Item
+                                            </FieldLabel>
 
-                                        <InputGroup>
-                                            <InputGroupTextarea
-                                                {...field}
-                                                id="form-rhf-demo-description"
-                                                placeholder="Enter item description"
-                                                rows={3}
-                                                className="min-h-24 resize-none"
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                            />
-                                        </InputGroup>
+                                            <InputGroup>
+                                                <InputGroupTextarea
+                                                    {...field}
+                                                    id={field.name}
+                                                    placeholder="Enter item description"
+                                                    rows={3}
+                                                    className="min-h-24 resize-none"
+                                                    aria-invalid={
+                                                        fieldState.invalid
+                                                    }
+                                                />
+                                            </InputGroup>
 
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
-                                            />
-                                        )}
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </FieldContent>
                                     </Field>
                                 )}
                             />
@@ -537,23 +553,30 @@ export default function FormDialog({
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="form-rhf-demo-unit">
-                                            Unit of Measurement
-                                        </FieldLabel>
+                                        <FieldContent>
+                                            <FieldLabel
+                                                htmlFor={field.name}
+                                                className="gap-1"
+                                            >
+                                                Unit of Measurement
+                                            </FieldLabel>
 
-                                        <Input
-                                            {...field}
-                                            id="form-rhf-demo-unit"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder="Enter unit of measurement"
-                                            autoComplete="off"
-                                        />
-
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
+                                            <Input
+                                                {...field}
+                                                id={field.name}
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                                placeholder="Enter unit of measurement"
+                                                autoComplete="off"
                                             />
-                                        )}
+
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </FieldContent>
                                     </Field>
                                 )}
                             />
@@ -565,25 +588,32 @@ export default function FormDialog({
                                 control={form.control}
                                 render={({ field, fieldState }) => (
                                     <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor="form-rhf-demo-price">
-                                            Price
-                                        </FieldLabel>
+                                        <FieldContent>
+                                            <FieldLabel
+                                                htmlFor={field.name}
+                                                className="gap-1"
+                                            >
+                                                Price
+                                            </FieldLabel>
 
-                                        <Input
-                                            {...field}
-                                            id="form-rhf-demo-price"
-                                            type="number"
-                                            step="0.01"
-                                            aria-invalid={fieldState.invalid}
-                                            placeholder="0.00"
-                                            autoComplete="off"
-                                        />
-
-                                        {fieldState.invalid && (
-                                            <FieldError
-                                                errors={[fieldState.error]}
+                                            <Input
+                                                {...field}
+                                                id={field.name}
+                                                type="number"
+                                                step="0.01"
+                                                aria-invalid={
+                                                    fieldState.invalid
+                                                }
+                                                placeholder="0.00"
+                                                autoComplete="off"
                                             />
-                                        )}
+
+                                            {fieldState.invalid && (
+                                                <FieldError
+                                                    errors={[fieldState.error]}
+                                                />
+                                            )}
+                                        </FieldContent>
                                     </Field>
                                 )}
                             />
