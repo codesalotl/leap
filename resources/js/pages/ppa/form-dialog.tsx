@@ -37,20 +37,16 @@ import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Office, Ppa } from '@/types/global';
 import { Spinner } from '@/components/ui/spinner';
-
 import {
     AlertDialog,
     AlertDialogAction,
-    // AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    // AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
-// Zod Schema updated to match your exact Types (using 'name' instead of 'title')
 const formSchema = z.object({
     office_id: z.string().min(1, 'Implementing office is required'),
     name: z.string().min(1, 'Name is required'),
@@ -60,7 +56,6 @@ const formSchema = z.object({
         .max(3, 'Suffix must be 3 digits (e.g., 001)')
         .regex(/^\d+$/, 'Suffix must be numeric'),
     type: z.enum(['Program', 'Project', 'Activity', 'Sub-Activity']),
-    // Removed .default(true) to fix the TypeScript / Resolver error
     is_active: z.boolean(),
 });
 
@@ -85,22 +80,10 @@ export default function PpaFormDialog({
     editPpa,
     offices,
 }: PpaFormDialogProps) {
-    // console.log({
-    //     isOpen,
-    //     onOpenChange,
-    //     mode,
-    //     targetType,
-    //     parentPpa,
-    //     editPpa,
-    //     offices,
-    // });
-
     const isEditing = mode === 'edit';
     const isAddingChild = mode === 'add' && !!parentPpa;
-
     const [openOfficeCommand, setOpenOfficeCommand] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
     const [isErrorAlertOpen, setIsErrorAlertOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -118,7 +101,6 @@ export default function PpaFormDialog({
     const selectedOfficeId = Number(form.watch('office_id'));
     const codeSuffix = form.watch('code_suffix');
 
-    // Sync form with props when dialog opens
     useEffect(() => {
         if (!isOpen) return;
 
@@ -144,12 +126,10 @@ export default function PpaFormDialog({
     const getCodePreview = () => {
         const suffix = codeSuffix || '000';
 
-        // 1. Adding a child: Base code is parent's full code
         if (isAddingChild && parentPpa?.full_code) {
             return `${parentPpa.full_code}-${suffix}`;
         }
 
-        // 2. Editing an item (not root): Remove its old suffix and append new one
         if (isEditing && editPpa?.full_code && editPpa.type !== 'Program') {
             const baseCode = editPpa.full_code
                 .split('-')
@@ -158,7 +138,6 @@ export default function PpaFormDialog({
             return `${baseCode}-${suffix}`;
         }
 
-        // 3. Root Program: Use Office full_code
         const officeFullCode = offices.find(
             (o) => o.id === selectedOfficeId,
         )?.full_code;
@@ -168,7 +147,6 @@ export default function PpaFormDialog({
     function onSubmit(values: FormValues) {
         console.log(values);
 
-        // Coerce office_id to number to match your TS Type before sending to backend
         const payload: Record<string, any> = {
             ...values,
             office_id: Number(values.office_id),
@@ -200,20 +178,16 @@ export default function PpaFormDialog({
                 onError: (errors) => {
                     console.error(errors);
 
-                    // If there is a code_suffix error, show it in the Alert
                     if (errors.code_suffix) {
                         setErrorMessage(errors.code_suffix);
                         setIsErrorAlertOpen(true);
-                    }
-                    // You can also catch other errors if you want
-                    else if (Object.keys(errors).length > 0) {
+                    } else if (Object.keys(errors).length > 0) {
                         setErrorMessage(
                             'An error occurred while saving. Please check your inputs.',
                         );
                         setIsErrorAlertOpen(true);
                     }
 
-                    // Still sync with the form so the input turns red
                     Object.keys(errors).forEach((key) => {
                         form.setError(key as keyof FormValues, {
                             type: 'server',
@@ -278,10 +252,8 @@ export default function PpaFormDialog({
                             <form
                                 id="ppa-form"
                                 onSubmit={form.handleSubmit(onSubmit)}
-                                // className="space-y-6"
                             >
                                 <div className="space-y-6">
-                                    {/* NAME FIELD */}
                                     <FormField
                                         control={form.control}
                                         name="name"
@@ -302,7 +274,6 @@ export default function PpaFormDialog({
                                         )}
                                     />
 
-                                    {/* OFFICE SELECTION */}
                                     <div className="col-span-1 md:col-span-2">
                                         <FormField
                                             control={form.control}
@@ -315,7 +286,6 @@ export default function PpaFormDialog({
 
                                                     {isEditing ||
                                                     isAddingChild ? (
-                                                        // LOCKED STATE
                                                         <div className="flex w-full items-center gap-3 rounded-lg border bg-muted/40 p-3 shadow-sm ring-1 ring-black/5 ring-inset">
                                                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-background shadow-sm">
                                                                 <span className="text-lg">
@@ -343,7 +313,6 @@ export default function PpaFormDialog({
                                                             />
                                                         </div>
                                                     ) : (
-                                                        // SELECTABLE STATE (New Program)
                                                         <>
                                                             <Button
                                                                 type="button"
@@ -419,12 +388,6 @@ export default function PpaFormDialog({
                                                                                             );
                                                                                         }}
                                                                                     >
-                                                                                        {/* Change 'flex' to 'grid'.
-                                                                                        'grid-cols-[80px_1fr_24px]' creates:
-                                                                                        1. A fixed 80px column for the acronym
-                                                                                        2. A flexible remaining space column for the name
-                                                                                        3. A fixed 24px column for the checkmark
-                                                                                    */}
                                                                                         <div className="grid w-full grid-cols-[80px_1fr_24px] items-center gap-2">
                                                                                             <span className="font-medium text-muted-foreground">
                                                                                                 {office.acronym ??
@@ -459,7 +422,6 @@ export default function PpaFormDialog({
                                         />
                                     </div>
 
-                                    {/* CODE SUFFIX & ACTIVE STATUS */}
                                     <div className="grid grid-cols-1 gap-6 md:grid-cols-5">
                                         <div className="md:col-span-2">
                                             <FormField
