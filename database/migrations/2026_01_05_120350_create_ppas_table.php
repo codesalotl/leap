@@ -30,6 +30,7 @@ return new class extends Migration {
             ]);
             $table->string('code_suffix', 4);
             $table->boolean('is_active')->default(true);
+            $table->integer('sort_order')->default(0);
             $table->timestamps();
 
             // Prevent duplicate suffixes for the same office/parent

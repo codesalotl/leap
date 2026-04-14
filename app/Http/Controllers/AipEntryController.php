@@ -34,6 +34,7 @@ class AipEntryController extends Controller
         $aipEntries = Ppa::where('office_id', $officeId)
             ->whereNull('parent_id')
             ->whereHas('aipEntries', $yearFilter)
+            ->orderBy('sort_order')
             ->with([
                 // programs
                 'aipEntries' => function ($query) use ($yearFilter) {
@@ -46,7 +47,9 @@ class AipEntryController extends Controller
                 'office.officeType',
 
                 // projects
-                'children' => $hasAipFilter,
+                'children' => fn($q) => $hasAipFilter($q)->orderBy(
+                    'sort_order',
+                ),
                 'children.aipEntries' => function ($query) use ($yearFilter) {
                     $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
@@ -57,7 +60,9 @@ class AipEntryController extends Controller
                 'children.office.officeType',
 
                 // activities
-                'children.children' => $hasAipFilter,
+                'children.children' => fn($q) => $hasAipFilter($q)->orderBy(
+                    'sort_order',
+                ),
                 'children.children.aipEntries' => function ($query) use (
                     $yearFilter,
                 ) {
@@ -70,7 +75,9 @@ class AipEntryController extends Controller
                 'children.children.office.officeType',
 
                 // sub-activities
-                'children.children.children' => $hasAipFilter,
+                'children.children.children' => fn($q) => $hasAipFilter(
+                    $q,
+                )->orderBy('sort_order'),
                 'children.children.children.aipEntries' => function (
                     $query,
                 ) use ($yearFilter) {
@@ -86,19 +93,25 @@ class AipEntryController extends Controller
 
         $ppaMasterList = Ppa::where('office_id', $officeId)
             ->whereNull('parent_id')
+            ->orderBy('sort_order')
             ->with([
                 'office.sector',
                 'office.lguLevel',
                 'office.officeType',
 
+                'children' => fn($q) => $q->orderBy('sort_order'),
                 'children.office.sector',
                 'children.office.lguLevel',
                 'children.office.officeType',
 
+                'children.children' => fn($q) => $q->orderBy('sort_order'),
                 'children.children.office.sector',
                 'children.children.office.lguLevel',
                 'children.children.office.officeType',
 
+                'children.children.children' => fn($q) => $q->orderBy(
+                    'sort_order',
+                ),
                 'children.children.children.office.sector',
                 'children.children.children.office.lguLevel',
                 'children.children.children.office.officeType',

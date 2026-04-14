@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,40 @@ import { DeleteDialog } from '@/components/delete-dialog';
 import { router } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
 import columns from './table/columns';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'PPA Master Library', href: '#' },
 ];
+
+const LEVEL_MAP = {
+    program: 0,
+    project: 1,
+    activity: 2,
+    'sub-activity': 3,
+    all: 3,
+};
+
+const filterTreeByLevel = (
+    data: Ppa[],
+    maxLevel: number,
+    currentLevel: number = 0,
+): Ppa[] => {
+    if (currentLevel > maxLevel) return [];
+
+    return data.map((item) => ({
+        ...item,
+        children: item.children
+            ? filterTreeByLevel(item.children, maxLevel, currentLevel + 1)
+            : [],
+    }));
+};
 
 export default function PpaPage({
     ppaTree,
@@ -32,6 +62,15 @@ export default function PpaPage({
     // Delete Dialog States
     const [deletePpa, setDeletePpa] = useState<Ppa | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // View Level Filter State
+    const [viewLevel, setViewLevel] = useState<string>('all');
+
+    // Filter tree based on view level
+    const filteredPpaTree = useMemo(() => {
+        const level = LEVEL_MAP[viewLevel as keyof typeof LEVEL_MAP];
+        return filterTreeByLevel(ppaTree, level);
+    }, [ppaTree, viewLevel]);
 
     // console.log({ parentPpa, editPpa });
 
@@ -84,18 +123,56 @@ export default function PpaPage({
         });
     }
 
+    function handleReorder(activeId: string, overId: string) {
+        router.post(
+            '/ppas/reorder',
+            {
+                active_id: activeId,
+                over_id: overId,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
                 <DataTable
                     columns={columns}
-                    data={ppaTree}
+                    data={filteredPpaTree}
                     withSearch={true}
                     onAdd={handleAddChild}
                     onEdit={handleEdit}
                     onDelete={handleDeleteOpen}
+                    onReorder={handleReorder}
                 >
-                    <Button onClick={handleAddRoot}>New Program</Button>
+                    <div className="flex items-center gap-2">
+                        <Select value={viewLevel} onValueChange={setViewLevel}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="View Level" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="program">
+                                    Only Programs
+                                </SelectItem>
+                                <SelectItem value="project">
+                                    With Projects
+                                </SelectItem>
+                                <SelectItem value="activity">
+                                    With Activities
+                                </SelectItem>
+                                <SelectItem value="sub-activity">
+                                    Full Hierarchy
+                                </SelectItem>
+                                <SelectItem value="all">Show All</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <Button onClick={handleAddRoot}>New Program</Button>
+                    </div>
                 </DataTable>
             </div>
 

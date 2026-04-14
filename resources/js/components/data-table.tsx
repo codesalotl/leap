@@ -1,5 +1,13 @@
-import { type ReactElement, useState, useRef } from 'react';
 import {
+    type ReactElement,
+    type CSSProperties,
+    useState,
+    useRef,
+    useMemo,
+    useEffect,
+} from 'react';
+import {
+    type Row,
     type ColumnDef,
     flexRender,
     getCoreRowModel,
@@ -20,6 +28,30 @@ import { getCommonPinningStyles } from '@/pages/utils/column-pinning-styles';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { AlertErrorDialog } from '@/components/alert-error-dialog';
+
+// needed for table body level scope DnD setup
+import {
+    DndContext,
+    KeyboardSensor,
+    MouseSensor,
+    TouchSensor,
+    closestCenter,
+    type DragEndEvent,
+    type UniqueIdentifier,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
+import {
+    arrayMove,
+    SortableContext,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+
+// needed for row & cell level scope DnD setup
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface DataTableProps<TData> {
     columns: ColumnDef<TData, any>[];
@@ -41,7 +73,31 @@ interface DataTableProps<TData> {
     onGeneratePdf?: (data: TData) => void;
     onOpenPpmpSummary?: (data: TData) => void;
     negativeHeight?: number;
+    onReorder?: (activeId: string, overId: string) => void;
 }
+
+const reorderTree = (data: any[], activeId: string, overId: string): any[] => {
+    // 1. Check if the items are in the current level
+    const activeIndex = data.findIndex(
+        (item) => item.id.toString() === activeId,
+    );
+    const overIndex = data.findIndex((item) => item.id.toString() === overId);
+
+    if (activeIndex !== -1 && overIndex !== -1) {
+        return arrayMove(data, activeIndex, overIndex);
+    }
+
+    // 2. If not found, recurse into children
+    return data.map((item) => {
+        if (item.children && item.children.length > 0) {
+            return {
+                ...item,
+                children: reorderTree(item.children, activeId, overId),
+            };
+        }
+        return item;
+    });
+};
 
 export function DataTable<TData>({
     columns,
@@ -58,14 +114,23 @@ export function DataTable<TData>({
     withRowSpan = false,
     withFooter = false,
     negativeHeight = 8,
+    onReorder,
 }: DataTableProps<TData>) {
+    const [localData, setLocalData] = useState(data);
+    const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        setLocalData(data);
+    }, [data]);
+
     const [globalFilter, setGlobalFilter] = useState('');
 
     // 1. Setup the ref for ScrollArea
     const tableContainerRef = useRef<HTMLDivElement>(null);
 
     const table = useReactTable({
-        data,
+        data: localData,
         columns,
         getCoreRowModel: getCoreRowModel(),
         initialState: {
@@ -81,6 +146,7 @@ export function DataTable<TData>({
             onOpen,
             onGeneratePdf,
             onOpenPpmpSummary,
+            onReorder,
         },
         getSubRows: (row: any) => row.children,
         getExpandedRowModel: getExpandedRowModel(),
@@ -89,9 +155,17 @@ export function DataTable<TData>({
             expanded: true,
             globalFilter,
         },
+
+        // for dnd
+        getRowId: (row) => row.id.toString(),
     });
 
     const { rows } = table.getRowModel();
+
+    const dataIds = useMemo<UniqueIdentifier[]>(
+        () => rows.map((row) => row.id.toString()),
+        [rows],
+    );
 
     // 2. Setup Virtualizer
     const rowVirtualizer = useVirtualizer({
@@ -116,189 +190,270 @@ export function DataTable<TData>({
             ? totalSize - (virtualRows?.[virtualRows.length - 1]?.end || 0)
             : 0;
 
+    const sensors = useSensors(
+        useSensor(MouseSensor, {}),
+        useSensor(TouchSensor, {}),
+        useSensor(KeyboardSensor, {}),
+    );
+
+    function handleDragEnd(event: DragEndEvent) {
+        const { active, over } = event;
+
+        if (active && over && active.id !== over.id) {
+            const activeId = active.id.toString();
+            const overId = over.id.toString();
+
+            // Find the objects in your flat 'rows' list
+            const activeRow = rows.find((r) => r.id === active.id);
+            const overRow = rows.find((r) => r.id === over.id);
+
+            if (!activeRow || !overRow) return;
+
+            // LOGIC CHECK: Are they siblings?
+            // In your PPA data, siblings share the same parent_id
+            if (
+                (activeRow.original as any).parent_id !==
+                (overRow.original as any).parent_id
+            ) {
+                setErrorMessage('Moving between levels is not supported');
+                setErrorDialogOpen(true);
+                return;
+            }
+
+            const updatedData = reorderTree([...localData], activeId, overId);
+            setLocalData(updatedData);
+
+            // Call the backend
+            onReorder?.(activeId, overId);
+        }
+    }
+
     return (
-        <div className="flex flex-col gap-4">
-            {(withSearch || children) && (
-                <div className="flex items-center justify-between gap-4">
-                    {withSearch ? (
-                        <Input
-                            placeholder="Filter..."
-                            value={globalFilter ?? ''}
-                            onChange={(event) =>
-                                table.setGlobalFilter(event.target.value)
-                            }
-                            className="max-w-sm"
-                        />
-                    ) : (
-                        <div />
-                    )}
-                    <div>{children}</div>
-                </div>
-            )}
-
-            {/* Keep your ScrollArea exactly as it was */}
-            <ScrollArea
-                ref={tableContainerRef}
-                style={{ height: `calc(100vh - ${negativeHeight}rem)` }}
-                className="rounded-md border"
-            >
-                {/* <Table style={{ tableLayout: 'fixed', width: '100%' }}> */}
-                <Table
-                    style={{
-                        tableLayout: 'fixed',
-                        // width: `${table.getCenterTotalSize()}px`,
-                        minWidth: `${table.getCenterTotalSize()}px`,
-                        width: '100%',
-                    }}
-                    // className="w-full"
-                >
-                    <TableHeader className="sticky top-0 z-20 bg-background">
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => (
-                                    <TableHead
-                                        key={header.id}
-                                        colSpan={header.colSpan}
-                                        className="border-b-0 shadow-[inset_0_-1px_0_0_var(--muted)]"
-                                        style={{
-                                            width: `${header.getSize()}px`,
-                                            // minWidth: `${header.getSize()}px`,
-                                            ...getCommonPinningStyles(
-                                                header.column,
-                                                table,
-                                            ),
-                                        }}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                  header.column.columnDef
-                                                      .header,
-                                                  header.getContext(),
-                                              )}
-                                    </TableHead>
-                                ))}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-
-                    <TableBody>
-                        {/* Top Spacer Row */}
-                        {paddingTop > 0 && (
-                            <TableRow>
-                                <TableCell
-                                    style={{ height: `${paddingTop}px` }}
-                                    colSpan={columns.length}
-                                />
-                            </TableRow>
+        <>
+            <div className="flex flex-col gap-4">
+                {(withSearch || children) && (
+                    <div className="flex items-center justify-between gap-4">
+                        {withSearch ? (
+                            <Input
+                                placeholder="Filter..."
+                                value={globalFilter ?? ''}
+                                onChange={(event) =>
+                                    table.setGlobalFilter(event.target.value)
+                                }
+                                className="max-w-sm"
+                            />
+                        ) : (
+                            <div />
                         )}
 
-                        {virtualRows.length > 0 ? (
-                            virtualRows.map((virtualRow) => {
-                                const row = rows[virtualRow.index];
-                                return (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={
-                                            row.getIsSelected() && 'selected'
-                                        }
-                                    >
-                                        {row.getVisibleCells().map((cell) => {
-                                            const columnMeta = cell.column
-                                                .columnDef.meta as any;
-                                            const isSpannedCol =
-                                                withRowSpan &&
-                                                columnMeta?.rowSpan;
-                                            const rowData = row.original as any;
-                                            const hasSpanningData =
-                                                typeof rowData.isFirstInGroup !==
-                                                'undefined';
-                                            const activeSpan =
-                                                isSpannedCol && hasSpanningData;
+                        <div>{children}</div>
+                    </div>
+                )}
 
-                                            if (
-                                                activeSpan &&
-                                                !rowData.isFirstInGroup
-                                            ) {
-                                                return null;
-                                            }
+                <ScrollArea
+                    ref={tableContainerRef}
+                    style={{ height: `calc(100vh - ${negativeHeight}rem)` }}
+                    className="rounded-md border"
+                >
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        modifiers={[restrictToVerticalAxis]}
+                        onDragEnd={handleDragEnd} // We'll write this in Phase 3
+                    >
+                        <Table
+                            style={{
+                                tableLayout: 'fixed',
+                                minWidth: `${table.getCenterTotalSize()}px`,
+                                width: '100%',
+                            }}
+                        >
+                            <TableHeader className="sticky top-0 z-20 bg-background">
+                                {table.getHeaderGroups().map((headerGroup) => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map((header) => (
+                                            <TableHead
+                                                key={header.id}
+                                                colSpan={header.colSpan}
+                                                className="border-b-0 shadow-[inset_0_-1px_0_0_var(--muted)]"
+                                                style={{
+                                                    width: `${header.getSize()}px`,
+                                                    ...getCommonPinningStyles(
+                                                        header.column,
+                                                        table,
+                                                    ),
+                                                }}
+                                            >
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                          header.column
+                                                              .columnDef.header,
+                                                          header.getContext(),
+                                                      )}
+                                            </TableHead>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHeader>
+
+                            <TableBody>
+                                {paddingTop > 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            style={{
+                                                height: `${paddingTop}px`,
+                                            }}
+                                            colSpan={columns.length}
+                                        />
+                                    </TableRow>
+                                )}
+
+                                <SortableContext
+                                    items={dataIds}
+                                    strategy={verticalListSortingStrategy}
+                                >
+                                    {virtualRows.length > 0 ? (
+                                        virtualRows.map((virtualRow) => {
+                                            const row = rows[virtualRow.index];
 
                                             return (
+                                                <DraggableRow
+                                                    key={row.id}
+                                                    row={row}
+                                                    table={table}
+                                                    withRowSpan={withRowSpan}
+                                                />
+                                            );
+                                        })
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={columns.length}
+                                                className="h-24 text-center"
+                                            >
+                                                No results.
+                                            </TableCell>
+                                        </TableRow>
+                                    )}
+                                </SortableContext>
+
+                                {paddingBottom > 0 && (
+                                    <TableRow>
+                                        <TableCell
+                                            style={{
+                                                height: `${paddingBottom}px`,
+                                            }}
+                                            colSpan={columns.length}
+                                        />
+                                    </TableRow>
+                                )}
+                            </TableBody>
+
+                            {withFooter && (
+                                <TableFooter className="sticky bottom-0 z-20 bg-secondary shadow-[inset_0_1px_0_0_var(--muted)]">
+                                    <TableRow>
+                                        {table
+                                            .getAllLeafColumns()
+                                            .map((column) => (
                                                 <TableCell
-                                                    key={cell.id}
-                                                    rowSpan={
-                                                        activeSpan
-                                                            ? rowData.groupSize
-                                                            : 1
-                                                    }
+                                                    key={column.id}
                                                     style={{
-                                                        width: `${cell.column.getSize()}px`,
-                                                        // minWidth: `${cell.column.getSize()}px`,
-                                                        ...getCommonPinningStyles(
-                                                            cell.column,
-                                                            table,
-                                                        ),
+                                                        width: `${column.getSize()}px`,
                                                     }}
                                                 >
-                                                    {flexRender(
-                                                        cell.column.columnDef
-                                                            .cell,
-                                                        cell.getContext(),
-                                                    )}
+                                                    {column.columnDef.footer
+                                                        ? flexRender(
+                                                              column.columnDef
+                                                                  .footer,
+                                                              {
+                                                                  column,
+                                                                  table,
+                                                              } as any,
+                                                          )
+                                                        : null}
                                                 </TableCell>
-                                            );
-                                        })}
+                                            ))}
                                     </TableRow>
-                                );
-                            })
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
+                                </TableFooter>
+                            )}
+                        </Table>
+                    </DndContext>
 
-                        {/* Bottom Spacer Row */}
-                        {paddingBottom > 0 && (
-                            <TableRow>
-                                <TableCell
-                                    style={{ height: `${paddingBottom}px` }}
-                                    colSpan={columns.length}
-                                />
-                            </TableRow>
-                        )}
-                    </TableBody>
+                    <ScrollBar orientation="horizontal" className="z-30" />
+                    <ScrollBar orientation="vertical" className="z-30" />
+                </ScrollArea>
+            </div>
 
-                    {withFooter && (
-                        <TableFooter className="sticky bottom-0 z-20 bg-secondary shadow-[inset_0_1px_0_0_var(--muted)]">
-                            <TableRow>
-                                {table.getAllLeafColumns().map((column) => (
-                                    <TableCell
-                                        key={column.id}
-                                        style={{
-                                            width: `${column.getSize()}px`,
-                                        }}
-                                    >
-                                        {column.columnDef.footer
-                                            ? flexRender(
-                                                  column.columnDef.footer,
-                                                  { column, table } as any,
-                                              )
-                                            : null}
-                                    </TableCell>
-                                ))}
-                            </TableRow>
-                        </TableFooter>
-                    )}
-                </Table>
-
-                <ScrollBar orientation="horizontal" className="z-30" />
-                <ScrollBar orientation="vertical" className="z-30" />
-            </ScrollArea>
-        </div>
+            <AlertErrorDialog
+                open={errorDialogOpen}
+                onOpenChange={setErrorDialogOpen}
+                error={errorMessage}
+            />
+        </>
     );
 }
+
+interface DraggableRowProps<TData> {
+    row: Row<TData>;
+    table: any;
+    withRowSpan?: boolean;
+}
+
+const DraggableRow = <TData,>({
+    row,
+    withRowSpan,
+    table,
+}: DraggableRowProps<TData>) => {
+    const { transform, transition, setNodeRef, isDragging, isOver } =
+        useSortable({
+            id: row.id,
+        });
+
+    const style: CSSProperties = {
+        transform: CSS.Translate.toString(transform), //let dnd-kit do its thing
+        transition: transition,
+        opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 10 : 0,
+        position: 'relative',
+        backgroundColor: isDragging ? 'hsl(var(--accent))' : undefined,
+    };
+
+    return (
+        <TableRow
+            // key={row.id}
+            ref={setNodeRef}
+            style={style}
+            data-state={row.getIsSelected() && 'selected'}
+        >
+            {row.getVisibleCells().map((cell) => {
+                const columnMeta = cell.column.columnDef.meta as any;
+                const isSpannedCol = withRowSpan && columnMeta?.rowSpan;
+                const rowData = row.original as any;
+                const hasSpanningData =
+                    typeof rowData.isFirstInGroup !== 'undefined';
+                const activeSpan = isSpannedCol && hasSpanningData;
+
+                if (activeSpan && !rowData.isFirstInGroup) {
+                    return null;
+                }
+
+                return (
+                    <TableCell
+                        key={cell.id}
+                        rowSpan={activeSpan ? rowData.groupSize : 1}
+                        style={{
+                            width: `${cell.column.getSize()}px`,
+                            ...getCommonPinningStyles(cell.column, table),
+                        }}
+                    >
+                        {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                        )}
+                    </TableCell>
+                );
+            })}
+        </TableRow>
+    );
+};

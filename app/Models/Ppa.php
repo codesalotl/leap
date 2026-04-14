@@ -19,6 +19,7 @@ class Ppa extends Model
         'type',
         'code_suffix',
         'is_active',
+        'sort_order',
     ];
 
     protected $appends = ['full_code'];

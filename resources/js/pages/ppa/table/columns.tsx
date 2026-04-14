@@ -1,13 +1,46 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { CheckCircle2, XCircle, Pencil, Trash, Plus } from 'lucide-react';
+import {
+    CheckCircle2,
+    XCircle,
+    Pencil,
+    Trash,
+    Plus,
+    GripVertical,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Ppa } from '@/types/global';
-import { Separator } from '@/components/ui/separator';
+// import { Separator } from '@/components/ui/separator';
+import { useSortable } from '@dnd-kit/sortable';
 
 const columnHelper = createColumnHelper<Ppa>();
 
+const RowDragHandleCell = ({ rowId }: { rowId: string }) => {
+    const { attributes, listeners, setActivatorNodeRef } = useSortable({
+        id: rowId,
+    });
+
+    return (
+        <Button
+            size="icon"
+            variant="ghost"
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            className="cursor-grab rounded hover:bg-accent active:cursor-grabbing"
+        >
+            <GripVertical />
+        </Button>
+    );
+};
+
 const columns = [
+    columnHelper.display({
+        id: 'drag-handle',
+        // header: 'AIP Reference Code',
+        size: 50,
+        cell: ({ row }) => <RowDragHandleCell rowId={row.id} />,
+    }),
     columnHelper.accessor('full_code', {
         header: 'AIP Reference Code',
         size: 200,

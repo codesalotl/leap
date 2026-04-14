@@ -279,6 +279,9 @@ Route::patch('ppas/{ppa}', [PpaController::class, 'update'])->name(
 Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
     'ppas.destroy',
 );
+Route::post('ppas/reorder', [PpaController::class, 'reorder'])->name(
+    'ppa.reorder',
+);
 
 Route::get('aip-entries', [AipEntryController::class, 'index']);
 

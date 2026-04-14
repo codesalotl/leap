@@ -30,6 +30,7 @@ declare module '@tanstack/react-table' {
         onOpen?: (data: TData) => void;
         onGeneratePdf?: (data: TData) => void;
         onOpenPpmpSummary?: (data: TData) => void;
+        onReorder?: (activeId: string, overId: string) => void;
     }
 }
 
