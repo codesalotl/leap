@@ -25,6 +25,17 @@ import {
 } from '@/components/ui/select';
 import { router, usePage } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    Command,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+    CommandShortcut,
+} from '@/components/ui/command';
 
 interface PdfPreviewDialogProps {
     open: boolean;
@@ -1128,7 +1139,7 @@ export default function PdfPreviewDialog({
 
     console.log(auth);
 
-    const isBACSU = auth.user.office_id === 4 || auth.user.role === 'admin';
+    const isBACSU = auth.user.office_id === 2 || auth.user.role === 'admin';
 
     const handleOfficeChange = (officeId: string) => {
         if (!fiscalYear) return;
@@ -1163,51 +1174,116 @@ export default function PdfPreviewDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="flex h-[95vh] flex-col gap-0 rounded-none p-0 sm:max-w-[95vw]">
+            <DialogContent className="flex h-[100vh] flex-col gap-0 rounded-none p-0 sm:max-w-[100vw]">
                 <DialogHeader className="flex flex-row items-center justify-between space-y-0 border-b p-4">
                     <DialogTitle>APP Preview - {fiscalYear.year}</DialogTitle>
+
                     <DialogDescription className="sr-only"></DialogDescription>
                 </DialogHeader>
 
                 <div className="flex flex-1 overflow-hidden">
                     {isBACSU && (
-                        <div className="w-80 space-y-4 border-r bg-muted/10 p-4">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-muted-foreground uppercase">
-                                    Report Scope
-                                </label>
-                                <Select
-                                    value={selectedOfficeId}
-                                    onValueChange={handleOfficeChange}
-                                    disabled={isReloading}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Office" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            Consolidated (Whole PGLU)
-                                        </SelectItem>
-                                        <div className="my-1 h-px bg-muted" />
-                                        {offices.map((o) => (
-                                            <SelectItem
-                                                key={o.id}
-                                                value={o.id.toString()}
-                                            >
-                                                {o.acronym}
+                        <div className="p-4">
+                            {/* <div className="w-80 space-y-4 border-r bg-muted/10 p-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-muted-foreground uppercase">
+                                        Report Scope
+                                    </label>
+
+                                    <Select
+                                        value={selectedOfficeId}
+                                        onValueChange={handleOfficeChange}
+                                        disabled={isReloading}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select Office" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">
+                                                Consolidated (Whole PGLU)
                                             </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            {isReloading && (
-                                <div className="flex animate-pulse items-center gap-2 text-primary">
-                                    <Spinner className="h-4 w-4 animate-spin" />
-                                    <span className="text-xs font-medium">
-                                        Updating PDF...
-                                    </span>
+                                            <div className="my-1 h-px bg-muted" />
+                                            {offices.map((o) => (
+                                                <SelectItem
+                                                    key={o.id}
+                                                    value={o.id.toString()}
+                                                >
+                                                    {o.acronym}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            )}
+
+                                {isReloading && (
+                                    <div className="flex animate-pulse items-center gap-2 text-primary">
+                                        <Spinner className="h-4 w-4 animate-spin" />
+
+                                        <span className="text-xs font-medium">
+                                            Updating PDF...
+                                        </span>
+                                    </div>
+                                )}
+                            </div> */}
+
+                            <Command className="max-w-md rounded-lg border">
+                                <CommandInput placeholder="Type a command or search..." />
+
+                                <CommandList className="max-h-none">
+                                    <CommandEmpty>
+                                        No results found.
+                                    </CommandEmpty>
+
+                                    <CommandGroup
+                                        heading="Offices"
+                                        // className="gap-4"
+                                    >
+                                        <CommandItem
+                                            value="all"
+                                            className="flex"
+                                            onSelect={() =>
+                                                handleOfficeChange('all')
+                                            }
+                                            data-checked={
+                                                selectedOfficeId === 'all'
+                                            }
+                                        >
+                                            Consolidated (Whole PGLU)
+                                        </CommandItem>
+
+                                        <CommandSeparator />
+
+                                        {offices.map((office) => {
+                                            return (
+                                                <CommandItem
+                                                    key={office.id}
+                                                    value={`${office.acronym} ${office.name}`}
+                                                    className="flex items-start"
+                                                    onSelect={() => {
+                                                        handleOfficeChange(
+                                                            office.id.toString(),
+                                                        );
+                                                    }}
+                                                    data-checked={
+                                                        selectedOfficeId ===
+                                                        office.id.toString()
+                                                    }
+                                                >
+                                                    <div className="grid w-full grid-cols-3">
+                                                        <span className="col-span-1">
+                                                            {office.acronym}
+                                                        </span>
+
+                                                        <span className="col-span-2">
+                                                            {office.name}
+                                                        </span>
+                                                    </div>
+                                                </CommandItem>
+                                            );
+                                        })}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
                         </div>
                     )}
 
@@ -1217,6 +1293,7 @@ export default function PdfPreviewDialog({
                                 <Spinner className="h-10 w-10 animate-spin text-white" />
                             </div>
                         )}
+
                         <PDFViewer
                             width="100%"
                             height="100%"

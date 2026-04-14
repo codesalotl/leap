@@ -21,15 +21,13 @@ class FiscalYearController extends Controller
     {
         $user = $request->user();
         // BACSU (ID 4) or Admin
-        $isControlOffice = $user->office_id === 4 || $user->role === 'admin';
+        $isControlOffice = $user->office_id === 2 || $user->role === 'admin';
 
         return Inertia::render('aip/index', [
             'fiscalYears' => FiscalYear::all(),
 
             // 1. Add the offices prop (Required for your sidebar dropdown)
-            'offices' => $isControlOffice
-                ? Office::orderBy('name', 'asc')->get()
-                : [],
+            'offices' => $isControlOffice ? Office::get() : [],
 
             'app' => Inertia::optional(function () use (
                 $request,

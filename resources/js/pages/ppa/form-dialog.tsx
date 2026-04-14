@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/field';
 import { Controller, useForm } from 'react-hook-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { usePage } from '@inertiajs/react';
 
 const formSchema = z.object({
     office_id: z.string().min(1, 'Implementing office is required'),
@@ -84,12 +85,19 @@ export default function PpaFormDialog({
     editPpa,
     offices,
 }: PpaFormDialogProps) {
+    const { props } = usePage();
     const isEditing = mode === 'edit';
     const isAddingChild = mode === 'add' && !!parentPpa;
     const [openOfficeCommand, setOpenOfficeCommand] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isErrorAlertOpen, setIsErrorAlertOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+
+    const userOfficeId = props.auth?.user.office_id;
+    const isOfficeAutoSelected = mode === 'add' && !parentPpa && !!userOfficeId;
+
+    console.log(props);
+    console.log(userOfficeId);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -118,14 +126,27 @@ export default function PpaFormDialog({
             });
         } else if (mode === 'add') {
             form.reset({
-                office_id: parentPpa?.office_id?.toString() || '',
+                // office_id: parentPpa?.office_id?.toString() || '',
+                office_id:
+                    parentPpa?.office_id?.toString() ||
+                    userOfficeId?.toString() ||
+                    '',
                 name: '',
                 code_suffix: '',
                 type: targetType,
                 is_active: true,
             });
         }
-    }, [isOpen, isEditing, editPpa, parentPpa, mode, targetType, form]);
+    }, [
+        isOpen,
+        isEditing,
+        editPpa,
+        parentPpa,
+        mode,
+        targetType,
+        form,
+        userOfficeId,
+    ]);
 
     const getCodePreview = () => {
         const suffix = codeSuffix || '000';
@@ -376,6 +397,9 @@ export default function PpaFormDialog({
                                                                     setOpenOfficeCommand(
                                                                         true,
                                                                     )
+                                                                }
+                                                                disabled={
+                                                                    isOfficeAutoSelected
                                                                 }
                                                             >
                                                                 {field.value ? (

@@ -12,7 +12,8 @@ class UserPolicy
      */
     public function viewAny(User $user): bool
     {
-        return false;
+        // return false;
+        return $user->role === 'admin';
     }
 
     /**

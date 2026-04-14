@@ -14,14 +14,14 @@ import { index } from '@/routes/aip';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import {
-    BanknoteArrowUp,
+    // BanknoteArrowUp,
     Briefcase,
     Building2,
     Calculator,
     ClipboardList,
-    FileText,
+    // FileText,
     FolderTree,
-    Gem,
+    // Gem,
     Landmark,
     Layers,
     LayoutGrid,
@@ -31,6 +31,7 @@ import {
     Users,
 } from 'lucide-react';
 import AppLogo from './app-logo';
+import { usePage } from '@inertiajs/react';
 
 const mainNavItems: NavItem[] = [
     {
@@ -112,6 +113,18 @@ const mainNavItems: NavItem[] = [
 // ];
 
 export function AppSidebar() {
+    const { auth } = usePage().props;
+
+    const filteredNavItems = mainNavItems.filter((item) => {
+        // If the item is 'Users', check the permission we shared in Middleware
+        if (item.title === 'Users') {
+            return auth.can?.manage_users;
+        }
+
+        // Return all other items as usual
+        return true;
+    });
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -127,7 +140,8 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                {/* <NavMain items={mainNavItems} /> */}
+                <NavMain items={filteredNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
