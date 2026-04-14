@@ -53,7 +53,7 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface DataTableProps<TData> {
+interface DataTableProps<TData extends { id: unknown }> {
     columns: ColumnDef<TData, any>[];
     data: TData[];
     isExpandedAll?: boolean;
@@ -99,7 +99,7 @@ const reorderTree = (data: any[], activeId: string, overId: string): any[] => {
     });
 };
 
-export function DataTable<TData>({
+export function DataTable<TData extends { id: unknown }>({
     columns,
     data,
     onAdd,
@@ -157,13 +157,13 @@ export function DataTable<TData>({
         },
 
         // for dnd
-        getRowId: (row) => row.id.toString(),
+        getRowId: (row) => row.id?.toString() ?? '',
     });
 
     const { rows } = table.getRowModel();
 
     const dataIds = useMemo<UniqueIdentifier[]>(
-        () => rows.map((row) => row.id.toString()),
+        () => rows.map((row) => row.id?.toString() ?? ''),
         [rows],
     );
 
@@ -175,8 +175,10 @@ export function DataTable<TData>({
             tableContainerRef.current?.querySelector(
                 '[data-radix-scroll-area-viewport]',
             ) as HTMLElement,
-        estimateSize: () => 45, // Match your typical row height
+        estimateSize: () => 50, // Match your typical row height
         overscan: 10,
+        getItemKey: (index) => rows[index]?.id,
+        measureElement: (el) => el.getBoundingClientRect().height,
     });
 
     const virtualRows = rowVirtualizer.getVirtualItems();
@@ -319,10 +321,19 @@ export function DataTable<TData>({
 
                                             return (
                                                 <DraggableRow
-                                                    key={row.id}
+                                                    // key={row.id}
+                                                    key={
+                                                        (row.original as any)
+                                                            .current_fs?.id
+                                                            ? `${row.id}-${(row.original as any).current_fs.id}`
+                                                            : row.id
+                                                    }
                                                     row={row}
                                                     table={table}
                                                     withRowSpan={withRowSpan}
+                                                    rowVirtualizer={
+                                                        rowVirtualizer
+                                                    }
                                                 />
                                             );
                                         })
@@ -398,33 +409,41 @@ interface DraggableRowProps<TData> {
     row: Row<TData>;
     table: any;
     withRowSpan?: boolean;
+    rowVirtualizer: any;
 }
 
 const DraggableRow = <TData,>({
     row,
     withRowSpan,
     table,
+    rowVirtualizer,
 }: DraggableRowProps<TData>) => {
-    const { transform, transition, setNodeRef, isDragging, isOver } =
-        useSortable({
-            id: row.id,
-        });
+    const { transform, transition, setNodeRef, isDragging } = useSortable({
+        id: row.id,
+    });
 
     const style: CSSProperties = {
         transform: CSS.Translate.toString(transform), //let dnd-kit do its thing
         transition: transition,
         opacity: isDragging ? 0.4 : 1,
-        zIndex: isDragging ? 10 : 0,
+        // zIndex: isDragging ? 10 : 0,
         position: 'relative',
-        backgroundColor: isDragging ? 'hsl(var(--accent))' : undefined,
+        minHeight: '50px', // LOCK: Must match estimateSize exactly
     };
 
     return (
         <TableRow
             // key={row.id}
-            ref={setNodeRef}
+            ref={(node) => {
+                setNodeRef(node); // Connect dnd-kit
+                if (node) {
+                    rowVirtualizer.measureElement(node); // Connect virtualizer measurement
+                }
+            }}
+            // style={style}
             style={style}
             data-state={row.getIsSelected() && 'selected'}
+            className="group transition-colors data-[state=selected]:bg-muted"
         >
             {row.getVisibleCells().map((cell) => {
                 const columnMeta = cell.column.columnDef.meta as any;
@@ -446,11 +465,14 @@ const DraggableRow = <TData,>({
                             width: `${cell.column.getSize()}px`,
                             ...getCommonPinningStyles(cell.column, table),
                         }}
+                        className="py-2"
                     >
+                        {/* <div className="flex h-[50px] items-center truncate overflow-hidden whitespace-nowrap"> */}
                         {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
                         )}
+                        {/* </div> */}
                     </TableCell>
                 );
             })}

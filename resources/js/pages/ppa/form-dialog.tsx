@@ -339,9 +339,7 @@ export default function PpaFormDialog({
                                                         htmlFor={field.name}
                                                         className="gap-1"
                                                     >
-                                                        <span>
-                                                            Implementing Office
-                                                        </span>
+                                                        Implementing Office
                                                         <span className="text-destructive">
                                                             *
                                                         </span>

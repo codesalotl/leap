@@ -3,7 +3,13 @@ import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, parseISO } from 'date-fns';
-import { CalendarIcon, Plus, Trash2, ListPlus } from 'lucide-react';
+import {
+    CalendarIcon,
+    Plus,
+    Trash2,
+    ListPlus,
+    ChevronsUpDown,
+} from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -13,7 +19,6 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -56,6 +61,19 @@ import {
     CommandInput,
     CommandList,
 } from '@/components/ui/command';
+import {
+    Field,
+    FieldContent,
+    // FieldDescription,
+    FieldError,
+    FieldGroup,
+    FieldLabel,
+    FieldLegend,
+    // FieldSeparator,
+    FieldSet,
+    // FieldTitle,
+} from '@/components/ui/field';
+import { cn } from '@/lib/utils';
 
 import type { FiscalYear, Ppa, FundingSource, Office } from '@/types/global';
 
@@ -111,6 +129,8 @@ export default function AipEntryFormDialog({
 
     const [openOfficeComamnd, setOpenOfficeComamnd] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    const isOfficeAutoSelected = !!data?.office_id;
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -289,101 +309,137 @@ export default function AipEntryFormDialog({
                                                             fieldState.invalid
                                                         }
                                                     >
-                                                        <FieldLabel>
-                                                            Office
-                                                        </FieldLabel>
+                                                        <FieldContent>
+                                                            <FieldLabel
+                                                                htmlFor={
+                                                                    field.name
+                                                                }
+                                                                className="gap-1"
+                                                            >
+                                                                Office
+                                                                <span className="text-destructive">
+                                                                    *
+                                                                </span>
+                                                            </FieldLabel>
 
-                                                        <Button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setOpenOfficeComamnd(
-                                                                    true,
-                                                                )
-                                                            }
-                                                            variant="outline"
-                                                        >
-                                                            {offices.find(
-                                                                (office) =>
-                                                                    office.id ===
-                                                                    Number(
-                                                                        field.value,
-                                                                    ),
-                                                            )?.name ||
-                                                                'No office selected'}
-                                                        </Button>
-
-                                                        <CommandDialog
-                                                            open={
-                                                                openOfficeComamnd
-                                                            }
-                                                            onOpenChange={
-                                                                setOpenOfficeComamnd
-                                                            }
-                                                        >
-                                                            <Command>
-                                                                <CommandInput placeholder="Type to search..." />
-                                                                <CommandList>
-                                                                    <CommandGroup>
-                                                                        <Table>
-                                                                            <TableHeader>
-                                                                                <TableRow>
-                                                                                    <TableHead className="text-xs opacity-50">
-                                                                                        Acronym
-                                                                                    </TableHead>
-                                                                                    <TableHead className="text-xs opacity-50">
-                                                                                        Office
-                                                                                        Name
-                                                                                    </TableHead>
-                                                                                </TableRow>
-                                                                            </TableHeader>
-
-                                                                            <TableBody>
-                                                                                {offices.map(
+                                                            <>
+                                                                <Button
+                                                                    id={
+                                                                        field.name
+                                                                    }
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    aria-invalid={
+                                                                        fieldState.invalid
+                                                                    }
+                                                                    className={cn(
+                                                                        'justify-between',
+                                                                        !field.value &&
+                                                                            'text-muted-foreground',
+                                                                    )}
+                                                                    onClick={() =>
+                                                                        setOpenOfficeComamnd(
+                                                                            true,
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        isOfficeAutoSelected
+                                                                    }
+                                                                >
+                                                                    {field.value ? (
+                                                                        <span className="truncate">
+                                                                            {
+                                                                                offices.find(
                                                                                     (
-                                                                                        office,
-                                                                                    ) => (
-                                                                                        <TableRow
-                                                                                            key={
-                                                                                                office.id
-                                                                                            }
-                                                                                            onClick={() => {
-                                                                                                field.onChange(
-                                                                                                    String(
-                                                                                                        office.id,
-                                                                                                    ),
-                                                                                                );
+                                                                                        o,
+                                                                                    ) =>
+                                                                                        o.id.toString() ===
+                                                                                        field.value,
+                                                                                )
+                                                                                    ?.name
+                                                                            }
+                                                                        </span>
+                                                                    ) : (
+                                                                        'Select implementing office...'
+                                                                    )}
 
-                                                                                                setOpenOfficeComamnd(
-                                                                                                    false,
-                                                                                                );
-                                                                                            }}
-                                                                                            className="cursor-pointer"
-                                                                                        >
-                                                                                            <TableCell className="font-medium">
-                                                                                                {office.acronym ||
-                                                                                                    '-'}
-                                                                                            </TableCell>
-                                                                                            <TableCell>
-                                                                                                <div className="text-wrap">
-                                                                                                    {office?.name ||
-                                                                                                        '-'}
-                                                                                                </div>
-                                                                                            </TableCell>
+                                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                                </Button>
+
+                                                                <CommandDialog
+                                                                    open={
+                                                                        openOfficeComamnd
+                                                                    }
+                                                                    onOpenChange={
+                                                                        setOpenOfficeComamnd
+                                                                    }
+                                                                >
+                                                                    <Command>
+                                                                        <CommandInput placeholder="Type to search..." />
+                                                                        <CommandList>
+                                                                            <CommandGroup>
+                                                                                <Table>
+                                                                                    <TableHeader>
+                                                                                        <TableRow>
+                                                                                            <TableHead className="text-xs opacity-50">
+                                                                                                Acronym
+                                                                                            </TableHead>
+                                                                                            <TableHead className="text-xs opacity-50">
+                                                                                                Office
+                                                                                                Name
+                                                                                            </TableHead>
                                                                                         </TableRow>
-                                                                                    ),
-                                                                                )}
-                                                                            </TableBody>
-                                                                        </Table>
-                                                                    </CommandGroup>
-                                                                </CommandList>
-                                                            </Command>
-                                                        </CommandDialog>
+                                                                                    </TableHeader>
 
-                                                        <FieldError
-                                                            errors={[
-                                                                fieldState.error,
-                                                            ]}
-                                                        />
+                                                                                    <TableBody>
+                                                                                        {offices.map(
+                                                                                            (
+                                                                                                office,
+                                                                                            ) => (
+                                                                                                <TableRow
+                                                                                                    key={
+                                                                                                        office.id
+                                                                                                    }
+                                                                                                    onClick={() => {
+                                                                                                        field.onChange(
+                                                                                                            String(
+                                                                                                                office.id,
+                                                                                                            ),
+                                                                                                        );
+
+                                                                                                        setOpenOfficeComamnd(
+                                                                                                            false,
+                                                                                                        );
+                                                                                                    }}
+                                                                                                    className="cursor-pointer"
+                                                                                                >
+                                                                                                    <TableCell className="font-medium">
+                                                                                                        {office.acronym ||
+                                                                                                            '-'}
+                                                                                                    </TableCell>
+                                                                                                    <TableCell>
+                                                                                                        <div className="text-wrap">
+                                                                                                            {office?.name ||
+                                                                                                                '-'}
+                                                                                                        </div>
+                                                                                                    </TableCell>
+                                                                                                </TableRow>
+                                                                                            ),
+                                                                                        )}
+                                                                                    </TableBody>
+                                                                                </Table>
+                                                                            </CommandGroup>
+                                                                        </CommandList>
+                                                                    </Command>
+                                                                </CommandDialog>
+                                                            </>
+
+                                                            <FieldError
+                                                                errors={[
+                                                                    fieldState.error,
+                                                                ]}
+                                                            />
+                                                        </FieldContent>
                                                     </Field>
                                                 )}
                                             />
