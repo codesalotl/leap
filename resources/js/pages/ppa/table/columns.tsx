@@ -6,6 +6,7 @@ import {
     Trash,
     Plus,
     GripVertical,
+    Move,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,8 +39,25 @@ const columns = [
     columnHelper.display({
         id: 'drag-handle',
         // header: 'AIP Reference Code',
-        size: 50,
-        cell: ({ row }) => <RowDragHandleCell rowId={row.id} />,
+        size: 100,
+        cell: ({ row, table }) => {
+            return (
+                <div className="gap-1">
+                    <RowDragHandleCell rowId={row.id} />
+
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() =>
+                            (table.options.meta as any)?.onMove?.(row.original)
+                        }
+                        disabled={row.original.type === 'Program'}
+                    >
+                        <Move />
+                    </Button>
+                </div>
+            );
+        },
     }),
     columnHelper.accessor('full_code', {
         header: 'AIP Reference Code',
@@ -101,6 +119,16 @@ const columns = [
         size: 120,
         cell: ({ row, table }) => (
             <div className="flex items-center gap-1">
+                {/* <Button
+                    size="icon"
+                    onClick={() =>
+                        (table.options.meta as any)?.onMove?.(row.original)
+                    }
+                    disabled={row.original.type === 'Program'}
+                >
+                    <Move />
+                </Button> */}
+
                 <Button
                     onClick={() => {
                         let nextType: 'Project' | 'Activity' | 'Sub-Activity';

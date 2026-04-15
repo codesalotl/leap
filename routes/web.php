@@ -278,6 +278,9 @@ Route::post('ppas', [PpaController::class, 'store'])->name('ppas.store');
 Route::patch('ppas/{ppa}', [PpaController::class, 'update'])->name(
     'ppas.update',
 );
+Route::post('ppas/{ppa}/move', [PpaController::class, 'move'])->name(
+    'ppas.move',
+);
 Route::delete('ppas/{ppa}', [PpaController::class, 'destroy'])->name(
     'ppas.destroy',
 );

@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import type { Ppa, Office } from '@/types/global';
 import PpaFormDialog from '@/pages/ppa/form-dialog';
+import PpaMoveDialog from '@/pages/ppa/move-dialog';
 import { DeleteDialog } from '@/components/delete-dialog';
 import { router } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
@@ -62,6 +63,10 @@ export default function PpaPage({
     // Delete Dialog States
     const [deletePpa, setDeletePpa] = useState<Ppa | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Move Dialog States
+    const [movePpa, setMovePpa] = useState<Ppa | null>(null);
+    const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
     // View Level Filter State
     const [viewLevel, setViewLevel] = useState<string>('all');
@@ -137,6 +142,11 @@ export default function PpaPage({
         );
     }
 
+    function handleMoveOpen(ppa: Ppa) {
+        setMovePpa(ppa);
+        setIsMoveDialogOpen(true);
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
@@ -148,6 +158,7 @@ export default function PpaPage({
                     onEdit={handleEdit}
                     onDelete={handleDeleteOpen}
                     onReorder={handleReorder}
+                    onMove={handleMoveOpen}
                 >
                     <div className="flex items-center gap-2">
                         <Select value={viewLevel} onValueChange={setViewLevel}>
@@ -202,6 +213,13 @@ export default function PpaPage({
                 onConfirm={handleDelete}
                 onCancel={() => setDeletePpa(null)}
                 isLoading={isDeleting}
+            />
+
+            <PpaMoveDialog
+                isOpen={isMoveDialogOpen}
+                onOpenChange={setIsMoveDialogOpen}
+                ppaToMove={movePpa}
+                ppaTree={ppaTree}
             />
         </AppLayout>
     );

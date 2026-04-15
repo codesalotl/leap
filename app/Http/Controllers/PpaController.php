@@ -135,8 +135,113 @@ class PpaController extends Controller
     public function update(UpdatePpaRequest $request, Ppa $ppa)
     {
         $validated = $request->validated();
-
         $ppa->update($validated);
+    }
+
+    /**
+     * Move a PPA to a different parent.
+     */
+    public function move(Request $request, Ppa $ppa)
+    {
+        $request->validate([
+            'parent_id' => 'nullable|exists:ppas,id',
+        ]);
+
+        $newParentId = $request->input('parent_id');
+        $oldParentId = $ppa->parent_id;
+
+        // Set moving PPA to temporary code_suffix to avoid unique constraint conflicts
+        $tempCodeSuffix = '9' . str_pad($ppa->id % 999, 3, '0', STR_PAD_LEFT);
+        $ppa->code_suffix = $tempCodeSuffix;
+        $ppa->save();
+
+        // Renumber siblings in the OLD parent (remove the item)
+        if ($oldParentId !== null) {
+            $this->renumberSiblings($oldParentId, $ppa->id);
+        }
+
+        // Renumber siblings in the NEW parent (add the item at the end)
+        if ($newParentId !== null) {
+            $this->renumberSiblings($newParentId, $ppa->id);
+        }
+
+        // Update the PPA with the new parent_id
+        $ppa->parent_id = $newParentId;
+
+        // Set sort_order to be the last in the new parent's children
+        $maxSortOrder =
+            Ppa::where('parent_id', $newParentId)
+                ->where('id', '!=', $ppa->id)
+                ->max('sort_order') ?? -1;
+        $ppa->sort_order = $maxSortOrder + 1;
+
+        // Calculate the new code_suffix based on its position in the new parent
+        $siblingCount = Ppa::where('parent_id', $newParentId)
+            ->where('id', '!=', $ppa->id)
+            ->count();
+        $digitLength = $this->getCodeSuffixLength($ppa->type);
+
+        if ($digitLength === 0) {
+            // Dynamic formatting (Sub-Activity) - no padding
+            $ppa->code_suffix = (string) ($siblingCount + 1);
+        } else {
+            // Fixed length formatting with leading zeros
+            $ppa->code_suffix = str_pad(
+                $siblingCount + 1,
+                $digitLength,
+                '0',
+                STR_PAD_LEFT,
+            );
+        }
+
+        $ppa->save();
+    }
+
+    /**
+     * Renumber siblings after a parent change.
+     */
+    private function renumberSiblings($parentId, $excludeId = null)
+    {
+        $query = Ppa::where('parent_id', $parentId)->orderBy('sort_order');
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $siblings = $query->get();
+
+        // First, set all siblings to temporary unique values to avoid unique constraint violation
+        foreach ($siblings as $sibling) {
+            $tempValue =
+                '9' . str_pad($sibling->id % 999, 3, '0', STR_PAD_LEFT);
+            $sibling->update([
+                'code_suffix' => $tempValue,
+            ]);
+        }
+
+        // Then, update all siblings to their final values with type-specific formatting
+        foreach ($siblings as $index => $sibling) {
+            $digitLength = $this->getCodeSuffixLength($sibling->type);
+
+            // Apply type-specific formatting
+            if ($digitLength === 0) {
+                // Dynamic formatting (Sub-Activity) - no padding
+                $codeSuffix = (string) ($index + 1);
+            } else {
+                // Fixed length formatting with leading zeros
+                $codeSuffix = str_pad(
+                    $index + 1,
+                    $digitLength,
+                    '0',
+                    STR_PAD_LEFT,
+                );
+            }
+
+            $sibling->update([
+                'sort_order' => $index,
+                'code_suffix' => $codeSuffix,
+            ]);
+        }
     }
 
     /**

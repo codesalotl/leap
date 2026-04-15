@@ -74,6 +74,7 @@ interface DataTableProps<TData extends { id: unknown }> {
     onOpenPpmpSummary?: (data: TData) => void;
     negativeHeight?: number;
     onReorder?: (activeId: string, overId: string) => void;
+    onMove?: (data: TData) => void;
 }
 
 const reorderTree = (data: any[], activeId: string, overId: string): any[] => {
@@ -115,6 +116,7 @@ export function DataTable<TData extends { id: unknown }>({
     withFooter = false,
     negativeHeight = 8,
     onReorder,
+    onMove,
 }: DataTableProps<TData>) {
     const [localData, setLocalData] = useState(data);
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
@@ -147,7 +149,8 @@ export function DataTable<TData extends { id: unknown }>({
             onGeneratePdf,
             onOpenPpmpSummary,
             onReorder,
-        },
+            onMove,
+        } as any,
         getSubRows: (row: any) => row.children,
         getExpandedRowModel: getExpandedRowModel(),
         filterFromLeafRows: true,
@@ -443,6 +446,7 @@ const DraggableRow = <TData,>({
             // style={style}
             style={style}
             data-state={row.getIsSelected() && 'selected'}
+            data-index={row.index}
             className="group transition-colors data-[state=selected]:bg-muted"
         >
             {row.getVisibleCells().map((cell) => {
