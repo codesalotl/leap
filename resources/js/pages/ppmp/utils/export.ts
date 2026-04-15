@@ -288,6 +288,14 @@ export async function exportToExcel({
         },
     );
 
+    // Set integer format (no decimals) for quantity columns
+    [8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32].forEach(
+        (columnNumber) => {
+            const column = worksheet.getColumn(columnNumber);
+            column.numFmt = '#,##0';
+        },
+    );
+
     const headerRow = worksheet.getRow(headerRowCount);
 
     headerRow.font = {

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -48,6 +48,7 @@ interface PpmpFormDialogProps {
     selectedEntry: { id: number } | null;
     fundingSources: PpaFundingSource[];
     selectedExpenseClass: string;
+    selectedFundingSourceId: number;
 }
 
 export default function PpmpFormDialog({
@@ -58,6 +59,7 @@ export default function PpmpFormDialog({
     selectedEntry = null,
     fundingSources,
     selectedExpenseClass,
+    selectedFundingSourceId,
 }: PpmpFormDialogProps) {
     const [openExpenseCommand, setOpenExpenseCommand] = useState(false);
     const [openFundingSourceCommand, setOpenFundingSourceCommand] =
@@ -85,6 +87,13 @@ export default function PpmpFormDialog({
     const isCustomItem = form.watch('isCustomItem');
     const selectedExpenseAccount = form.watch('expenseAccount');
     const selectedCategory = form.watch('category');
+
+    // Autofill funding source when dialog opens and a funding source is selected in the parent
+    useEffect(() => {
+        if (open && selectedFundingSourceId && selectedFundingSourceId !== 0) {
+            form.setValue('fundingSource', selectedFundingSourceId);
+        }
+    }, [open, selectedFundingSourceId, form]);
 
     const filteredChartOfAccounts = !isCustomItem
         ? selectedCategory
@@ -1033,6 +1042,7 @@ export default function PpmpFormDialog({
                                                                             true,
                                                                         )
                                                                     }
+                                                                    disabled
                                                                 >
                                                                     {selectedFundingSource ? (
                                                                         <span className="truncate">
@@ -1068,6 +1078,7 @@ export default function PpmpFormDialog({
                                                                             null,
                                                                         );
                                                                     }}
+                                                                    disabled
                                                                 >
                                                                     Clear
                                                                 </Button>

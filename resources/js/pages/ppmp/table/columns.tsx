@@ -23,18 +23,36 @@ const formatNumber = (val: string | number) => {
           });
 };
 
+const formatInteger = (val: string | number) => {
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) || num === null
+        ? '0'
+        : num.toLocaleString(undefined, {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+          });
+};
+
 const EditableCell: React.FC<EditableCellProps> = ({
     getValue,
     row,
     column,
 }) => {
     const initialValue = getValue();
-    const [value, setValue] = useState(formatNumber(initialValue));
+    const isQtyField = column.id.endsWith('_qty');
+    const [value, setValue] = useState(
+        isQtyField ? formatInteger(initialValue) : formatNumber(initialValue),
+    );
     const [isUpdating, setIsUpdating] = useState(false);
+    const [forceUpdate, setForceUpdate] = useState(0);
 
     useEffect(() => {
-        setValue(formatNumber(initialValue));
-    }, [initialValue]);
+        setValue(
+            isQtyField
+                ? formatInteger(initialValue)
+                : formatNumber(initialValue),
+        );
+    }, [initialValue, isQtyField, forceUpdate]);
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -62,11 +80,15 @@ const EditableCell: React.FC<EditableCellProps> = ({
                     only: ['ppmpItems'],
                     onFinish: () => {
                         setIsUpdating(false);
-                        // Format the new value after server sync
-                        setValue(formatNumber(cleanValue));
+                        // Force re-render to update with server-returned value
+                        setForceUpdate((prev) => prev + 1);
                     },
                     onError: () => {
-                        setValue(formatNumber(initialValue));
+                        setValue(
+                            isQtyField
+                                ? formatInteger(initialValue)
+                                : formatNumber(initialValue),
+                        );
                         setIsUpdating(false);
                     },
                 },
@@ -74,7 +96,11 @@ const EditableCell: React.FC<EditableCellProps> = ({
         } else {
             // 3. If nothing changed or we are already updating,
             // just re-format the local state to put the commas back.
-            setValue(formatNumber(cleanValue));
+            setValue(
+                isQtyField
+                    ? formatInteger(cleanValue)
+                    : formatNumber(cleanValue),
+            );
         }
     };
 
@@ -155,7 +181,7 @@ const columns = [
 
             return (
                 <span className="block text-right">
-                    {formatNumber(totalQty.toString())}
+                    {formatInteger(totalQty.toString())}
                 </span>
             );
         },

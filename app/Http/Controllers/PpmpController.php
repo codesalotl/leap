@@ -174,9 +174,12 @@ class PpmpController extends Controller
         $monthAmount = str_replace('_qty', '_amount', $monthQty);
         $unitPrice = $ppmp->ppmpPriceList?->price ?? 0;
 
+        // Round the quantity to the nearest integer
+        $roundedQuantity = (int) round($validated['quantity']);
+
         $ppmp->update([
-            $monthQty => $validated['quantity'],
-            $monthAmount => $validated['quantity'] * $unitPrice,
+            $monthQty => $roundedQuantity,
+            $monthAmount => $roundedQuantity * $unitPrice,
         ]);
 
         $this->updatePpaFundingSourceTotals(

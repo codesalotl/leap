@@ -798,7 +798,11 @@ export default function AipEntryFormDialog({
                                                                                     !watchedSources?.[
                                                                                         index
                                                                                     ]
-                                                                                        ?.funding_source_id
+                                                                                        ?.funding_source_id ||
+                                                                                    !watchedSources?.[
+                                                                                        index
+                                                                                    ]
+                                                                                        ?.id
                                                                                 }
                                                                                 title="Manage PPMP Items"
                                                                             >

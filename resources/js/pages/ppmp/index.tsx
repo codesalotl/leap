@@ -206,9 +206,6 @@ export default function PpmpPage({
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectLabel>Expense Class</SelectLabel>
-                                    <SelectItem value="ALL">
-                                        All Classes
-                                    </SelectItem>
                                     <SelectItem value="MOOE">
                                         {/* Maintenance and Other Operating Expenses */}
                                         (MOOE)
@@ -232,10 +229,6 @@ export default function PpmpPage({
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectLabel>Funding Sources</SelectLabel>
-
-                                    <SelectItem key="0" value="0">
-                                        Show All
-                                    </SelectItem>
 
                                     {fundingSources.map((fs) => (
                                         <SelectItem
@@ -320,6 +313,7 @@ export default function PpmpPage({
                 selectedEntry={aipEntry}
                 fundingSources={fundingSources}
                 selectedExpenseClass={selectedExpenseClass}
+                selectedFundingSourceId={selectedFundingSource}
             />
 
             <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>

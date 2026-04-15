@@ -40,5 +40,15 @@ export interface User {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
+    status?: string;
+    office?: {
+        id: number;
+        name: string;
+        acronym: string | null;
+        parent?: {
+            name: string;
+            acronym: string | null;
+        };
+    };
     [key: string]: unknown; // This allows for additional properties...
 }

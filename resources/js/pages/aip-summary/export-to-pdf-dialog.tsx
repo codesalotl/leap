@@ -14,6 +14,8 @@ import {
     Font,
 } from '@react-pdf/renderer';
 import type { FiscalYear, Ppa } from '@/types/global';
+import { usePage } from '@inertiajs/react';
+import { type SharedData } from '@/types';
 
 interface ExportToPdfDialogProps {
     open: boolean;
@@ -31,13 +33,13 @@ export default function ExportToPdfDialog({
     aipEntries,
     fiscalYear,
 }: ExportToPdfDialogProps) {
+    const { auth } = usePage<SharedData>().props;
     const COLUMN_WIDTHS = [
         7.14, 17.86, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 5.36,
         5.36, 5.36, 5.34,
     ];
 
-    const office =
-        'OFFICE OF THE PROVINCIAL GOVERNOR - INFORMATION AND COMMUNICATIONS TECHNOLOGY UNIT';
+    const office = auth.user.office?.name.toUpperCase() || '';
 
     const styles = StyleSheet.create({
         page: { padding: 36 },
