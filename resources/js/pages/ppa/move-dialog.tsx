@@ -146,7 +146,7 @@ export default function PpaMoveDialog({
             `/ppas/${ppaToMove.id}/move`,
             { parent_id: selectedId },
             {
-                preserveState: true,
+                preserveState: false,
                 preserveScroll: true,
                 onStart: () => setLoading(true),
                 onSuccess: () => {

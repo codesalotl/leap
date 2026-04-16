@@ -120,7 +120,7 @@ export default function PpaPage({
         if (!deletePpa) return;
 
         router.delete(`/ppas/${deletePpa.id}`, {
-            preserveState: true,
+            preserveState: false,
             preserveScroll: true,
             onStart: () => setIsDeleting(true),
             onSuccess: () => setDeletePpa(null),
@@ -136,7 +136,7 @@ export default function PpaPage({
                 over_id: overId,
             },
             {
-                preserveState: true,
+                preserveState: false,
                 preserveScroll: true,
             },
         );
@@ -165,19 +165,24 @@ export default function PpaPage({
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="View Level" />
                             </SelectTrigger>
+
                             <SelectContent>
                                 <SelectItem value="program">
                                     Only Programs
                                 </SelectItem>
+
                                 <SelectItem value="project">
                                     With Projects
                                 </SelectItem>
+
                                 <SelectItem value="activity">
                                     With Activities
                                 </SelectItem>
+
                                 <SelectItem value="sub-activity">
                                     Full Hierarchy
                                 </SelectItem>
+
                                 <SelectItem value="all">Show All</SelectItem>
                             </SelectContent>
                         </Select>

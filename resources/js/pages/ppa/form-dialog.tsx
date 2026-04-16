@@ -92,8 +92,8 @@ export default function PpaFormDialog({
     const userOfficeId = props.auth?.user.office_id;
     const isOfficeAutoSelected = mode === 'add' && !parentPpa && !!userOfficeId;
 
-    console.log(props);
-    console.log(userOfficeId);
+    // console.log(props);
+    // console.log(userOfficeId);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -194,7 +194,7 @@ export default function PpaFormDialog({
     };
 
     function onSubmit(values: FormValues) {
-        console.log(values);
+        // console.log(values);
 
         const payload: Record<string, any> = {
             ...values,
@@ -203,7 +203,7 @@ export default function PpaFormDialog({
 
         if (isEditing && editPpa) {
             router.patch(`/ppas/${editPpa.id}`, payload, {
-                preserveState: true,
+                preserveState: false,
                 preserveScroll: true,
                 onStart: () => setIsSubmitting(true),
                 onSuccess: () => {
@@ -217,7 +217,7 @@ export default function PpaFormDialog({
                 payload.parent_id = parentPpa.id;
             }
             router.post('/ppas', payload, {
-                preserveState: true,
+                preserveState: false,
                 preserveScroll: true,
                 onStart: () => setIsSubmitting(true),
                 onSuccess: () => {
