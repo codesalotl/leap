@@ -51,6 +51,8 @@ export default function PpaPage({
     ppaTree: Ppa[];
     offices: Office[];
 }) {
+    console.log(ppaTree);
+
     // Form Dialog States
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [formMode, setFormMode] = useState<'add' | 'edit'>('add');

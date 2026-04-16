@@ -34,27 +34,66 @@ class PpaController extends Controller
     /**
      * Display a listing of the resource.
      */
+    // public function index()
+    // {
+    //     $userOfficeId = Auth::user()->office_id;
+
+    //     return Inertia::render('ppa/index', [
+    //         // Wrap these in closures!
+    //         'ppaTree' => fn() => Ppa::where('office_id', $userOfficeId)
+    //             ->whereNull('parent_id')
+    //             ->orderBy('sort_order')
+    //             ->with([
+    //                 'office',
+    //                 'children' => fn($q) => $q->orderBy('sort_order'),
+    //                 'children.office',
+    //                 'children.children' => fn($q) => $q->orderBy('sort_order'),
+    //                 'children.children.office',
+    //                 'children.children.children' => fn($q) => $q->orderBy(
+    //                     'sort_order',
+    //                 ),
+    //                 'children.children.children.office',
+    //             ])
+    //             ->get(),
+
+    //         'offices' => fn() => Office::with([
+    //             'sector',
+    //             'lguLevel',
+    //             'officeType',
+    //         ])->get(),
+    //     ]);
+    // }
+
     public function index()
     {
         $userOfficeId = Auth::user()->office_id;
 
         return Inertia::render('ppa/index', [
-            // Wrap these in closures!
-            'ppaTree' => fn() => Ppa::where('office_id', $userOfficeId)
-                ->whereNull('parent_id')
-                ->orderBy('sort_order')
-                ->with([
-                    'office',
-                    'children' => fn($q) => $q->orderBy('sort_order'),
-                    'children.office',
-                    'children.children' => fn($q) => $q->orderBy('sort_order'),
-                    'children.children.office',
-                    'children.children.children' => fn($q) => $q->orderBy(
-                        'sort_order',
-                    ),
-                    'children.children.children.office',
-                ])
-                ->get(),
+            'ppaTree' => function () use ($userOfficeId) {
+                // 1. Fetch ALL relevant rows in ONE query
+                $allPpas = Ppa::where('office_id', $userOfficeId)
+                    ->with('office')
+                    ->orderBy('sort_order')
+                    ->get();
+
+                // 2. Build the tree using references (O(n) complexity)
+                $lookup = [];
+                foreach ($allPpas as $ppa) {
+                    $ppa->setRelation('children', collect()); // Initialize children collection
+                    $lookup[$ppa->id] = $ppa;
+                }
+
+                $tree = collect();
+                foreach ($allPpas as $ppa) {
+                    if ($ppa->parent_id && isset($lookup[$ppa->parent_id])) {
+                        $lookup[$ppa->parent_id]->children->push($ppa);
+                    } else {
+                        $tree->push($ppa);
+                    }
+                }
+
+                return $tree;
+            },
 
             'offices' => fn() => Office::with([
                 'sector',
@@ -63,6 +102,7 @@ class PpaController extends Controller
             ])->get(),
         ]);
     }
+
     /**
      * Show the form for creating a new resource.
      */
