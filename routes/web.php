@@ -158,6 +158,10 @@ Route::delete('price-lists/{ppmpPriceList}', [
     PpmpPriceListController::class,
     'destroy',
 ])->name('price-lists.destroy');
+Route::post('price-lists/reorder', [
+    PpmpPriceListController::class,
+    'reorder',
+])->name('price-lists.reorder');
 
 // offices
 Route::get('offices', [OfficeController::class, 'index'])->name(

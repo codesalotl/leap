@@ -10,6 +10,7 @@ use App\Http\Requests\UpdatePpmpPriceListRequest;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
 
 class PpmpPriceListController extends Controller
@@ -19,8 +20,15 @@ class PpmpPriceListController extends Controller
      */
     public function index()
     {
-        $priceList = PpmpPriceList::with(['chartOfAccount', 'category'])->get();
-        $chartOfAccounts = ChartOfAccount::all();
+        $priceList = PpmpPriceList::with(['chartOfAccount', 'category'])
+            ->orderBy('sort_order')
+            ->get();
+        // $chartOfAccounts = ChartOfAccount::all();
+        $chartOfAccounts = ChartOfAccount::where(
+            'expense_class',
+            '!=',
+            'PS',
+        )->get();
         $ppmpCategory = PpmpCategory::all();
 
         return Inertia::render('price-list/index', [
@@ -45,10 +53,15 @@ class PpmpPriceListController extends Controller
     {
         $validated = $request->validated();
 
+        // Auto-assign sort_order and item_number as the next available number
+        $maxSortOrder = PpmpPriceList::max('sort_order') ?? 0;
+        $nextSortOrder = $maxSortOrder + 1;
+
         $validatedMapped = [
             'chart_of_account_id' => $validated['expenseAccount'],
             'ppmp_category_id' => $validated['category'],
-            'item_number' => $validated['itemNo'],
+            'sort_order' => $nextSortOrder,
+            'item_number' => $nextSortOrder,
             'description' => $validated['description'],
             'unit_of_measurement' => $validated['unitOfMeasurement'],
             'price' => $validated['price'],
@@ -119,5 +132,50 @@ class PpmpPriceListController extends Controller
                 'database' => 'An unexpected database error occurred.',
             ]);
         }
+    }
+
+    /**
+     * Reorder price list items.
+     */
+    public function reorder(Request $request)
+    {
+        $activeId = (int) $request->active_id;
+        $overId = (int) $request->over_id;
+
+        DB::transaction(function () use ($activeId, $overId) {
+            $movingItem = PpmpPriceList::findOrFail($activeId);
+            $targetItem = PpmpPriceList::findOrFail($overId);
+
+            $oldOrder = $movingItem->sort_order;
+            $newOrder = $targetItem->sort_order;
+
+            if ($oldOrder < $newOrder) {
+                // Moving Down: Decrease sort_order of everything in between
+                PpmpPriceList::whereBetween('sort_order', [
+                    $oldOrder + 1,
+                    $newOrder,
+                ])->decrement('sort_order');
+                PpmpPriceList::whereBetween('item_number', [
+                    $oldOrder + 1,
+                    $newOrder,
+                ])->decrement('item_number');
+            } elseif ($oldOrder > $newOrder) {
+                // Moving Up: Increase sort_order of everything in between
+                PpmpPriceList::whereBetween('sort_order', [
+                    $newOrder,
+                    $oldOrder - 1,
+                ])->increment('sort_order');
+                PpmpPriceList::whereBetween('item_number', [
+                    $newOrder,
+                    $oldOrder - 1,
+                ])->increment('item_number');
+            }
+
+            // Set the moving item to its new position
+            $movingItem->update([
+                'sort_order' => $newOrder,
+                'item_number' => $newOrder,
+            ]);
+        });
     }
 }

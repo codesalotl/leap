@@ -1,11 +1,38 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { Pencil, Trash } from 'lucide-react';
+import { Pencil, Trash, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PriceList } from '@/types/global';
+import { useSortable } from '@dnd-kit/sortable';
 
 const columnHelper = createColumnHelper<PriceList>();
 
+const RowDragHandleCell = ({ rowId }: { rowId: string }) => {
+    const { attributes, listeners, setActivatorNodeRef } = useSortable({
+        id: rowId,
+    });
+
+    return (
+        <Button
+            size="icon"
+            variant="ghost"
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            className="cursor-grab rounded active:cursor-grabbing"
+        >
+            <GripVertical />
+        </Button>
+    );
+};
+
 const columns = [
+    columnHelper.display({
+        id: 'drag-handle',
+        size: 50,
+        cell: ({ row }) => {
+            return <RowDragHandleCell rowId={row.id} />;
+        },
+    }),
     columnHelper.accessor('item_number', {
         header: 'Item Number',
         size: 80,

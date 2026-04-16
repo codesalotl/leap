@@ -13,6 +13,7 @@ class PpmpPriceList extends Model
 
     protected $fillable = [
         'item_number',
+        'sort_order',
         'description',
         'unit_of_measurement',
         'price',

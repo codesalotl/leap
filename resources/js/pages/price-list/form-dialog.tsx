@@ -52,7 +52,6 @@ const formSchema = z
             }),
         category: z.number().optional(),
         customCategory: z.string().optional(),
-        itemNo: z.coerce.number().min(1, 'Item number is required.'),
         description: z.string().min(1, 'Description is required.'),
         unitOfMeasurement: z
             .string()
@@ -98,7 +97,6 @@ export default function FormDialog({
             expenseAccount: undefined,
             category: undefined,
             customCategory: '',
-            itemNo: 0,
             description: '',
             unitOfMeasurement: '',
             price: '',
@@ -120,7 +118,6 @@ export default function FormDialog({
                 expenseAccount: selectedPriceList.chart_of_account?.id,
                 customCategory: undefined,
                 category: selectedPriceList.category?.id,
-                itemNo: selectedPriceList.item_number,
                 description: selectedPriceList.description,
                 unitOfMeasurement: selectedPriceList.unit_of_measurement,
                 price: selectedPriceList.price,
@@ -130,7 +127,6 @@ export default function FormDialog({
                 expenseAccount: 0,
                 customCategory: undefined,
                 category: undefined,
-                itemNo: 0,
                 description: '',
                 unitOfMeasurement: '',
                 price: '0.00',
@@ -481,46 +477,6 @@ export default function FormDialog({
                                 )}
                             </FieldContent>
                         </Field>
-
-                        <div className="md:col-span-1">
-                            <Controller
-                                name="itemNo"
-                                control={form.control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldContent>
-                                            <FieldLabel
-                                                htmlFor={field.name}
-                                                className="gap-1"
-                                            >
-                                                Item No.
-                                            </FieldLabel>
-
-                                            <Input
-                                                {...field}
-                                                id={field.name}
-                                                aria-invalid={
-                                                    fieldState.invalid
-                                                }
-                                                placeholder="Enter item number"
-                                                autoComplete="off"
-                                                type="number"
-                                                value={
-                                                    field.value?.toString() ||
-                                                    ''
-                                                }
-                                            />
-
-                                            {fieldState.invalid && (
-                                                <FieldError
-                                                    errors={[fieldState.error]}
-                                                />
-                                            )}
-                                        </FieldContent>
-                                    </Field>
-                                )}
-                            />
-                        </div>
 
                         <div className="md:col-span-2">
                             <Controller

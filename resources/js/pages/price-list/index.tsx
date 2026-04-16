@@ -76,6 +76,23 @@ export default function PriceListPage({
         });
     }
 
+    function handleReorder(activeId: string, overId: string) {
+        router.post(
+            '/price-lists/reorder',
+            {
+                active_id: activeId,
+                over_id: overId,
+            },
+            {
+                preserveState: false,
+                preserveScroll: true,
+                onSuccess: () => {
+                    window.location.reload();
+                },
+            },
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="p-4">
@@ -85,6 +102,7 @@ export default function PriceListPage({
                     withSearch={true}
                     onEdit={handleEdit}
                     onDelete={handleDeleteDialogOpen}
+                    onReorder={handleReorder}
                 >
                     <Button onClick={handleAdd}>Add Price List</Button>
                 </DataTable>

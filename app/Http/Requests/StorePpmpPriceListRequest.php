@@ -27,13 +27,6 @@ class StorePpmpPriceListRequest extends FormRequest
             'category' => 'required_without:customCategory|nullable|integer',
             'customCategory' =>
                 'required_without:category|nullable|string|max:255',
-            'itemNo' => [
-                'required',
-                'integer',
-                Rule::unique('ppmp_price_lists', 'item_number')->ignore(
-                    $this->ppmpPriceList?->id,
-                ),
-            ],
             'description' => 'required|string|max:255',
             'unitOfMeasurement' => 'required|string|max:50',
             'price' => 'required|numeric|min:0',
