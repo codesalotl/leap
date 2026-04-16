@@ -217,7 +217,8 @@ export default function PpaFormDialog({
                 payload.parent_id = parentPpa.id;
             }
             router.post('/ppas', payload, {
-                preserveState: false,
+                only: ['ppaTree'],
+                preserveState: true,
                 preserveScroll: true,
                 onStart: () => setIsSubmitting(true),
                 onSuccess: () => {

@@ -38,35 +38,31 @@ class PpaController extends Controller
     {
         $userOfficeId = Auth::user()->office_id;
 
-        // dd($userOfficeId);
-
-        $ppaTree = Ppa::where('office_id', $userOfficeId)
-            ->whereNull('parent_id')
-            ->orderBy('sort_order')
-            ->with([
-                'office',
-
-                'children' => fn($q) => $q->orderBy('sort_order'),
-                'children.office',
-
-                'children.children' => fn($q) => $q->orderBy('sort_order'),
-                'children.children.office',
-
-                'children.children.children' => fn($q) => $q->orderBy(
-                    'sort_order',
-                ),
-                'children.children.children.office',
-            ])
-            ->get();
-
-        $offices = Office::with(['sector', 'lguLevel', 'officeType'])->get();
-
         return Inertia::render('ppa/index', [
-            'ppaTree' => $ppaTree,
-            'offices' => $offices,
+            // Wrap these in closures!
+            'ppaTree' => fn() => Ppa::where('office_id', $userOfficeId)
+                ->whereNull('parent_id')
+                ->orderBy('sort_order')
+                ->with([
+                    'office',
+                    'children' => fn($q) => $q->orderBy('sort_order'),
+                    'children.office',
+                    'children.children' => fn($q) => $q->orderBy('sort_order'),
+                    'children.children.office',
+                    'children.children.children' => fn($q) => $q->orderBy(
+                        'sort_order',
+                    ),
+                    'children.children.children.office',
+                ])
+                ->get(),
+
+            'offices' => fn() => Office::with([
+                'sector',
+                'lguLevel',
+                'officeType',
+            ])->get(),
         ]);
     }
-
     /**
      * Show the form for creating a new resource.
      */
@@ -81,36 +77,32 @@ class PpaController extends Controller
     public function store(StorePpaRequest $request)
     {
         $validated = $request->validated();
-
-        // Auto-generate code_suffix and sort_order based on sibling count and type
         $parentId = $validated['parent_id'] ?? null;
         $type = $validated['type'];
-        $siblingCount = Ppa::where('parent_id', $parentId)->count();
-        $digitLength = $this->getCodeSuffixLength($type);
 
-        // Get the maximum sort_order among siblings
-        $maxSortOrder =
-            Ppa::where('parent_id', $parentId)->max('sort_order') ?? -1;
+        // ONE query to get both count and max order
+        $stats = Ppa::where('parent_id', $parentId)
+            ->selectRaw('COUNT(*) as total, MAX(sort_order) as max_sort')
+            ->first();
+
+        $siblingCount = $stats->total ?? 0;
+        $maxSortOrder = $stats->max_sort ?? -1;
+
+        $digitLength = $this->getCodeSuffixLength($type);
         $sortOrder = $maxSortOrder + 1;
 
-        // Apply type-specific formatting
-        if ($digitLength === 0) {
-            // Dynamic formatting (Sub-Activity) - no padding
-            $codeSuffix = (string) ($siblingCount + 1);
-        } else {
-            // Fixed length formatting with leading zeros
-            $codeSuffix = str_pad(
-                $siblingCount + 1,
-                $digitLength,
-                '0',
-                STR_PAD_LEFT,
-            );
-        }
+        // Formatting logic
+        $codeSuffix =
+            $digitLength === 0
+                ? (string) ($siblingCount + 1)
+                : str_pad($siblingCount + 1, $digitLength, '0', STR_PAD_LEFT);
 
         $validated['code_suffix'] = $codeSuffix;
         $validated['sort_order'] = $sortOrder;
 
         Ppa::create($validated);
+
+        // Inertia will now redirect back to index()
     }
 
     /**
