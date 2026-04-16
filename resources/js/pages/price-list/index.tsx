@@ -23,6 +23,10 @@ export default function PriceListPage({
     chartOfAccounts,
     ppmpCategory,
 }: PriceListPageProps) {
+    console.log(priceList);
+    // console.log(chartOfAccounts);
+    // console.log(ppmpCategory);
+
     const [openEdit, setOpenEdit] = useState(false);
     const [selectedPriceList, setSelectedPriceList] =
         useState<PriceList | null>(null);
