@@ -12,6 +12,7 @@ import PpaSelectorDialog from '@/pages/aip-summary/ppa-selector-dialog';
 import { DeleteDialog } from '@/components/delete-dialog';
 import AipEntryFormDialog from '@/pages/aip-summary/aip-entry-form-dialog';
 import ExportToPdfDialog from '@/pages/aip-summary/export-to-pdf-dialog';
+import { exportToExcel } from '@/pages/aip-summary/export-to-excel';
 import type {
     FiscalYear,
     Ppa,
@@ -20,8 +21,9 @@ import type {
     FlattenedPpa,
 } from '@/types/global';
 import { type BreadcrumbItem } from '@/types';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
+import { type SharedData } from '@/types';
 import columns from './table/columns';
 import ExportSummaryToPdfDialog from '@/pages/aip-summary/export-summary-to-pdf-dialog';
 
@@ -83,6 +85,7 @@ export default function AipSummaryTable({
     masterPpas,
 }: AipSummaryTableProp) {
     console.log(aipEntries);
+    const { auth } = usePage<SharedData>().props;
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -160,6 +163,16 @@ export default function AipSummaryTable({
 
     function handlePrintPreview() {
         setIsExportOpen(true);
+    }
+
+    async function handleExportToExcel() {
+        const officeName = auth.user.office?.name || '';
+
+        await exportToExcel({
+            aipEntries,
+            fiscalYear,
+            officeName,
+        });
     }
 
     // const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
@@ -285,6 +298,16 @@ export default function AipSummaryTable({
 
                                         <span className="whitespace-nowrap">
                                             Print Preview
+                                        </span>
+                                    </div>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem onClick={handleExportToExcel}>
+                                    <div className="flex items-center">
+                                        <FileDown className="mr-2 h-4 w-4" />
+
+                                        <span className="whitespace-nowrap">
+                                            Export to Excel
                                         </span>
                                     </div>
                                 </DropdownMenuItem>

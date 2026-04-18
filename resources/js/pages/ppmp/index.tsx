@@ -70,8 +70,14 @@ export default function PpmpPage({
     initialFund,
 }: PpmpPageProps) {
     console.log({
+        fiscalYear,
         aipEntry,
-        // fundingSources
+        ppmpItems,
+        chartOfAccounts,
+        ppmpCategories,
+        fundingSources,
+        initialChoice,
+        initialFund,
     });
 
     const [open, setOpen] = useState(false);
