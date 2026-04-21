@@ -49,6 +49,8 @@ import {
     exportToPrint,
 } from '@/pages/ppmp/utils/export';
 
+import ExpenseAccountSummaryDialog from '@/pages/ppmp/expense-account-summary-dialog';
+
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
     aipEntry: AipEntry;
@@ -75,14 +77,14 @@ export default function PpmpPage({
     const { auth } = usePage().props;
     console.log(auth);
 
-    console.log({
-        aipEntry,
-        //     priceLists,
-        //     chartOfAccounts,
-        //     ppmpCategories,
-        //     ppmps,
-        //     fundingSources,
-    });
+    // console.log({
+    //     aipEntry,
+    //     priceLists,
+    //     chartOfAccounts,
+    //     ppmpCategories,
+    //     ppmps,
+    //     fundingSources,
+    // });
 
     const [open, setOpen] = useState(false);
     const [openAlert, setOpenAlert] = useState(false);
@@ -95,6 +97,10 @@ export default function PpmpPage({
     const [selectedExpenseClass, setSelectedExpenseClass] = useState<string>(
         initialChoice || 'ALL',
     );
+    const [
+        openExpenseAccountSummaryDialog,
+        setOpenExpenseAccountSummaryDialog,
+    ] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Annual Investment Programs', href: '/aip' },
@@ -139,7 +145,7 @@ export default function PpmpPage({
         }));
     }, [filteredPpmpItems, priceLists]);
 
-    console.log(processedData);
+    // console.log(processedData);
 
     // const filteredChartOfAccounts =
     //     selectedExpenseClass === 'ALL'
@@ -198,6 +204,116 @@ export default function PpmpPage({
             },
         );
     };
+
+    // console.log(filteredPpmpItems);
+
+    type PpmpWithFundingSource = Ppmp & FundingSource;
+    type PpmpWithFundingSourceAndPriceList = PpmpWithFundingSource & PriceList;
+    type PpmpWithFundingSourceAndPriceListAndCoa =
+        PpmpWithFundingSourceAndPriceList & ChartOfAccount;
+
+    const flatPpmpWithFs: PpmpWithFundingSource[] = filteredPpmpItems.map(
+        (ppmp) => {
+            const fundingSource = fundingSources.find(
+                (fs) => fs.id === ppmp.funding_source_id,
+            );
+
+            if (!fundingSource) {
+                throw new Error(`Funding source not found for PPMP ${ppmp.id}`);
+            }
+
+            return { ...ppmp, ...fundingSource };
+        },
+    );
+
+    const flatPpmpWithFsWithPl: PpmpWithFundingSourceAndPriceList[] =
+        flatPpmpWithFs.map((ppmp) => {
+            const priceList = priceLists.find((pl) => {
+                return pl.id === ppmp.ppmp_price_list_id;
+            });
+
+            if (!priceList) {
+                throw new Error(`Price list not found for PPMP ${ppmp.id}`);
+            }
+
+            return { ...ppmp, ...priceList };
+        });
+
+    const flatPpmpWithFsWithPlWithCoa: PpmpWithFundingSourceAndPriceListAndCoa[] =
+        flatPpmpWithFsWithPl.map((ppmp) => {
+            const chartOfAccount = chartOfAccounts.find((coa) => {
+                return coa.id === ppmp.chart_of_account_id;
+            });
+
+            if (!chartOfAccount) {
+                throw new Error(
+                    `Chart of account not found for PPMP ${ppmp.id}`,
+                );
+            }
+
+            return {
+                ...ppmp,
+                ...chartOfAccount,
+                description: chartOfAccount.description ?? '',
+            };
+        });
+
+    console.log(flatPpmpWithFsWithPlWithCoa);
+
+    const groupedData: Record<
+        number,
+        PpmpWithFundingSourceAndPriceListAndCoa[]
+    > = flatPpmpWithFsWithPlWithCoa.reduce(
+        (acc, current) => {
+            const key = current.chart_of_account_id;
+
+            // If the key doesn't exist in our accumulator, create an empty array
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+
+            // Push the current object into the group
+            acc[key].push(current);
+
+            return acc;
+        },
+        {} as Record<number, PpmpWithFundingSourceAndPriceListAndCoa[]>,
+    );
+
+    console.log(groupedData);
+
+    // ---
+
+    const coaWithPriceLists = filteredPpmpItems.reduce(
+        (
+            acc: (ChartOfAccount & { price_lists: (PriceList & Ppmp)[] })[],
+            item,
+        ) => {
+            const priceList = priceLists.find(
+                (pl) => pl.id === item.ppmp_price_list_id,
+            );
+            const coa = chartOfAccounts.find(
+                (coa) => coa.id === priceList?.chart_of_account_id,
+            );
+
+            if (coa && priceList) {
+                const existingCoa = acc.find((c) => c.id === coa.id);
+                if (existingCoa) {
+                    existingCoa.price_lists.push({ ...priceList, ...item });
+                } else {
+                    acc.push({
+                        ...coa,
+                        price_lists: [{ ...priceList, ...item }],
+                    });
+                }
+            }
+
+            return acc;
+        },
+        [],
+    );
+
+    console.log(coaWithPriceLists);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -304,6 +420,7 @@ export default function PpmpPage({
                                                       fundingSources,
                                                       selectedFundingSource,
                                                       auth,
+                                                      fiscalYear,
                                                   })
                                                 : setOpenAlert(true)
                                         }
@@ -323,6 +440,7 @@ export default function PpmpPage({
                                                       fundingSources,
                                                       selectedFundingSource,
                                                       auth,
+                                                      fiscalYear,
                                                   })
                                                 : setOpenAlert(true)
                                         }
@@ -342,6 +460,7 @@ export default function PpmpPage({
                                                       fundingSources,
                                                       selectedFundingSource,
                                                       auth,
+                                                      fiscalYear,
                                                   })
                                                 : setOpenAlert(true)
                                         }
@@ -351,6 +470,14 @@ export default function PpmpPage({
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
                         </DropdownMenu>
+
+                        <Button
+                            onClick={() =>
+                                setOpenExpenseAccountSummaryDialog(true)
+                            }
+                        >
+                            Expense Account Summary per PPMP
+                        </Button>
 
                         <Button onClick={() => setOpen(true)}>
                             <Plus /> Add Item
@@ -377,12 +504,14 @@ export default function PpmpPage({
                         <AlertDialogTitle>
                             Funding Source Required
                         </AlertDialogTitle>
+
                         <AlertDialogDescription>
                             You must select a valid funding source before you
                             can export this document. Please choose one from the
                             list and try again.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
+
                     <AlertDialogFooter>
                         <AlertDialogAction onClick={() => setOpenAlert(false)}>
                             Got it
@@ -390,6 +519,13 @@ export default function PpmpPage({
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <ExpenseAccountSummaryDialog
+                open={openExpenseAccountSummaryDialog}
+                onOpenChange={setOpenExpenseAccountSummaryDialog}
+                // flatPpmpWithFsWithPlWithCoa={flatPpmpWithFsWithPlWithCoa}
+                coaWithPriceLists={coaWithPriceLists}
+            />
 
             <DeleteDialog
                 isOpen={isDeleteDialogOpen}

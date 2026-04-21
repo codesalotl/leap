@@ -76,7 +76,7 @@ interface DataTableProps<TData extends { id: unknown }> {
     onReorder?: (activeId: string, overId: string) => void;
     onMove?: (data: TData) => void;
 
-    meta: any;
+    meta?: any;
 }
 
 const reorderTree = (data: any[], activeId: string, overId: string): any[] => {

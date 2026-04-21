@@ -11,6 +11,7 @@ import type {
     ChartOfAccount,
     AipEntry,
     FundingSource,
+    FiscalYear,
 } from '@/types/global';
 
 interface ExportToExcelProps {
@@ -22,6 +23,7 @@ interface ExportToExcelProps {
     fundingSources: FundingSource[];
     selectedFundingSource: number;
     auth: any;
+    fiscalYear: FiscalYear;
 }
 
 export async function exportToExcel({
@@ -33,6 +35,7 @@ export async function exportToExcel({
     fundingSources,
     selectedFundingSource,
     auth,
+    fiscalYear,
 }: ExportToExcelProps) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('PPMP');
@@ -404,7 +407,7 @@ export async function exportToExcel({
     aipRefCode.value = `${aipEntry?.ppa?.full_code || 'N/A'}`;
     ppaDesc.value = `${aipEntry?.ppa?.name || 'N/A'}`;
     headerTitle.value = 'PROVINCIAL GOVERNMENT OF LA UNION';
-    headerSubTitle.value = 'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026';
+    headerSubTitle.value = `PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY ${fiscalYear.year}`;
 
     [
         fundingSource,
@@ -458,6 +461,7 @@ export async function exportToPrint({
     fundingSources,
     selectedFundingSource,
     auth,
+    fiscalYear,
 }: ExportToExcelProps) {
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
@@ -531,11 +535,16 @@ export async function exportToPrint({
             // Initialize totals for the 12 month amount columns
             const monthlyTotals = Array(12).fill(0);
 
+            let groupTotalPrice = 0;
+            // groupTotalPrice += price;
+
             accountItems.forEach((item) => {
                 const priceList = priceLists.find(
                     (pl) => pl.id === item.ppmp_price_list_id,
                 );
                 const price = Number(priceList?.price || 0);
+
+                groupTotalPrice += price;
 
                 // Array of monthly amounts to accumulate
                 const monthlyAmts = [
@@ -626,34 +635,46 @@ export async function exportToPrint({
                 data: Array(31)
                     .fill('')
                     .map((_, i) => {
+                        // Label
                         if (i === 2) return 'TOTAL';
-                        if (i === 6)
+
+                        if (i === 4) {
+                            return groupTotalPrice.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                        }
+
+                        // Group Total - This will now always show at least 0.00
+                        if (i === 6) {
                             return groupTotalAmount.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                             });
+                        }
 
-                        // Monthly Amount Columns are 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+                        // Monthly Amount Columns
                         const monthAmtCols = [
                             8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
                         ];
                         if (monthAmtCols.includes(i)) {
                             const monthIdx = (i - 8) / 2;
-                            return monthlyTotals[monthIdx] > 0
-                                ? monthlyTotals[monthIdx].toLocaleString(
-                                      undefined,
-                                      {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                      },
-                                  )
-                                : '';
+                            const value = monthlyTotals[monthIdx] || 0; // Fallback to 0 if undefined
+
+                            // Removed the " > 0 " check so 0 formatted becomes "0.00"
+                            return value.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
                         }
+
                         return '';
                     }),
             });
         });
     });
+
+    // console.log(aipEntry);
 
     // --- TABLE GENERATION ---
     autoTable(doc, {
@@ -682,7 +703,7 @@ export async function exportToPrint({
                     styles: {
                         halign: 'center',
                         valign: 'bottom',
-                        fontSize: 28,
+                        fontSize: 27,
                         fontStyle: 'bold',
                     },
                 },
@@ -714,8 +735,7 @@ export async function exportToPrint({
                     },
                 },
                 {
-                    content:
-                        'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026',
+                    content: `PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY ${fiscalYear.year}`,
                     colSpan: 24,
                     rowSpan: 2,
                     styles: {
@@ -857,6 +877,8 @@ export async function exportToPDF({
     aipEntry,
     fundingSources,
     selectedFundingSource,
+    auth,
+    fiscalYear,
 }: ExportToExcelProps) {
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
@@ -929,12 +951,14 @@ export async function exportToPDF({
             let groupTotalAmount = 0;
             // Initialize totals for the 12 month amount columns
             const monthlyTotals = Array(12).fill(0);
+            let groupTotalPrice = 0;
 
             accountItems.forEach((item) => {
                 const priceList = priceLists.find(
                     (pl) => pl.id === item.ppmp_price_list_id,
                 );
                 const price = Number(priceList?.price || 0);
+                groupTotalPrice += price;
 
                 // Array of monthly amounts to accumulate
                 const monthlyAmts = [
@@ -1025,29 +1049,39 @@ export async function exportToPDF({
                 data: Array(31)
                     .fill('')
                     .map((_, i) => {
+                        // Label
                         if (i === 2) return 'TOTAL';
-                        if (i === 6)
+
+                        if (i === 4) {
+                            return groupTotalPrice.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                        }
+
+                        // Group Total - This will now always show at least 0.00
+                        if (i === 6) {
                             return groupTotalAmount.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                             });
+                        }
 
-                        // Monthly Amount Columns are 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+                        // Monthly Amount Columns
                         const monthAmtCols = [
                             8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
                         ];
                         if (monthAmtCols.includes(i)) {
                             const monthIdx = (i - 8) / 2;
-                            return monthlyTotals[monthIdx] > 0
-                                ? monthlyTotals[monthIdx].toLocaleString(
-                                      undefined,
-                                      {
-                                          minimumFractionDigits: 2,
-                                          maximumFractionDigits: 2,
-                                      },
-                                  )
-                                : '';
+                            const value = monthlyTotals[monthIdx] || 0; // Fallback to 0 if undefined
+
+                            // Removed the " > 0 " check so 0 formatted becomes "0.00"
+                            return value.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
                         }
+
                         return '';
                     }),
             });
@@ -1063,7 +1097,7 @@ export async function exportToPDF({
             [
                 { content: '', styles: { fillColor: [255, 255, 255] } },
                 {
-                    content: 'NAME OF OFFICE',
+                    content: `${auth.user.name}`,
                     colSpan: 6,
                     rowSpan: 2,
                     styles: {
@@ -1113,8 +1147,7 @@ export async function exportToPDF({
                     },
                 },
                 {
-                    content:
-                        'PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY 2026',
+                    content: `PROJECT PROCUREMENT MANAGEMENT PLAN(PPMP) CY ${fiscalYear.year}`,
                     colSpan: 24,
                     rowSpan: 2,
                     styles: {
