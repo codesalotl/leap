@@ -218,7 +218,16 @@ export interface PpmpCategory {
     created_at: string | null;
     updated_at: string | null;
 
+    chart_of_account_pivot: ChartOfAccountPpmpCategory[];
+    chart_of_accounts: ChartOfAccount[];
+}
+
+export interface ChartOfAccountPpmpCategory {
+    id: number;
+    ppmp_category_id: number;
     chart_of_account_id: number;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export interface AipSummary {

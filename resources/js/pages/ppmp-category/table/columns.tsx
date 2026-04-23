@@ -1,15 +1,14 @@
 import { createColumnHelper } from '@tanstack/react-table';
 import { Pencil, Trash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { PpmpCategory, ChartOfAccount } from '@/types/global';
+import type { PpmpCategory } from '@/types/global';
+import { Badge } from '@/components/ui/badge';
 
-type PpmpCategoriesWithCoa = PpmpCategory & ChartOfAccount;
-
-const columnHelper = createColumnHelper<PpmpCategoriesWithCoa>();
+const columnHelper = createColumnHelper<PpmpCategory>();
 
 const columns = [
     columnHelper.accessor('name', {
-        header: () => <div>Name</div>,
+        header: () => <div>Category Name</div>,
         size: 300,
         cell: (value) => <div className="text-wrap">{value.getValue()}</div>,
     }),
@@ -22,11 +21,15 @@ const columns = [
             </div>
         ),
     }),
-    columnHelper.accessor('account_title', {
-        header: () => <div>Account Title</div>,
+    columnHelper.accessor('chart_of_accounts', {
+        header: () => <div>Expense Accounts</div>,
         size: 300,
         cell: ({ getValue }) => (
-            <div className="text-wrap">{getValue() ?? '-'}</div>
+            <div className="flex flex-wrap gap-2">
+                {getValue().map((account) => (
+                    <Badge key={account.id}>{account.account_title}</Badge>
+                ))}
+            </div>
         ),
     }),
     columnHelper.display({

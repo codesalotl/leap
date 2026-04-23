@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -38,8 +38,6 @@ import {
     CommandItem,
     CommandList,
 } from '@/components/ui/command';
-import { ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface FormDialogProps {
     open: boolean;
@@ -50,8 +48,8 @@ interface FormDialogProps {
 
 const formSchema = z.object({
     name: z.string().trim().min(1, { message: 'Name is required' }),
-    chart_of_account_id: z.number().int().positive(),
     is_non_procurement: z.boolean(),
+    chart_of_accounts: z.array(z.number()),
 });
 
 export default function FormDialog({
@@ -60,9 +58,13 @@ export default function FormDialog({
     initialData,
     chartOfAccounts,
 }: FormDialogProps) {
-    const [openExpenseClassCommandDialog, setOpenExpenseClassCommandDialog] =
-        useState(false);
+    console.log(initialData);
+
     const [isLoading, setIsLoading] = useState(false);
+    const [openCoaCommand, setOpenCoaCommand] = useState(false);
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+    const [pendingClose, setPendingClose] = useState(false);
 
     const isEditing = !!initialData;
 
@@ -70,7 +72,7 @@ export default function FormDialog({
         resolver: zodResolver(formSchema),
         defaultValues: {
             name: '',
-            chart_of_account_id: undefined,
+            chart_of_accounts: [],
             is_non_procurement: false,
         },
     });
@@ -78,14 +80,39 @@ export default function FormDialog({
     useEffect(() => {
         if (open) {
             form.reset(
-                initialData ?? {
-                    name: '',
-                    chart_of_account_id: undefined,
-                    is_non_procurement: false,
-                },
+                initialData
+                    ? {
+                          ...initialData,
+                          chart_of_accounts:
+                              initialData.chart_of_accounts?.map(
+                                  (account) => account.id,
+                              ) || [],
+                      }
+                    : {
+                          name: '',
+                          chart_of_accounts: [],
+                          is_non_procurement: false,
+                      },
             );
+            setHasUnsavedChanges(false);
         }
     }, [initialData, open, form]);
+
+    const formValues = form.watch();
+    const initialChartOfAccounts = useMemo(
+        () => initialData?.chart_of_accounts?.map((a) => a.id) || [],
+        [initialData],
+    );
+
+    useEffect(() => {
+        const currentChartOfAccounts = formValues.chart_of_accounts || [];
+        const hasChanges =
+            JSON.stringify(
+                [...currentChartOfAccounts].sort((a, b) => a - b),
+            ) !==
+            JSON.stringify([...initialChartOfAccounts].sort((a, b) => a - b));
+        setHasUnsavedChanges(hasChanges);
+    }, [formValues.chart_of_accounts, initialChartOfAccounts]);
 
     function onSubmit(data: z.infer<typeof formSchema>) {
         // console.log(data);
@@ -95,7 +122,10 @@ export default function FormDialog({
                 preserveScroll: true,
                 preserveState: true,
                 onStart: () => setIsLoading(true),
-                onSuccess: () => setOpen(false),
+                onSuccess: () => {
+                    setHasUnsavedChanges(false);
+                    setOpen(false);
+                },
                 onFinish: () => setIsLoading(false),
             });
         } else {
@@ -109,255 +139,98 @@ export default function FormDialog({
         }
     }
 
+    function handleOpenChange(isOpen: boolean) {
+        if (!isOpen && hasUnsavedChanges) {
+            setShowUnsavedDialog(true);
+            setPendingClose(true);
+        } else {
+            setOpen(isOpen);
+        }
+    }
+
+    function handleUnsavedConfirm() {
+        setShowUnsavedDialog(false);
+        setPendingClose(false);
+        setHasUnsavedChanges(false);
+        setOpen(false);
+    }
+
+    function handleUnsavedCancel() {
+        setShowUnsavedDialog(false);
+        setPendingClose(false);
+    }
+
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent
-                className="flex max-h-[90vh] flex-col gap-0 overflow-hidden"
-                onPointerDownOutside={(e) => isLoading && e.preventDefault()}
-                onEscapeKeyDown={(e) => isLoading && e.preventDefault()}
-            >
-                <DialogHeader>
-                    <DialogTitle>
-                        {isEditing
-                            ? 'Edit PPMP Category'
-                            : 'Add New PPMP Category'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {isEditing
-                            ? 'Modify the details of the existing PPMP category below.'
-                            : 'Fill in the information to create a new PPMP category record.'}
-                    </DialogDescription>
-                </DialogHeader>
+        <>
+            <Dialog open={open} onOpenChange={handleOpenChange}>
+                <DialogContent
+                    className="flex max-h-[90vh] flex-col gap-0 overflow-hidden"
+                    onPointerDownOutside={(e) => {
+                        if (isLoading) e.preventDefault();
+                        if (hasUnsavedChanges) {
+                            e.preventDefault();
+                            setShowUnsavedDialog(true);
+                            setPendingClose(true);
+                        }
+                    }}
+                    onEscapeKeyDown={(e) => {
+                        if (isLoading) e.preventDefault();
+                        if (hasUnsavedChanges) {
+                            e.preventDefault();
+                            setShowUnsavedDialog(true);
+                            setPendingClose(true);
+                        }
+                    }}
+                >
+                    <DialogHeader>
+                        <DialogTitle>
+                            {isEditing
+                                ? 'Edit PPMP Category'
+                                : 'Add New PPMP Category'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {isEditing
+                                ? 'Modify the details of the existing PPMP category below.'
+                                : 'Fill in the information to create a new PPMP category record.'}
+                        </DialogDescription>
+                    </DialogHeader>
 
-                <div className="flex min-h-0 flex-1 pt-2">
-                    <ScrollArea className="w-full flex-1 pr-3">
-                        <form
-                            id="ppmp-category-form"
-                            onSubmit={form.handleSubmit(onSubmit)}
-                        >
-                            <FieldGroup className="pb-4">
-                                <Controller
-                                    name="name"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldContent>
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                    className="gap-1"
-                                                >
-                                                    Name
-                                                    <span className="text-red-500">
-                                                        *
-                                                    </span>
-                                                </FieldLabel>
+                    <div className="flex min-h-0 flex-1 pt-2">
+                        <ScrollArea className="w-full flex-1 pr-3">
+                            <form
+                                id="ppmp-category-form"
+                                onSubmit={form.handleSubmit(onSubmit)}
+                            >
+                                <FieldGroup className="pb-4">
+                                    <Controller
+                                        name="name"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => (
+                                            <Field
+                                                data-invalid={
+                                                    fieldState.invalid
+                                                }
+                                            >
+                                                <FieldContent>
+                                                    <FieldLabel
+                                                        htmlFor={field.name}
+                                                        className="gap-1"
+                                                    >
+                                                        Name
+                                                        <span className="text-red-500">
+                                                            *
+                                                        </span>
+                                                    </FieldLabel>
 
-                                                <Input
-                                                    {...field}
-                                                    id={field.name}
-                                                    aria-invalid={
-                                                        fieldState.invalid
-                                                    }
-                                                    placeholder="Category name..."
-                                                    autoComplete="off"
-                                                />
-
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
-                                                    />
-                                                )}
-                                            </FieldContent>
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="chart_of_account_id"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => (
-                                        <Field
-                                            data-invalid={fieldState.invalid}
-                                        >
-                                            <FieldContent>
-                                                <FieldLabel
-                                                    htmlFor={field.name}
-                                                    className="gap-1"
-                                                >
-                                                    Expense Account
-                                                    <span className="text-destructive">
-                                                        *
-                                                    </span>
-                                                </FieldLabel>
-
-                                                <>
-                                                    {/* final button for command dialog */}
-                                                    <Button
+                                                    <Input
+                                                        {...field}
                                                         id={field.name}
-                                                        type="button"
-                                                        variant="outline"
                                                         aria-invalid={
                                                             fieldState.invalid
                                                         }
-                                                        className={cn(
-                                                            'justify-between',
-                                                            !field.value &&
-                                                                'text-muted-foreground',
-                                                        )}
-                                                        onClick={() =>
-                                                            setOpenExpenseClassCommandDialog(
-                                                                true,
-                                                            )
-                                                        }
-                                                    >
-                                                        {field.value ? (
-                                                            <span className="truncate">
-                                                                {
-                                                                    chartOfAccounts.find(
-                                                                        (coa) =>
-                                                                            coa.id ===
-                                                                            field.value,
-                                                                    )
-                                                                        ?.account_title
-                                                                }
-                                                            </span>
-                                                        ) : (
-                                                            'Select implementing office...'
-                                                        )}
-
-                                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                    </Button>
-
-                                                    {/* final command dialog */}
-                                                    <CommandDialog
-                                                        open={
-                                                            openExpenseClassCommandDialog
-                                                        }
-                                                        onOpenChange={
-                                                            setOpenExpenseClassCommandDialog
-                                                        }
-                                                        className="flex max-h-[90vh] flex-col"
-                                                    >
-                                                        <Command>
-                                                            <CommandInput placeholder="Search office name..." />
-
-                                                            <CommandList className="max-h-none flex-1">
-                                                                <CommandEmpty>
-                                                                    No office
-                                                                    found.
-                                                                </CommandEmpty>
-
-                                                                <CommandGroup heading="Offices">
-                                                                    {chartOfAccounts.map(
-                                                                        (
-                                                                            coa,
-                                                                        ) => (
-                                                                            <CommandItem
-                                                                                key={
-                                                                                    coa.id
-                                                                                }
-                                                                                value={`${coa.account_number} ${coa.account_title}`}
-                                                                                data-checked={
-                                                                                    field.value ===
-                                                                                    coa.id
-                                                                                }
-                                                                                onSelect={() => {
-                                                                                    console.log(
-                                                                                        coa,
-                                                                                    );
-                                                                                    // form.setValue(
-                                                                                    //     'office_id',
-                                                                                    //     office.id.toString(),
-                                                                                    // );
-                                                                                    field.onChange(
-                                                                                        coa.id,
-                                                                                    );
-                                                                                    setOpenExpenseClassCommandDialog(
-                                                                                        false,
-                                                                                    );
-                                                                                }}
-                                                                                className="items-start gap-4 py-2"
-                                                                            >
-                                                                                <div className="grid w-full grid-cols-6 gap-4">
-                                                                                    <span className="col-span-2">
-                                                                                        {coa.account_number ??
-                                                                                            '-'}
-                                                                                    </span>
-
-                                                                                    <span className="col-span-4 whitespace-normal">
-                                                                                        {
-                                                                                            coa.account_title
-                                                                                        }
-                                                                                    </span>
-                                                                                </div>
-                                                                            </CommandItem>
-                                                                        ),
-                                                                    )}
-                                                                </CommandGroup>
-                                                            </CommandList>
-                                                        </Command>
-                                                    </CommandDialog>
-                                                </>
-
-                                                {fieldState.invalid && (
-                                                    <FieldError
-                                                        errors={[
-                                                            fieldState.error,
-                                                        ]}
+                                                        placeholder="Category name..."
+                                                        autoComplete="off"
                                                     />
-                                                )}
-                                            </FieldContent>
-                                        </Field>
-                                    )}
-                                />
-
-                                <Controller
-                                    name="is_non_procurement"
-                                    control={form.control}
-                                    render={({ field, fieldState }) => {
-                                        console.log(field.value);
-
-                                        return (
-                                            <FieldSet>
-                                                <FieldContent>
-                                                    <FieldLegend variant="label">
-                                                        Procurement Type
-                                                    </FieldLegend>
-
-                                                    <FieldGroup>
-                                                        <Field
-                                                            orientation="horizontal"
-                                                            data-invalid={
-                                                                fieldState.invalid
-                                                            }
-                                                        >
-                                                            <Checkbox
-                                                                id={field.name}
-                                                                aria-invalid={
-                                                                    fieldState.invalid
-                                                                }
-                                                                checked={
-                                                                    field.value
-                                                                }
-                                                                onCheckedChange={
-                                                                    field.onChange
-                                                                }
-                                                            />
-
-                                                            <FieldLabel
-                                                                htmlFor={
-                                                                    field.name
-                                                                }
-                                                                className="font-normal"
-                                                            >
-                                                                Non-Procurement
-                                                            </FieldLabel>
-                                                        </Field>
-                                                    </FieldGroup>
 
                                                     {fieldState.invalid && (
                                                         <FieldError
@@ -367,49 +240,317 @@ export default function FormDialog({
                                                         />
                                                     )}
                                                 </FieldContent>
-                                            </FieldSet>
-                                        );
-                                    }}
-                                />
-                            </FieldGroup>
-                        </form>
-                    </ScrollArea>
-                </div>
+                                            </Field>
+                                        )}
+                                    />
 
-                <DialogFooter>
-                    <Button
-                        variant="outline"
-                        onClick={() => setOpen(false)}
-                        disabled={isLoading}
-                    >
-                        Cancel
-                    </Button>
+                                    <Controller
+                                        name="chart_of_accounts"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => {
+                                            // console.log(field.value);
+                                            return (
+                                                <FieldSet>
+                                                    <FieldContent>
+                                                        <FieldLegend variant="label">
+                                                            Chart of Accounts
+                                                        </FieldLegend>
 
-                    <Button
-                        type="submit"
-                        form="ppmp-category-form"
-                        disabled={isLoading}
-                    >
-                        {isEditing ? (
-                            isLoading ? (
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setOpenCoaCommand(
+                                                                    true,
+                                                                )
+                                                            }
+                                                        >
+                                                            Add Chart of Account
+                                                        </Button>
+
+                                                        <ul className="list-disc pl-5">
+                                                            {field.value
+                                                                ?.map((id) =>
+                                                                    chartOfAccounts.find(
+                                                                        (coa) =>
+                                                                            coa.id ===
+                                                                            id,
+                                                                    ),
+                                                                )
+                                                                .filter(
+                                                                    (
+                                                                        coa,
+                                                                    ): coa is ChartOfAccount =>
+                                                                        Boolean(
+                                                                            coa,
+                                                                        ),
+                                                                )
+                                                                .map((coa) => (
+                                                                    <li
+                                                                        key={
+                                                                            coa.id
+                                                                        }
+                                                                        className="flex items-center justify-between gap-2"
+                                                                    >
+                                                                        <span>
+                                                                            {
+                                                                                coa.account_title
+                                                                            }
+                                                                        </span>
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            onClick={() => {
+                                                                                const newValue =
+                                                                                    field.value?.filter(
+                                                                                        (
+                                                                                            id,
+                                                                                        ) =>
+                                                                                            id !==
+                                                                                            coa.id,
+                                                                                    ) ||
+                                                                                    [];
+                                                                                field.onChange(
+                                                                                    newValue,
+                                                                                );
+                                                                            }}
+                                                                        >
+                                                                            ×
+                                                                        </Button>
+                                                                    </li>
+                                                                ))}
+                                                        </ul>
+
+                                                        <CommandDialog
+                                                            open={
+                                                                openCoaCommand
+                                                            }
+                                                            onOpenChange={
+                                                                setOpenCoaCommand
+                                                            }
+                                                            className="flex max-h-[90vh] flex-col"
+                                                        >
+                                                            <Command>
+                                                                <CommandInput placeholder="Search chart of account..." />
+                                                                <CommandList className="max-h-none flex-1">
+                                                                    <CommandEmpty>
+                                                                        No chart
+                                                                        of
+                                                                        account
+                                                                        found.
+                                                                    </CommandEmpty>
+                                                                    <CommandGroup heading="Chart of Accounts">
+                                                                        {chartOfAccounts.map(
+                                                                            (
+                                                                                coa,
+                                                                            ) => (
+                                                                                <CommandItem
+                                                                                    key={
+                                                                                        coa.id
+                                                                                    }
+                                                                                    value={`${coa.account_number} ${coa.account_title}`}
+                                                                                    className="items-center gap-4"
+                                                                                >
+                                                                                    <Checkbox
+                                                                                        checked={
+                                                                                            field.value?.includes(
+                                                                                                coa.id,
+                                                                                            ) ||
+                                                                                            false
+                                                                                        }
+                                                                                        onCheckedChange={(
+                                                                                            checked,
+                                                                                        ) => {
+                                                                                            const newValue =
+                                                                                                checked
+                                                                                                    ? [
+                                                                                                          ...(field.value ||
+                                                                                                              []),
+                                                                                                          coa.id,
+                                                                                                      ]
+                                                                                                    : field.value?.filter(
+                                                                                                          (
+                                                                                                              id,
+                                                                                                          ) =>
+                                                                                                              id !==
+                                                                                                              coa.id,
+                                                                                                      ) ||
+                                                                                                      [];
+                                                                                            field.onChange(
+                                                                                                newValue,
+                                                                                            );
+                                                                                        }}
+                                                                                    />
+                                                                                    <div className="grid w-full grid-cols-6 gap-4">
+                                                                                        <span className="col-span-2">
+                                                                                            {coa.account_number ??
+                                                                                                '-'}
+                                                                                        </span>
+                                                                                        <span className="col-span-4 whitespace-normal">
+                                                                                            {
+                                                                                                coa.account_title
+                                                                                            }
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </CommandItem>
+                                                                            ),
+                                                                        )}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                            <div className="border-t p-4">
+                                                                <Button
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setOpenCoaCommand(
+                                                                            false,
+                                                                        )
+                                                                    }
+                                                                    className="w-full"
+                                                                >
+                                                                    Save
+                                                                    Selected
+                                                                </Button>
+                                                            </div>
+                                                        </CommandDialog>
+
+                                                        {fieldState.invalid && (
+                                                            <FieldError
+                                                                errors={[
+                                                                    fieldState.error,
+                                                                ]}
+                                                            />
+                                                        )}
+                                                    </FieldContent>
+                                                </FieldSet>
+                                            );
+                                        }}
+                                    />
+
+                                    <Controller
+                                        name="is_non_procurement"
+                                        control={form.control}
+                                        render={({ field, fieldState }) => {
+                                            console.log(field.value);
+
+                                            return (
+                                                <FieldSet>
+                                                    <FieldContent>
+                                                        <FieldLegend variant="label">
+                                                            Procurement Type
+                                                        </FieldLegend>
+
+                                                        <FieldGroup>
+                                                            <Field
+                                                                orientation="horizontal"
+                                                                data-invalid={
+                                                                    fieldState.invalid
+                                                                }
+                                                            >
+                                                                <Checkbox
+                                                                    id={
+                                                                        field.name
+                                                                    }
+                                                                    aria-invalid={
+                                                                        fieldState.invalid
+                                                                    }
+                                                                    checked={
+                                                                        field.value
+                                                                    }
+                                                                    onCheckedChange={
+                                                                        field.onChange
+                                                                    }
+                                                                />
+
+                                                                <FieldLabel
+                                                                    htmlFor={
+                                                                        field.name
+                                                                    }
+                                                                    className="font-normal"
+                                                                >
+                                                                    Non-Procurement
+                                                                </FieldLabel>
+                                                            </Field>
+                                                        </FieldGroup>
+
+                                                        {fieldState.invalid && (
+                                                            <FieldError
+                                                                errors={[
+                                                                    fieldState.error,
+                                                                ]}
+                                                            />
+                                                        )}
+                                                    </FieldContent>
+                                                </FieldSet>
+                                            );
+                                        }}
+                                    />
+                                </FieldGroup>
+                            </form>
+                        </ScrollArea>
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setOpen(false)}
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            type="submit"
+                            form="ppmp-category-form"
+                            disabled={isLoading}
+                        >
+                            {isEditing ? (
+                                isLoading ? (
+                                    <span className="flex items-center gap-1">
+                                        <Spinner />
+                                        Saving Changes
+                                    </span>
+                                ) : (
+                                    'Save Changes'
+                                )
+                            ) : isLoading ? (
                                 <span className="flex items-center gap-1">
                                     <Spinner />
-                                    Saving Changes
+                                    Creating Category
                                 </span>
                             ) : (
-                                'Save Changes'
-                            )
-                        ) : isLoading ? (
-                            <span className="flex items-center gap-1">
-                                <Spinner />
-                                Creating Category
-                            </span>
-                        ) : (
-                            'Create Category'
-                        )}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                                'Create Category'
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog
+                open={showUnsavedDialog}
+                onOpenChange={setShowUnsavedDialog}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Unsaved Changes</DialogTitle>
+                        <DialogDescription>
+                            You have unsaved changes to the chart of accounts.
+                            Do you want to discard these changes?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={handleUnsavedCancel}>
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleUnsavedConfirm}
+                        >
+                            Discard Changes
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

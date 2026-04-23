@@ -23,8 +23,8 @@ class StorePpmpCategoryRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:100',
-            'chart_of_account_id' =>
-                'required|integer|exists:chart_of_accounts,id',
+            'chart_of_accounts' => 'required|array',
+            'chart_of_accounts.*' => 'integer|exists:chart_of_accounts,id',
             'is_non_procurement' => 'required|boolean',
         ];
     }

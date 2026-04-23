@@ -15,8 +15,10 @@ class PpmpCategoryController extends Controller
      */
     public function index()
     {
+        $ppmpCategories = PpmpCategory::with('chartOfAccounts')->get();
+
         return Inertia::render('ppmp-category/index', [
-            'ppmpCategories' => PpmpCategory::all(),
+            'ppmpCategories' => $ppmpCategories,
             'chartOfAccounts' => ChartOfAccount::all(),
         ]);
     }
@@ -36,7 +38,12 @@ class PpmpCategoryController extends Controller
     {
         $validated = $request->validated();
 
-        PpmpCategory::create($validated);
+        $ppmpCategory = PpmpCategory::create([
+            'name' => $validated['name'],
+            'is_non_procurement' => $validated['is_non_procurement'],
+        ]);
+
+        $ppmpCategory->chartOfAccounts()->sync($validated['chart_of_accounts']);
     }
 
     /**
@@ -64,7 +71,12 @@ class PpmpCategoryController extends Controller
     ) {
         $validated = $request->validated();
 
-        $ppmpCategory->update($validated);
+        $ppmpCategory->update([
+            'name' => $validated['name'],
+            'is_non_procurement' => $validated['is_non_procurement'],
+        ]);
+
+        $ppmpCategory->chartOfAccounts()->sync($validated['chart_of_accounts']);
     }
 
     /**
@@ -72,6 +84,7 @@ class PpmpCategoryController extends Controller
      */
     public function destroy(PpmpCategory $ppmpCategory)
     {
+        $ppmpCategory->chartOfAccounts()->detach();
         $ppmpCategory->delete();
     }
 }

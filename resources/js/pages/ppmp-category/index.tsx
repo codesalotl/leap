@@ -20,8 +20,17 @@ export default function PpmpCategoryPage({
     ppmpCategories,
     chartOfAccounts,
 }: PpmpCategoryPageProps) {
-    console.log(ppmpCategories);
-    console.log(chartOfAccounts);
+    // console.log(ppmpCategories);
+    // console.log(chartOfAccounts);
+
+    const categoriesWithAccounts = ppmpCategories.map((category) => ({
+        ...category,
+        chart_of_accounts: category.chart_of_accounts || [],
+    }));
+
+    console.log(categoriesWithAccounts);
+
+    // ---
 
     const [open, setOpen] = useState(false);
     const [selectedCategory, setSelectedCategory] =
@@ -40,6 +49,8 @@ export default function PpmpCategoryPage({
     }
 
     function handleEdit(category: PpmpCategory) {
+        console.log(category);
+
         setSelectedCategory(category);
         setOpen(true);
     }
@@ -62,31 +73,12 @@ export default function PpmpCategoryPage({
         });
     }
 
-    const categoryWithCoa = ppmpCategories.map((cat) => {
-        const coa = chartOfAccounts.find(
-            (coa) => coa.id === cat.chart_of_account_id,
-        );
-        return {
-            ...cat,
-            ...(coa
-                ? {
-                      account_number: coa.account_number,
-                      account_title: coa.account_title,
-                      account_type: coa.account_type,
-                  }
-                : {}),
-        };
-    });
-
-    console.log(categoryWithCoa);
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
                 <DataTable
                     columns={columns}
-                    // data={ppmpCategories}
-                    data={categoryWithCoa}
+                    data={categoriesWithAccounts}
                     withSearch={true}
                     onEdit={handleEdit}
                     onDelete={handleDeleteDialogOpen}
