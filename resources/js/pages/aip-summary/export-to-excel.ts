@@ -100,58 +100,79 @@ export async function exportToExcel({
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('AIP Summary');
 
-    // Define columns matching PDF layout
+    // Define columns matching PDF layout (no header to prevent automatic header row)
     worksheet.columns = [
-        { header: 'AIP REF. CODE', key: 'aipRefCode', width: 15 },
-        {
-            header: 'PROGRAM / PROJECT / ACTIVITY DESCRIPTION',
-            key: 'description',
-            width: 35,
-        },
-        {
-            header: 'IMPLEMENTING OFFICE / DEPARTMENT / LOCATION',
-            key: 'office',
-            width: 25,
-        },
-        { header: 'STARTING DATE', key: 'startDate', width: 12 },
-        { header: 'COMPLETION DATE', key: 'endDate', width: 12 },
-        { header: 'EXPECTED OUTPUTS', key: 'expectedOutput', width: 30 },
-        { header: 'FUNDING SOURCE', key: 'fundingSource', width: 15 },
-        { header: 'PERSONAL SERVICES (PS)', key: 'ps', width: 12 },
-        {
-            header: 'MAINTENANCE & OTHER OPERATING EXPENSES (MOOE)',
-            key: 'mooe',
-            width: 12,
-        },
-        { header: 'FINANCIAL EXPENSES (FE)', key: 'fe', width: 12 },
-        { header: 'CAPITAL OUTLAY (CO)', key: 'co', width: 12 },
-        { header: 'TOTAL', key: 'total', width: 12 },
-        { header: 'Climate Change Adaptation', key: 'adaptation', width: 12 },
-        { header: 'Climate Change Mitigation', key: 'mitigation', width: 12 },
-        { header: 'CC Typology Code', key: 'typology', width: 12 },
+        { key: 'aipRefCode', width: 15 },
+        { key: 'description', width: 35 },
+        { key: 'office', width: 25 },
+        { key: 'startDate', width: 12 },
+        { key: 'endDate', width: 12 },
+        { key: 'expectedOutput', width: 30 },
+        { key: 'fundingSource', width: 15 },
+        { key: 'ps', width: 12 },
+        { key: 'mooe', width: 12 },
+        { key: 'fe', width: 12 },
+        { key: 'co', width: 12 },
+        { key: 'total', width: 12 },
+        { key: 'adaptation', width: 12 },
+        { key: 'mitigation', width: 12 },
+        { key: 'typology', width: 12 },
     ];
 
+    // Ensure columns A through O have enough width for centering
+    for (let i = 1; i <= 15; i++) {
+        worksheet.getColumn(i).width = 15;
+    }
+
     // Add title rows
-    const titleRow = worksheet.addRow([
-        `CY ${fiscalYear.year} Annual Investment Program (AIP)`,
-    ]);
-    titleRow.font = { bold: true, size: 14, name: 'Century Gothic' };
-    titleRow.alignment = { horizontal: 'center' };
+    worksheet.mergeCells('A1:O1');
+    const titleCell = worksheet.getCell('A1');
+    titleCell.value = `CY ${fiscalYear.year} Annual Investment Program (AIP)`;
+    titleCell.font = { bold: true, size: 14, name: 'Century Gothic' };
+    titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-    const subtitleRow = worksheet.addRow([
-        'By Program / Project / Activity - by Sector',
-    ]);
-    subtitleRow.font = { bold: true, size: 12, name: 'Century Gothic' };
-    subtitleRow.alignment = { horizontal: 'center' };
+    worksheet.mergeCells('A2:O2');
+    const subtitleCell = worksheet.getCell('A2');
+    subtitleCell.value = 'By Program / Project / Activity - by Sector';
+    subtitleCell.font = { bold: true, size: 12, name: 'Century Gothic' };
+    subtitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-    const officeRow = worksheet.addRow([`OFFICE: ${office}`]);
-    officeRow.font = { bold: true, size: 10, name: 'Century Gothic' };
-    officeRow.alignment = { horizontal: 'left' };
+    worksheet.mergeCells('A3:O3');
+    const officeCell = worksheet.getCell('A3');
+    officeCell.value = `OFFICE: ${office}`;
+    officeCell.font = { bold: true, size: 10, name: 'Century Gothic' };
+    officeCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+    // Force alignment on merged cells using loop
+    for (let i = 1; i <= 3; i++) {
+        const row = worksheet.getRow(i);
+        row.eachCell({ includeEmpty: true }, (cell) => {
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+    }
 
     worksheet.addRow([]);
 
     // Add header row with styling
-    const headerRow = worksheet.getRow(worksheet.rowCount + 1);
+    // const headerRow = worksheet.getRow(worksheet.rowCount + 1);
+    const headerRow = worksheet.getRow(5);
+    headerRow.values = [
+        'AIP REF. CODE',
+        'PROGRAM / PROJECT / ACTIVITY DESCRIPTION',
+        'IMPLEMENTING OFFICE / DEPARTMENT / LOCATION',
+        'STARTING DATE',
+        'COMPLETION DATE',
+        'EXPECTED OUTPUTS',
+        'FUNDING SOURCE',
+        'PERSONAL SERVICES (PS)',
+        'MAINTENANCE & OTHER OPERATING EXPENSES (MOOE)',
+        'FINANCIAL EXPENSES (FE)',
+        'CAPITAL OUTLAY (CO)',
+        'TOTAL',
+        'Climate Change Adaptation',
+        'Climate Change Mitigation',
+        'CC Typology Code',
+    ];
     headerRow.font = { bold: true, size: 8, name: 'Century Gothic' };
     headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
     headerRow.height = 30;
