@@ -284,7 +284,7 @@ export function DataTable<TData extends { id: unknown }>({
                                             <TableHead
                                                 key={header.id}
                                                 colSpan={header.colSpan}
-                                                className="border-b-0 bg-primary text-primary-foreground shadow-[inset_0_-1px_0_0_var(--muted)]"
+                                                className="border-b-0 bg-primary text-primary-foreground"
                                                 style={{
                                                     width: `${header.getSize()}px`,
                                                     ...getCommonPinningStyles(
