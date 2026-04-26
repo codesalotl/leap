@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import type { RowData } from '@tanstack/react-table';
+import { Separator } from '@/components/ui/separator';
 
 declare module '@tanstack/react-table' {
     interface TableMeta<TData extends RowData> {
@@ -115,6 +116,7 @@ const columns = [
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
+                                variant="outline"
                                 size="icon"
                                 title="Change AIP status"
                                 onClick={() =>
@@ -166,7 +168,10 @@ const columns = [
                         </DropdownMenuContent>
                     </DropdownMenu>
 
+                    {/* <Separator orientation="vertical" /> */}
+
                     <Button
+                        variant="outline"
                         size="icon"
                         title="Open AIP"
                         onClick={() =>
@@ -176,7 +181,10 @@ const columns = [
                         <ExternalLink />
                     </Button>
 
+                    {/* <Separator orientation="vertical" /> */}
+
                     <Button
+                        variant="outline"
                         title="Generate APP"
                         size="icon"
                         onClick={() => {
@@ -186,7 +194,10 @@ const columns = [
                         <FileText />
                     </Button>
 
+                    {/* <Separator orientation="vertical" /> */}
+
                     <Button
+                        variant="outline"
                         title="Open PPMP Summary"
                         size="icon"
                         onClick={() => {

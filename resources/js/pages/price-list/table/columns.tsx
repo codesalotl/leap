@@ -98,7 +98,7 @@ const columns = [
             <div className="flex items-center gap-1">
                 <Button
                     size="icon"
-                    variant="ghost" // Ghost is often cleaner in dense tables
+                    variant="outline" // Ghost is often cleaner in dense tables
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
                 >
                     <Pencil className="h-4 w-4" />
@@ -106,8 +106,7 @@ const columns = [
 
                 <Button
                     size="icon"
-                    variant="ghost"
-                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    variant="destructive"
                     onClick={() => table.options.meta?.onDelete?.(row.original)}
                 >
                     <Trash className="h-4 w-4" />

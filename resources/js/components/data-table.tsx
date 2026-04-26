@@ -284,12 +284,14 @@ export function DataTable<TData extends { id: unknown }>({
                                             <TableHead
                                                 key={header.id}
                                                 colSpan={header.colSpan}
-                                                className="border-b-0 shadow-[inset_0_-1px_0_0_var(--muted)]"
+                                                className="border-b-0 bg-primary text-primary-foreground shadow-[inset_0_-1px_0_0_var(--muted)]"
                                                 style={{
                                                     width: `${header.getSize()}px`,
                                                     ...getCommonPinningStyles(
                                                         header.column,
                                                         table,
+                                                        false,
+                                                        true,
                                                     ),
                                                 }}
                                             >
@@ -369,7 +371,7 @@ export function DataTable<TData extends { id: unknown }>({
                             </TableBody>
 
                             {withFooter && (
-                                <TableFooter className="sticky bottom-0 z-20 bg-secondary shadow-[inset_0_1px_0_0_var(--muted)]">
+                                <TableFooter className="sticky bottom-0 z-20 shadow-[inset_0_1px_0_0_var(--muted)]">
                                     <TableRow>
                                         {table
                                             .getAllLeafColumns()
@@ -476,7 +478,12 @@ const DraggableRow = <TData,>({
                         rowSpan={activeSpan ? rowData.groupSize : 1}
                         style={{
                             width: `${cell.column.getSize()}px`,
-                            ...getCommonPinningStyles(cell.column, table),
+                            ...getCommonPinningStyles(
+                                cell.column,
+                                table,
+                                false,
+                                false,
+                            ),
                         }}
                         className="py-2"
                     >

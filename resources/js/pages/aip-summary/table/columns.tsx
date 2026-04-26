@@ -326,6 +326,7 @@ const columns = [
             <div className="flex items-center gap-1">
                 <Button
                     size="icon"
+                    variant="outline"
                     onClick={() => table.options.meta?.onAdd?.(row.original)}
                     disabled={row.original.type === 'Sub-Activity'}
                 >
@@ -334,6 +335,7 @@ const columns = [
 
                 <Button
                     size="icon"
+                    variant="outline"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
                 >
                     <Pencil className="h-4 w-4" />

@@ -5,6 +5,7 @@ export const getCommonPinningStyles = <TData>(
     column: Column<TData>,
     table: Table<any>,
     isFooter = false,
+    isHeader = false,
 ): CSSProperties => {
     const isPinned = column.getIsPinned();
     const isLastLeftPinnedColumn =
@@ -40,9 +41,11 @@ export const getCommonPinningStyles = <TData>(
 
         zIndex: isPinned ? 1 : 0,
         backgroundColor: isFooter
-            ? 'var(--secondary)'
-            : isFirstRightPinnedColumn
-              ? 'var(--background)'
-              : '',
+            ? 'var(--muted)'
+            : isHeader && isPinned
+              ? 'var(--primary)'
+              : isFirstRightPinnedColumn
+                ? 'var(--background)'
+                : '',
     };
 };

@@ -33,6 +33,7 @@ const columns = [
             <div className="flex items-center gap-1">
                 <Button
                     size="icon"
+                    variant="outline"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
                 >
                     <Pencil />

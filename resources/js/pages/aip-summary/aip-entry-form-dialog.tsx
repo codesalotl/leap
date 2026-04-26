@@ -799,6 +799,7 @@ export default function AipEntryFormDialog({
                                                                                 asChild
                                                                             >
                                                                                 <Button
+                                                                                    variant="outline"
                                                                                     size="icon"
                                                                                     title="Manage PPMP Items"
                                                                                     disabled={

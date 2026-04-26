@@ -121,16 +121,6 @@ const columns = [
         size: 120,
         cell: ({ row, table }) => (
             <div className="flex items-center gap-1">
-                {/* <Button
-                    size="icon"
-                    onClick={() =>
-                        (table.options.meta as any)?.onMove?.(row.original)
-                    }
-                    disabled={row.original.type === 'Program'}
-                >
-                    <Move />
-                </Button> */}
-
                 <Button
                     onClick={() => {
                         let nextType: 'Project' | 'Activity' | 'Sub-Activity';
@@ -144,6 +134,7 @@ const columns = [
                         table.options.meta?.onAdd?.(row.original, nextType);
                     }}
                     size="icon"
+                    variant="outline"
                     disabled={row.original.type === 'Sub-Activity'}
                 >
                     <Plus className="h-4 w-4" />
@@ -151,6 +142,7 @@ const columns = [
 
                 <Button
                     size="icon"
+                    variant="outline"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
                 >
                     <Pencil />

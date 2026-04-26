@@ -29,7 +29,7 @@ export default function AuthSimpleLayout({
                             className="flex flex-col items-center gap-2 font-medium"
                         >
                             {/* <div className="mb-1 flex h-9 w-9 items-center justify-center rounded-md"> */}
-                            <div className="items-center">
+                            <div className="flex flex-col items-center">
                                 {/* <AppLogoIcon className="size-9 fill-current text-[var(--foreground)] dark:text-white" /> */}
                                 <img
                                     src={logo}
