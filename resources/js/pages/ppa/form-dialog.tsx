@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
     Command,
     CommandDialog,
@@ -9,11 +10,10 @@ import {
     CommandList,
 } from '@/components/ui/command';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from '@inertiajs/react';
+import * as z from 'zod';
 import { useEffect, useState } from 'react';
-import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Office, Ppa } from '@/types/global';
+import type { Office, Ppa, AuthData } from '@/types/global';
 import { Spinner } from '@/components/ui/spinner';
 import {
     AlertDialog,
@@ -48,9 +48,8 @@ import {
     FieldSet,
     // FieldTitle,
 } from '@/components/ui/field';
-import { Controller, useForm } from 'react-hook-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 
 const formSchema = z.object({
     office_id: z.string().min(1, 'Implementing office is required'),
@@ -70,6 +69,7 @@ interface PpaFormDialogProps {
     parentPpa: Ppa | null;
     editPpa: Ppa | null;
     offices: Office[];
+    auth: AuthData;
 }
 
 export default function PpaFormDialog({
@@ -80,8 +80,8 @@ export default function PpaFormDialog({
     parentPpa,
     editPpa,
     offices,
+    auth,
 }: PpaFormDialogProps) {
-    const { props } = usePage();
     const isEditing = mode === 'edit';
     const isAddingChild = mode === 'add' && !!parentPpa;
     const [openOfficeCommand, setOpenOfficeCommand] = useState(false);
@@ -89,11 +89,8 @@ export default function PpaFormDialog({
     const [isErrorAlertOpen, setIsErrorAlertOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const userOfficeId = props.auth?.user.office_id;
+    const userOfficeId = auth.user.office_id;
     const isOfficeAutoSelected = mode === 'add' && !parentPpa && !!userOfficeId;
-
-    // console.log(props);
-    // console.log(userOfficeId);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),

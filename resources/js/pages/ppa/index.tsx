@@ -2,11 +2,11 @@ import { useState, useMemo } from 'react';
 import { type BreadcrumbItem } from '@/types';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
-import type { Ppa, Office } from '@/types/global';
+import type { Ppa, Office, SharedData } from '@/types/global';
 import PpaFormDialog from '@/pages/ppa/form-dialog';
 import PpaMoveDialog from '@/pages/ppa/move-dialog';
 import { DeleteDialog } from '@/components/delete-dialog';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
 import columns from './table/columns';
 import {
@@ -51,7 +51,8 @@ export default function PpaPage({
     ppaTree: Ppa[];
     offices: Office[];
 }) {
-    console.log(ppaTree);
+    // console.log(ppaTree);
+    const { auth } = usePage<SharedData>().props;
 
     // Form Dialog States
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -202,6 +203,7 @@ export default function PpaPage({
                 parentPpa={parentPpa}
                 editPpa={editPpa}
                 offices={offices}
+                auth={auth}
             />
 
             <DeleteDialog

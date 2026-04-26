@@ -266,6 +266,9 @@ export interface User {
     status: string;
 
     office?: Office;
+
+    office_id: number;
+    role: string;
 }
 
 // not a table in the database
@@ -285,3 +288,13 @@ export interface App {
     q4_amount: number;
     total_amount: number;
 }
+
+export type AuthData = {
+    user: User;
+    can: {
+        manage_users: boolean;
+    };
+};
+export type SharedData = {
+    auth: AuthData;
+};

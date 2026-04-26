@@ -2,8 +2,14 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import FormDialog from '@/pages/aip/form-dialog';
 import { type BreadcrumbItem } from '@/types';
-import type { FiscalYear, FiscalYearStatus, App, Office } from '@/types/global';
-import { router } from '@inertiajs/react';
+import type {
+    FiscalYear,
+    FiscalYearStatus,
+    App,
+    Office,
+    SharedData,
+} from '@/types/global';
+import { router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-table';
 import columns from './table/columns';
@@ -20,11 +26,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface AipProps {
     fiscalYears: FiscalYear[];
     app: App[];
-    offices: Office[]; // Add this line
+    offices: Office[];
 }
 
 export default function AipPage({ fiscalYears, app, offices = [] }: AipProps) {
-    console.log(app);
+    const { auth } = usePage<SharedData>().props;
+    // console.log(auth);
 
     const [openFormDialog, setOpenFormDialog] = useState(false);
     const [openPdfPreviewDialog, setOpenPdfPreviewDialog] = useState(false);
@@ -90,6 +97,7 @@ export default function AipPage({ fiscalYears, app, offices = [] }: AipProps) {
                 data={app}
                 fiscalYear={selectedYear}
                 offices={offices} // Verified: Passed to Dialog
+                auth={auth}
             />
         </AppLayout>
     );

@@ -24,8 +24,8 @@ export default function PriceListPage({
     ppmpCategory,
 }: PriceListPageProps) {
     // console.log(priceList);
-    // console.log(chartOfAccounts);
-    // console.log(ppmpCategory);
+    console.log(chartOfAccounts);
+    console.log(ppmpCategory);
 
     const [openEdit, setOpenEdit] = useState(false);
     const [selectedPriceList, setSelectedPriceList] =
@@ -34,8 +34,6 @@ export default function PriceListPage({
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-
-    // console.log(selectedPriceList);
 
     function handleAdd() {
         setSelectedPriceList(null);

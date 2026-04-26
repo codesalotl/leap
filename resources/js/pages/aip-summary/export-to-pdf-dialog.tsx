@@ -13,15 +13,14 @@ import {
     PDFViewer,
     Font,
 } from '@react-pdf/renderer';
-import type { FiscalYear, Ppa } from '@/types/global';
-import { usePage } from '@inertiajs/react';
-import { type SharedData } from '@/types';
+import type { FiscalYear, Ppa, AuthData } from '@/types/global';
 
 interface ExportToPdfDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     aipEntries: Ppa[];
     fiscalYear: FiscalYear;
+    auth: AuthData;
 }
 
 // Disable hyphenation globally
@@ -32,8 +31,8 @@ export default function ExportToPdfDialog({
     onOpenChange,
     aipEntries,
     fiscalYear,
+    auth,
 }: ExportToPdfDialogProps) {
-    const { auth } = usePage<SharedData>().props;
     const COLUMN_WIDTHS = [
         7.14, 17.86, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 7.14, 5.36, 5.36, 5.36,
         5.36, 5.36, 5.34,

@@ -20,27 +20,17 @@ class PpmpPriceListController extends Controller
      */
     public function index()
     {
-        $priceList = PpmpPriceList::with([
+        $priceList = PpmpPriceList::with(
             'chartOfAccount:id,account_title',
             'category:id,name',
-        ])
+        )
             ->orderBy('sort_order')
-            ->get([
-                'id',
-                'item_number',
-                'description',
-                'unit_of_measurement',
-                'price',
-                'sort_order',
-                'chart_of_account_id',
-                'ppmp_category_id',
-            ]);
+            ->get();
 
-        $chartOfAccounts = ChartOfAccount::where(
-            'expense_class',
-            '!=',
-            'PS',
-        )->get();
+        $chartOfAccounts = ChartOfAccount::whereIn('expense_class', [
+            'MOOE',
+            'CO',
+        ])->get();
 
         $ppmpCategory = PpmpCategory::all();
 

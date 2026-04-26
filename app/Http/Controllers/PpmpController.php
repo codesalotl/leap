@@ -23,21 +23,6 @@ class PpmpController extends Controller
      */
     public function index(FiscalYear $fiscalYear, AipEntry $aipEntry)
     {
-        // $priceLists = Ppmp::where('aip_entry_id', $aipEntry->id)
-        //     ->with([
-        //         'fundingSource', // Direct relationship
-        //         'ppmpPriceList.category', // Nested relationships
-        //         'ppmpPriceList.chartOfAccount',
-        //     ])
-        //     ->get();
-
-        // $chartOfAccounts = ChartOfAccount::whereIn('expense_class', [
-        //     'MOOE',
-        //     'CO',
-        // ])
-        //     ->with(['ppmpPriceLists.category'])
-        //     ->get();
-
         $selectedAipEntry = AipEntry::with(['ppa'])->find($aipEntry->id);
 
         $ppmps = Ppmp::where('aip_entry_id', $aipEntry->id)
@@ -88,11 +73,8 @@ class PpmpController extends Controller
             'CO',
         ])->get();
 
-        $ppmpCategories = PpmpCategory::all();
-
-        // $ppaFundingSources = PpaFundingSource::with('fundingSource')
-        //     ->where('aip_entry_id', $aipEntry->id)
-        //     ->get();
+        // $ppmpCategories = PpmpCategory::all();
+        $ppmpCategories = PpmpCategory::with('chartOfAccountPivot')->get();
 
         $fundingSources = FundingSource::whereHas(
             'ppaFundingSources',
@@ -101,6 +83,12 @@ class PpmpController extends Controller
             },
         )->get();
 
+        /* 
+            get ppmp based on aip entry 
+            get all chart of accounts
+            get all category
+            get all procurement items 
+        */
         return Inertia::render('ppmp/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntry' => $selectedAipEntry,

@@ -1,9 +1,15 @@
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem, type SharedData } from '@/types';
+import { type BreadcrumbItem } from '@/types';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import FormDialog from './form-dialog';
-import type { Office, Sector, LguLevel, OfficeType } from '@/types/global';
+import type {
+    Office,
+    Sector,
+    LguLevel,
+    OfficeType,
+    SharedData,
+} from '@/types/global';
 import { DeleteDialog } from '@/components/delete-dialog';
 import { router, usePage } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
@@ -25,7 +31,7 @@ export default function OfficesPage({
     officeTypes,
 }: OfficesPageProps) {
     const { auth } = usePage<SharedData>().props;
-    const userRole = auth.user.role as string;
+    const userRole = auth.user.role;
 
     console.log(offices);
 

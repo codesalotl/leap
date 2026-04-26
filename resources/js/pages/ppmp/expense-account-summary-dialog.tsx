@@ -93,10 +93,6 @@ export default function ExpenseAccountSummaryDialog({
     const mooePpmps = coaWithPriceListsByExpenseClass.MOOE ?? [];
     const coPpmps = coaWithPriceListsByExpenseClass.CO ?? [];
 
-    console.log(coaWithPriceListsByExpenseClass);
-    console.log(mooePpmps);
-    console.log(coPpmps);
-
     const columns = [
         {
             header: 'EXPENSE ACCOUNT',
@@ -278,9 +274,13 @@ export default function ExpenseAccountSummaryDialog({
                     </View>
 
                     {/* table container */}
-                    <View style={{ flexDirection: 'column' }} >
+                    <View style={{ flexDirection: 'column' }}>
                         {/* header */}
-                        <View style={{ flexDirection: 'row' }} wrap={false} fixed>
+                        <View
+                            style={{ flexDirection: 'row' }}
+                            wrap={false}
+                            fixed
+                        >
                             {columns.map((col, index) => (
                                 <View
                                     key={index}

@@ -19,11 +19,11 @@ import type {
     FundingSource,
     Office,
     FlattenedPpa,
+    SharedData,
 } from '@/types/global';
 import { type BreadcrumbItem } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
-import { type SharedData } from '@/types';
 import columns from './table/columns';
 import ExportSummaryToPdfDialog from '@/pages/aip-summary/export-summary-to-pdf-dialog';
 
@@ -353,6 +353,7 @@ export default function AipSummaryTable({
                 fiscalYear={fiscalYear}
                 fundingSources={fundingSources}
                 offices={offices}
+                auth={auth}
             />
 
             <DeleteDialog
@@ -388,6 +389,7 @@ export default function AipSummaryTable({
                 onOpenChange={setIsExportOpen}
                 aipEntries={aipEntries}
                 fiscalYear={fiscalYear}
+                auth={auth}
             />
 
             <ExportSummaryToPdfDialog

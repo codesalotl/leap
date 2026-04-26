@@ -12,6 +12,7 @@ import type {
     AipEntry,
     FundingSource,
     FiscalYear,
+    AuthData,
 } from '@/types/global';
 
 interface ExportToExcelProps {
@@ -22,8 +23,8 @@ interface ExportToExcelProps {
     aipEntry: AipEntry;
     fundingSources: FundingSource[];
     selectedFundingSourceId: number;
-    auth: any;
     fiscalYear: FiscalYear;
+    auth: AuthData;
 }
 
 export async function exportToExcel({
@@ -128,14 +129,10 @@ export async function exportToExcel({
             return [key, subGrouped];
         }),
     );
-    // console.log(groupedByExpenseAccount);
-    // console.log(ppmpCategories);
 
     // Process each group
     Object.entries(groupedByExpenseAccount).forEach(
         ([categoryId, accounts]) => {
-            // console.log(categoryId, accounts);
-
             worksheet.addRow({
                 description: ppmpCategories.find(
                     (category) => category.id === Number(categoryId),
@@ -149,8 +146,6 @@ export async function exportToExcel({
             currentRow++;
 
             Object.entries(accounts).forEach(([accountId, items]) => {
-                // console.log(accountId, items);
-
                 worksheet.addRow({
                     description: chartOfAccounts.find(
                         (account) => account.id === Number(accountId),
@@ -385,7 +380,8 @@ export async function exportToExcel({
         String(Number(ppaDesc.col) - 1),
     );
 
-    officeName.value = auth.user.name;
+    // officeName.value = auth.user.name;
+    officeName.value = auth.user.office?.acronym || auth.user.office?.name;
     officeName.fill = {
         type: 'pattern',
         pattern: 'solid',
@@ -463,10 +459,6 @@ export async function exportToPrint({
     auth,
     fiscalYear,
 }: ExportToExcelProps) {
-    console.log(filteredPpmpItems);
-    console.log(priceLists);
-    console.log(ppmpCategories);
-
     const longBondPaper = [8.5, 13];
     const convertInchToMm = (inch) => inch.map((value) => value * 25.4);
 
@@ -515,8 +507,6 @@ export async function exportToPrint({
         {} as Record<string, typeof itemsWithCategory>,
     );
 
-    console.log(groupedByProcurementType);
-
     const allProcurementTypeTotals: {
         type: string;
         totalAmount: number;
@@ -549,8 +539,6 @@ export async function exportToPrint({
                 acc[key].push(item);
                 return acc;
             }, {});
-
-            console.log(groupedByCategory);
 
             Object.entries(groupedByCategory).forEach(
                 ([categoryId, items]: [string, any]) => {
@@ -840,8 +828,6 @@ export async function exportToPrint({
             }),
     });
 
-    // console.log(aipEntry);
-
     // --- TABLE GENERATION ---
     autoTable(doc, {
         startY: 5,
@@ -851,7 +837,7 @@ export async function exportToPrint({
             [
                 { content: '', styles: { fillColor: [255, 255, 255] } },
                 {
-                    content: `${auth.user.name}`,
+                    content: `${auth.user.office?.acronym || auth.user.office?.name}`,
                     colSpan: 6,
                     rowSpan: 2,
                     styles: {
@@ -1279,7 +1265,7 @@ export async function exportToPDF({
             [
                 { content: '', styles: { fillColor: [255, 255, 255] } },
                 {
-                    content: `${auth.user.name}`,
+                    content: `${auth.user.office?.acronym || auth.user.office?.name}`,
                     colSpan: 6,
                     rowSpan: 2,
                     styles: {

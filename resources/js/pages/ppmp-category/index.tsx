@@ -20,12 +20,20 @@ export default function PpmpCategoryPage({
     ppmpCategories,
     chartOfAccounts,
 }: PpmpCategoryPageProps) {
-    // console.log(ppmpCategories);
-    // console.log(chartOfAccounts);
+    console.log(chartOfAccounts);
+    console.log(ppmpCategories);
 
     const categoriesWithAccounts = ppmpCategories.map((category) => ({
         ...category,
-        chart_of_accounts: category.chart_of_accounts || [],
+        chart_of_accounts:
+            category.chart_of_account_pivot
+                ?.map((pivot) =>
+                    chartOfAccounts.find(
+                        (coa) => coa.id === pivot.chart_of_account_id,
+                    ),
+                )
+                .filter((coa): coa is ChartOfAccount => coa !== undefined) ||
+            [],
     }));
 
     console.log(categoriesWithAccounts);

@@ -3,7 +3,6 @@ import { useForm, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { format, parseISO } from 'date-fns';
-import { usePage } from '@inertiajs/react';
 import {
     CalendarIcon,
     Plus,
@@ -72,11 +71,17 @@ import {
     FieldLegend,
     // FieldSeparator,
     FieldSet,
-    // FieldTitle,
+    FieldTitle,
 } from '@/components/ui/field';
 import { cn } from '@/lib/utils';
 
-import type { FiscalYear, Ppa, FundingSource, Office } from '@/types/global';
+import type {
+    FiscalYear,
+    Ppa,
+    FundingSource,
+    Office,
+    AuthData,
+} from '@/types/global';
 
 const amountSchema = z.string();
 
@@ -108,7 +113,8 @@ interface Props {
     data: Ppa | null;
     fiscalYear: FiscalYear;
     fundingSources: FundingSource[];
-    offices: Office[]; // Added offices prop
+    offices: Office[];
+    auth: AuthData;
 }
 
 export default function AipEntryFormDialog({
@@ -118,8 +124,8 @@ export default function AipEntryFormDialog({
     fiscalYear,
     fundingSources,
     offices,
+    auth,
 }: Props) {
-    const { auth } = usePage().props as any;
     const userOfficeId = auth?.user?.office_id;
 
     // Filter offices to show only user's office and its children

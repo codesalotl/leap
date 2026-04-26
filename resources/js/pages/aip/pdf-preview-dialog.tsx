@@ -13,28 +13,28 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import type { App, FiscalYear, Office } from '@/types/global';
+import type { App, AuthData, FiscalYear, Office } from '@/types/global';
 
 import { useState } from 'react';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { router, usePage } from '@inertiajs/react';
+// import {
+//     Select,
+//     SelectContent,
+//     SelectItem,
+//     SelectTrigger,
+//     SelectValue,
+// } from '@/components/ui/select';
+import { router } from '@inertiajs/react';
 import { Spinner } from '@/components/ui/spinner';
 import {
     Command,
-    CommandDialog,
+    // CommandDialog,
     CommandEmpty,
     CommandGroup,
     CommandInput,
     CommandItem,
     CommandList,
     CommandSeparator,
-    CommandShortcut,
+    // CommandShortcut,
 } from '@/components/ui/command';
 
 interface PdfPreviewDialogProps {
@@ -43,6 +43,7 @@ interface PdfPreviewDialogProps {
     data: App[];
     fiscalYear: FiscalYear | null;
     offices: Office[];
+    auth: AuthData;
 }
 
 const COLUMN_WIDTHS = [5, 20, 5, 10, 5, 11, 4, 6, 4, 6, 4, 6, 4, 10];
@@ -1130,14 +1131,12 @@ export default function PdfPreviewDialog({
     data,
     fiscalYear,
     offices,
+    auth,
 }: PdfPreviewDialogProps) {
-    // console.log(offices);
+    // console.log(auth);
 
-    const { auth } = usePage().props as any;
     const [isReloading, setIsReloading] = useState(false);
     const [selectedOfficeId, setSelectedOfficeId] = useState<string>('all');
-
-    // console.log(auth);
 
     const isBACSU = auth.user.office_id === 2 || auth.user.role === 'admin';
 
@@ -1156,7 +1155,6 @@ export default function PdfPreviewDialog({
         if (!isBACSU) return `${auth.user.office?.name || 'My Office'}`;
 
         if (selectedOfficeId === 'all') {
-            // Find office with ID 1 and return its name
             const mainOffice = offices.find((o) => o.id === 1);
             return mainOffice?.name ?? 'All Offices';
         }
@@ -1167,8 +1165,6 @@ export default function PdfPreviewDialog({
 
         return selected?.acronym ?? '';
     };
-
-    // console.log(getOfficeLabel());
 
     if (!fiscalYear) return null;
 

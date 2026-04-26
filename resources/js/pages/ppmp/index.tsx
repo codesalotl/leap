@@ -42,6 +42,7 @@ import type {
     PpmpCategory,
     FundingSource,
     PriceList,
+    SharedData,
 } from '@/types/global';
 import {
     exportToExcel,
@@ -50,7 +51,6 @@ import {
 } from '@/pages/ppmp/utils/export';
 
 import ExpenseAccountSummaryDialog from '@/pages/ppmp/expense-account-summary-dialog';
-import ppmp from '@/routes/ppmp';
 
 interface PpmpPageProps {
     fiscalYear: FiscalYear;
@@ -75,7 +75,7 @@ export default function PpmpPage({
     initialChoice,
     initialFund,
 }: PpmpPageProps) {
-    const { auth } = usePage().props;
+    const { auth } = usePage<SharedData>().props;
 
     const [open, setOpen] = useState(false);
     const [openAlert, setOpenAlert] = useState(false);
@@ -101,6 +101,23 @@ export default function PpmpPage({
         },
         { title: `PPMP Management`, href: `#` },
     ];
+
+    const ppmpCategoriesWithAccounts = ppmpCategories.map((category) => ({
+        ...category,
+        chart_of_accounts:
+            category.chart_of_account_pivot
+                ?.map((pivot) =>
+                    chartOfAccounts.find(
+                        (coa) => coa.id === pivot.chart_of_account_id,
+                    ),
+                )
+                .filter((coa): coa is ChartOfAccount => coa !== undefined) ||
+            [],
+    }));
+
+    console.log(ppmpCategoriesWithAccounts);
+
+    // ---
 
     function handleFundingSourceSelect(value: string) {
         const id = Number(value);
@@ -335,11 +352,6 @@ export default function PpmpPage({
         >,
     );
 
-    // console.log(filteredPpmpItems);
-    console.log(ppmps);
-    console.log(coaWithPriceLists);
-    console.log(coaWithPriceListsByExpenseClass);
-
     const selectedFundingSource = fundingSources.find((fs) => {
         return fs.id === selectedFundingSourceId;
     });
@@ -356,38 +368,38 @@ export default function PpmpPage({
         return { ...pl, ...category };
     });
 
-    const ppmpCategoriesWithCoa = ppmpCategories
-        .map((cat) => {
-            const coa = filteredChartOfAccounts.find(
-                (acc) => acc.id === cat.chart_of_account_id,
-            );
+    // const ppmpCategoriesWithCoa = ppmpCategories
+    //     .map((cat) => {
+    //         const coa = filteredChartOfAccounts.find((acc) =>
+    //             cat.chart_of_accounts.some((c) => c.id === acc.id),
+    //         );
 
-            if (!coa) {
-                return null;
-            }
+    //         if (!coa) {
+    //             return null;
+    //         }
 
-            const {
-                id: coaId,
-                description: coaDescription,
-                account_number: coaAccountNumber,
-                account_title: coaAccountTitle,
-                account_type: coaAccountType,
-                expense_class: coaExpenseClass,
-                ...restCoa
-            } = coa;
+    //         const {
+    //             id: coaId,
+    //             description: coaDescription,
+    //             account_number: coaAccountNumber,
+    //             account_title: coaAccountTitle,
+    //             account_type: coaAccountType,
+    //             expense_class: coaExpenseClass,
+    //             ...restCoa
+    //         } = coa;
 
-            return {
-                ...cat,
-                ...restCoa,
-                coa_id: coaId,
-                coa_description: coaDescription,
-                coa_account_number: coaAccountNumber,
-                coa_account_title: coaAccountTitle,
-                coa_account_type: coaAccountType,
-                coa_expense_class: coaExpenseClass,
-            };
-        })
-        .filter((cat): cat is NonNullable<typeof cat> => cat !== null);
+    //         return {
+    //             ...cat,
+    //             ...restCoa,
+    //             coa_id: coaId,
+    //             coa_description: coaDescription,
+    //             coa_account_number: coaAccountNumber,
+    //             coa_account_title: coaAccountTitle,
+    //             coa_account_type: coaAccountType,
+    //             coa_expense_class: coaExpenseClass,
+    //         };
+    //     })
+    //     .filter((cat): cat is NonNullable<typeof cat> => cat !== null);
 
     const priceListsWithCoa = priceLists
         .map((pl) => {
@@ -421,13 +433,6 @@ export default function PpmpPage({
             };
         })
         .filter((pl): pl is NonNullable<typeof pl> => pl !== null);
-
-    // console.log('coa', filteredChartOfAccounts);
-    // console.log('cat', ppmpCategoriesWithCoa);
-    // console.log('pricelist', priceListsWithCoa);
-
-    // console.log(processedData);
-    console.log(filteredPpmpItems);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -598,7 +603,7 @@ export default function PpmpPage({
                 </DataTable>
             </div>
 
-            <PpmpFormDialog
+            {/* <PpmpFormDialog
                 open={open}
                 onOpenChange={setOpen}
                 chartOfAccounts={filteredChartOfAccounts}
@@ -608,7 +613,7 @@ export default function PpmpPage({
                 fundingSources={fundingSources}
                 selectedExpenseClass={selectedExpenseClass}
                 selectedFundingSourceId={selectedFundingSourceId}
-            />
+            /> */}
 
             <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
                 <AlertDialogContent>
