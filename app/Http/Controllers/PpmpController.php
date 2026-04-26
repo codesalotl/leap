@@ -25,37 +25,7 @@ class PpmpController extends Controller
     {
         $selectedAipEntry = AipEntry::with(['ppa'])->find($aipEntry->id);
 
-        $ppmps = Ppmp::where('aip_entry_id', $aipEntry->id)
-            ->select([
-                'id',
-                'jan_qty',
-                'jan_amount',
-                'feb_qty',
-                'feb_amount',
-                'mar_qty',
-                'mar_amount',
-                'apr_qty',
-                'apr_amount',
-                'may_qty',
-                'may_amount',
-                'jun_qty',
-                'jun_amount',
-                'jul_qty',
-                'jul_amount',
-                'aug_qty',
-                'aug_amount',
-                'sep_qty',
-                'sep_amount',
-                'oct_qty',
-                'oct_amount',
-                'nov_qty',
-                'nov_amount',
-                'dec_qty',
-                'dec_amount',
-                'ppmp_price_list_id',
-                'funding_source_id',
-            ])
-            ->get();
+        $ppmps = Ppmp::where('aip_entry_id', $aipEntry->id)->get();
 
         $priceLists = PpmpPriceList::select([
             'id',
@@ -84,10 +54,10 @@ class PpmpController extends Controller
         )->get();
 
         /* 
-            get ppmp based on aip entry 
+            get ppmp based on aip entry
             get all chart of accounts
             get all category
-            get all procurement items 
+            get all procurement items
         */
         return Inertia::render('ppmp/index', [
             'fiscalYear' => $fiscalYear,
@@ -97,6 +67,7 @@ class PpmpController extends Controller
             'priceLists' => $priceLists,
             'chartOfAccounts' => $chartOfAccounts,
             'ppmpCategories' => $ppmpCategories,
+
             'fundingSources' => $fundingSources,
 
             'initialChoice' => request()->query('choice'),

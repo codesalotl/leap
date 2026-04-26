@@ -144,6 +144,7 @@ export async function exportToExcel({
             };
 
             currentRow++;
+            const categoryStartRow = currentRow;
 
             Object.entries(accounts).forEach(([accountId, items]) => {
                 worksheet.addRow({
@@ -157,7 +158,6 @@ export async function exportToExcel({
                 };
 
                 currentRow++;
-                const groupStartRow = currentRow;
 
                 items.forEach((item) => {
                     const priceList = priceLists.find(
@@ -213,58 +213,58 @@ export async function exportToExcel({
 
                     currentRow++;
                 });
-
-                const groupEndRow = currentRow - 1;
-
-                worksheet.addRow({
-                    description: 'TOTAL',
-                    totalAmount: {
-                        formula: `SUM(G${groupStartRow}:G${groupEndRow})`,
-                    },
-                    janAmount: {
-                        formula: `SUM(I${groupStartRow}:I${groupEndRow})`,
-                    },
-                    febAmount: {
-                        formula: `SUM(K${groupStartRow}:K${groupEndRow})`,
-                    },
-                    marAmount: {
-                        formula: `SUM(M${groupStartRow}:M${groupEndRow})`,
-                    },
-                    aprAmount: {
-                        formula: `SUM(O${groupStartRow}:O${groupEndRow})`,
-                    },
-                    mayAmount: {
-                        formula: `SUM(Q${groupStartRow}:Q${groupEndRow})`,
-                    },
-                    junAmount: {
-                        formula: `SUM(S${groupStartRow}:S${groupEndRow})`,
-                    },
-                    julAmount: {
-                        formula: `SUM(U${groupStartRow}:U${groupEndRow})`,
-                    },
-                    augAmount: {
-                        formula: `SUM(W${groupStartRow}:W${groupEndRow})`,
-                    },
-                    sepAmount: {
-                        formula: `SUM(Y${groupStartRow}:Y${groupEndRow})`,
-                    },
-                    octAmount: {
-                        formula: `SUM(AA${groupStartRow}:AA${groupEndRow})`,
-                    },
-                    novAmount: {
-                        formula: `SUM(AC${groupStartRow}:AC${groupEndRow})`,
-                    },
-                    decAmount: {
-                        formula: `SUM(AE${groupStartRow}:AE${groupEndRow})`,
-                    },
-                }).fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'fef2cb' },
-                };
-
-                currentRow++;
             });
+
+            const categoryEndRow = currentRow - 1;
+
+            worksheet.addRow({
+                description: 'TOTAL',
+                totalAmount: {
+                    formula: `SUM(G${categoryStartRow}:G${categoryEndRow})`,
+                },
+                janAmount: {
+                    formula: `SUM(I${categoryStartRow}:I${categoryEndRow})`,
+                },
+                febAmount: {
+                    formula: `SUM(K${categoryStartRow}:K${categoryEndRow})`,
+                },
+                marAmount: {
+                    formula: `SUM(M${categoryStartRow}:M${categoryEndRow})`,
+                },
+                aprAmount: {
+                    formula: `SUM(O${categoryStartRow}:O${categoryEndRow})`,
+                },
+                mayAmount: {
+                    formula: `SUM(Q${categoryStartRow}:Q${categoryEndRow})`,
+                },
+                junAmount: {
+                    formula: `SUM(S${categoryStartRow}:S${categoryEndRow})`,
+                },
+                julAmount: {
+                    formula: `SUM(U${categoryStartRow}:U${categoryEndRow})`,
+                },
+                augAmount: {
+                    formula: `SUM(W${categoryStartRow}:W${categoryEndRow})`,
+                },
+                sepAmount: {
+                    formula: `SUM(Y${categoryStartRow}:Y${categoryEndRow})`,
+                },
+                octAmount: {
+                    formula: `SUM(AA${categoryStartRow}:AA${categoryEndRow})`,
+                },
+                novAmount: {
+                    formula: `SUM(AC${categoryStartRow}:AC${categoryEndRow})`,
+                },
+                decAmount: {
+                    formula: `SUM(AE${categoryStartRow}:AE${categoryEndRow})`,
+                },
+            }).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'fef2cb' },
+            };
+
+            currentRow++;
         },
     );
 
@@ -554,6 +554,11 @@ export async function exportToPrint({
                             .map((_, i) => (i === 2 ? categoryName : '')),
                     });
 
+                    // Initialize category-level totals
+                    let categoryTotalAmount = 0;
+                    const categoryMonthlyTotals = Array(12).fill(0);
+                    let categoryTotalPrice = 0;
+
                     const accounts = items.reduce((acc: any, item: any) => {
                         const key =
                             item.priceList?.chart_of_account_id?.toString() ||
@@ -580,18 +585,12 @@ export async function exportToPrint({
                                     ),
                             });
 
-                            let groupTotalAmount = 0;
-                            // Initialize totals for the 12 month amount columns
-                            const monthlyTotals = Array(12).fill(0);
-
-                            let groupTotalPrice = 0;
-
                             accountItems.forEach((item) => {
                                 const price = Number(
                                     item.priceList?.price || 0,
                                 );
 
-                                groupTotalPrice += price;
+                                categoryTotalPrice += price;
 
                                 // Array of monthly amounts to accumulate
                                 const monthlyAmts = [
@@ -625,11 +624,13 @@ export async function exportToPrint({
                                 ].reduce((a, b) => a + Number(b || 0), 0);
 
                                 const totalAmt = price * totalQty;
-                                groupTotalAmount += totalAmt;
+                                categoryTotalAmount += totalAmt;
 
                                 // Sum up monthly amounts
                                 monthlyAmts.forEach((amt, idx) => {
-                                    monthlyTotals[idx] += Number(amt || 0);
+                                    categoryMonthlyTotals[idx] += Number(
+                                        amt || 0,
+                                    );
                                 });
 
                                 tableBody.push({
@@ -675,68 +676,64 @@ export async function exportToPrint({
                                     ],
                                 });
                             });
-
-                            // Total Row (Yellow) - Includes Monthly Column Totals
-                            tableBody.push({
-                                isTotal: true,
-                                data: Array(31)
-                                    .fill('')
-                                    .map((_, i) => {
-                                        // Label
-                                        if (i === 2) return 'TOTAL';
-
-                                        if (i === 4) {
-                                            return groupTotalPrice.toLocaleString(
-                                                undefined,
-                                                {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                },
-                                            );
-                                        }
-
-                                        // Group Total - This will now always show at least 0.00
-                                        if (i === 6) {
-                                            return groupTotalAmount.toLocaleString(
-                                                undefined,
-                                                {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                },
-                                            );
-                                        }
-
-                                        // Monthly Amount Columns
-                                        const monthAmtCols = [
-                                            8, 10, 12, 14, 16, 18, 20, 22, 24,
-                                            26, 28, 30,
-                                        ];
-                                        if (monthAmtCols.includes(i)) {
-                                            const monthIdx = (i - 8) / 2;
-                                            const value =
-                                                monthlyTotals[monthIdx] || 0; // Fallback to 0 if undefined
-
-                                            // Removed the " > 0 " check so 0 formatted becomes "0.00"
-                                            return value.toLocaleString(
-                                                undefined,
-                                                {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                },
-                                            );
-                                        }
-
-                                        return '';
-                                    }),
-                            });
-
-                            // Accumulate account totals into procurement type totals
-                            procurementTypeTotalAmount += groupTotalAmount;
-                            monthlyTotals.forEach((amt, idx) => {
-                                procurementTypeMonthlyTotals[idx] += amt;
-                            });
                         },
                     );
+
+                    // Category Total Row (Yellow) - Includes Monthly Column Totals
+                    tableBody.push({
+                        isTotal: true,
+                        data: Array(31)
+                            .fill('')
+                            .map((_, i) => {
+                                // Label
+                                if (i === 2) return 'TOTAL';
+
+                                if (i === 4) {
+                                    return categoryTotalPrice.toLocaleString(
+                                        undefined,
+                                        {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                        },
+                                    );
+                                }
+
+                                // Category Total
+                                if (i === 6) {
+                                    return categoryTotalAmount.toLocaleString(
+                                        undefined,
+                                        {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                        },
+                                    );
+                                }
+
+                                // Monthly Amount Columns
+                                const monthAmtCols = [
+                                    8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28,
+                                    30,
+                                ];
+                                if (monthAmtCols.includes(i)) {
+                                    const monthIdx = (i - 8) / 2;
+                                    const value =
+                                        categoryMonthlyTotals[monthIdx] || 0;
+
+                                    return value.toLocaleString(undefined, {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    });
+                                }
+
+                                return '';
+                            }),
+                    });
+
+                    // Accumulate category totals into procurement type totals
+                    procurementTypeTotalAmount += categoryTotalAmount;
+                    categoryMonthlyTotals.forEach((amt, idx) => {
+                        procurementTypeMonthlyTotals[idx] += amt;
+                    });
                 },
             );
 
@@ -1092,6 +1089,11 @@ export async function exportToPDF({
                 .map((_, i) => (i === 2 ? categoryName : '')),
         });
 
+        // Initialize category-level totals
+        let categoryTotalAmount = 0;
+        const categoryMonthlyTotals = Array(12).fill(0);
+        let categoryTotalPrice = 0;
+
         const accounts = items.reduce((acc, item) => {
             const priceList = priceLists.find(
                 (pl) => pl.id === item.ppmp_price_list_id,
@@ -1116,17 +1118,12 @@ export async function exportToPDF({
                     .map((_, i) => (i === 2 ? accountTitle : '')),
             });
 
-            let groupTotalAmount = 0;
-            // Initialize totals for the 12 month amount columns
-            const monthlyTotals = Array(12).fill(0);
-            let groupTotalPrice = 0;
-
             accountItems.forEach((item) => {
                 const priceList = priceLists.find(
                     (pl) => pl.id === item.ppmp_price_list_id,
                 );
                 const price = Number(priceList?.price || 0);
-                groupTotalPrice += price;
+                categoryTotalPrice += price;
 
                 // Array of monthly amounts to accumulate
                 const monthlyAmts = [
@@ -1160,11 +1157,11 @@ export async function exportToPDF({
                 ].reduce((a, b) => a + Number(b || 0), 0);
 
                 const totalAmt = price * totalQty;
-                groupTotalAmount += totalAmt;
+                categoryTotalAmount += totalAmt;
 
                 // Sum up monthly amounts
                 monthlyAmts.forEach((amt, idx) => {
-                    monthlyTotals[idx] += Number(amt || 0);
+                    categoryMonthlyTotals[idx] += Number(amt || 0);
                 });
 
                 tableBody.push({
@@ -1210,49 +1207,48 @@ export async function exportToPDF({
                     ],
                 });
             });
+        });
 
-            // Total Row (Yellow) - Includes Monthly Column Totals
-            tableBody.push({
-                isTotal: true,
-                data: Array(31)
-                    .fill('')
-                    .map((_, i) => {
-                        // Label
-                        if (i === 2) return 'TOTAL';
+        // Category Total Row (Yellow) - Includes Monthly Column Totals
+        tableBody.push({
+            isTotal: true,
+            data: Array(31)
+                .fill('')
+                .map((_, i) => {
+                    // Label
+                    if (i === 2) return 'TOTAL';
 
-                        if (i === 4) {
-                            return groupTotalPrice.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            });
-                        }
+                    if (i === 4) {
+                        return categoryTotalPrice.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        });
+                    }
 
-                        // Group Total - This will now always show at least 0.00
-                        if (i === 6) {
-                            return groupTotalAmount.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            });
-                        }
+                    // Category Total
+                    if (i === 6) {
+                        return categoryTotalAmount.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        });
+                    }
 
-                        // Monthly Amount Columns
-                        const monthAmtCols = [
-                            8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
-                        ];
-                        if (monthAmtCols.includes(i)) {
-                            const monthIdx = (i - 8) / 2;
-                            const value = monthlyTotals[monthIdx] || 0; // Fallback to 0 if undefined
+                    // Monthly Amount Columns
+                    const monthAmtCols = [
+                        8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
+                    ];
+                    if (monthAmtCols.includes(i)) {
+                        const monthIdx = (i - 8) / 2;
+                        const value = categoryMonthlyTotals[monthIdx] || 0;
 
-                            // Removed the " > 0 " check so 0 formatted becomes "0.00"
-                            return value.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            });
-                        }
+                        return value.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        });
+                    }
 
-                        return '';
-                    }),
-            });
+                    return '';
+                }),
         });
     });
 

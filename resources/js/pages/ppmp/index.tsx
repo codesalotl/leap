@@ -75,6 +75,14 @@ export default function PpmpPage({
     initialChoice,
     initialFund,
 }: PpmpPageProps) {
+    console.log({
+        ppmps,
+        priceLists,
+        chartOfAccounts,
+        ppmpCategories,
+        fundingSources,
+    });
+
     const { auth } = usePage<SharedData>().props;
 
     const [open, setOpen] = useState(false);
