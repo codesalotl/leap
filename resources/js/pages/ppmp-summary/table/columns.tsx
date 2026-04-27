@@ -45,7 +45,6 @@ export const getPriceListColumns = (data: PriceListRow[]) => {
     );
 
     return [
-        // ... Static Columns (Item #, Description, etc.)
         columnHelper.accessor('item_number', { header: 'Item #', size: 50 }),
         columnHelper.accessor('description', {
             header: 'Description',
