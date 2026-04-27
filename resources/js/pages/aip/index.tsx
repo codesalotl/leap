@@ -96,7 +96,7 @@ export default function AipPage({ fiscalYears, app, offices = [] }: AipProps) {
                 onOpenChange={setOpenPdfPreviewDialog}
                 data={app}
                 fiscalYear={selectedYear}
-                offices={offices} // Verified: Passed to Dialog
+                offices={offices}
                 auth={auth}
             />
         </AppLayout>
