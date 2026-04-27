@@ -4,6 +4,7 @@ import { login } from '@/routes';
 import { Link } from '@inertiajs/react';
 import { type PropsWithChildren } from 'react';
 import logo from '../../../images/pglu-logo.png';
+import buildingImage from '../../../images/pglu-building.png';
 
 interface AuthLayoutProps {
     name?: string;
@@ -19,7 +20,13 @@ export default function AuthSimpleLayout({
     // console.log(logo);
 
     return (
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
+        <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden bg-background p-6 md:p-10">
+            <img
+                src={buildingImage}
+                className="right pointer-events-none absolute -right-10 -bottom-120 h-[150%] w-[200%] object-cover object-bottom opacity-20"
+                alt=""
+            />
+
             <div className="w-full max-w-sm">
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col items-center gap-4">

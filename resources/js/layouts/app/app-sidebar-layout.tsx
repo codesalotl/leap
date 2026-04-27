@@ -17,7 +17,9 @@ export default function AppSidebarLayout({
                 className="overflow-x-hidden border-l"
             >
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                {/* <div className="m-4 rounded bg-sidebar-foreground"> */}
                 {children}
+                {/* </div> */}
             </AppContent>
         </AppShell>
     );

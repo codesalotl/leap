@@ -166,7 +166,7 @@ const columns = [
                     </div>
                 ),
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = sumField(rows, 'ps_amount');
                     return (
                         <div className="text-right font-bold">
@@ -184,8 +184,9 @@ const columns = [
                     </div>
                 ),
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = sumField(rows, 'mooe_amount');
+
                     return (
                         <div className="text-right font-bold">
                             {formatNumber(total.toString())}
@@ -202,7 +203,7 @@ const columns = [
                     </div>
                 ),
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = sumField(rows, 'fe_amount');
                     return (
                         <div className="text-right font-bold">
@@ -220,7 +221,7 @@ const columns = [
                     </div>
                 ),
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = sumField(rows, 'co_amount');
                     return (
                         <div className="text-right font-bold">
@@ -246,7 +247,7 @@ const columns = [
                     );
                 },
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = rows.reduce((sum, row) => {
                         const fs = row.original.current_fs;
                         if (!fs) return sum;
@@ -283,7 +284,7 @@ const columns = [
                     </div>
                 ),
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = sumField(rows, 'ccet_adaptation');
                     return (
                         <div className="text-right font-bold">
@@ -301,8 +302,9 @@ const columns = [
                     </div>
                 ),
                 footer: ({ table }) => {
-                    const rows = table.getFilteredRowModel().rows;
+                    const rows = table.getFilteredRowModel().flatRows;
                     const total = sumField(rows, 'ccet_mitigation');
+
                     return (
                         <div className="text-right font-bold">
                             {formatNumber(total.toString())}
@@ -330,7 +332,7 @@ const columns = [
                     onClick={() => table.options.meta?.onAdd?.(row.original)}
                     disabled={row.original.type === 'Sub-Activity'}
                 >
-                    <Plus className="h-4 w-4" />
+                    <Plus />
                 </Button>
 
                 <Button
@@ -338,7 +340,7 @@ const columns = [
                     variant="outline"
                     onClick={() => table.options.meta?.onEdit?.(row.original)}
                 >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil />
                 </Button>
 
                 <Button
@@ -346,7 +348,7 @@ const columns = [
                     variant="destructive"
                     onClick={() => table.options.meta?.onDelete?.(row.original)}
                 >
-                    <Trash className="h-4 w-4" />
+                    <Trash />
                 </Button>
             </div>
         ),
