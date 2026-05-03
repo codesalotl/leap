@@ -73,20 +73,42 @@ class PpaController extends Controller
 
         $ppa = $query->paginate(100)->withQueryString();
 
+        // getting ancestors for breadcrumb
         $current = $parentId
             ? Ppa::with('ancestor.ancestor')->find($parentId)
             : null;
+
+        $flatCurrent = $current ? $this->flattenAncestors($current) : [];
+
         $offices = Office::with(['sector', 'lguLevel', 'officeType'])->get();
 
         return Inertia::render('ppa/index', [
             'ppaTree' => $ppa,
             'offices' => $offices,
-            'current' => $current,
+            'current' => $flatCurrent,
             'filters' => [
                 'search' => $search,
                 'id' => $parentId,
             ],
         ]);
+    }
+
+    private function flattenAncestors($ppa)
+    {
+        $result = [];
+        $current = $ppa;
+
+        while ($current) {
+            // Create a copy without the ancestor relation
+            $item = $current->toArray();
+            unset($item['ancestor']);
+            $result[] = $item;
+
+            // Move to the next level up
+            $current = $current->ancestor;
+        }
+
+        return $result;
     }
 
     /**

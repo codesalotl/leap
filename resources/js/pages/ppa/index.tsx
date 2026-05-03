@@ -31,64 +31,30 @@ export default function PpaPage({
 }: {
     ppaTree: PaginatedResponse<Ppa>;
     offices: Office[];
-    current: Ppa | null;
+    current: Ppa[];
     filters: { search?: string; id?: string | number };
 }) {
-    console.log(ppaTree);
+    // console.log(ppaTree);
+    console.log(current);
 
     const breadcrumbs: BreadcrumbItem[] = [
         {
             title: 'PPA Master Library',
-            href: null,
+            href: index().url,
         },
-        {
-            title: 'All Programs',
-            href: current ? index().url : null,
-        },
-        {
-            title: current
-                ? (current.ancestor?.ancestor?.name ??
-                      current.ancestor?.name ??
-                      current.name) + ' Projects'
-                : null,
-            href: current?.ancestor
-                ? index({
-                      query: {
-                          id:
-                              current.ancestor.ancestor?.id ??
-                              current.ancestor.id,
-                      },
-                  }).url
-                : null,
-        },
-        {
-            title: current
-                ? (current.type === 'Project'
-                      ? current.name
-                      : (current.ancestor?.name ?? current.name)) +
-                  ' Activities'
-                : null,
-            href: current?.ancestor
-                ? index({ query: { id: current.ancestor?.id } }).url
-                : null,
-        },
-        {
-            title: current
-                ? current.type === 'Activity'
-                    ? current.name + ' Subactivities'
-                    : null
-                : null,
-            href: null,
-        },
-    ].filter((_, index) => {
-        if (index === 0) return true;
-        if (index === 1) return true;
-        if (index === 2 && current) return true;
-        if (index === 3 && current?.ancestor) return true;
-        if (index === 4 && current?.ancestor?.ancestor) return true;
+    ];
 
-        return false;
-    });
+    const dynamicItems =
+        current?.toReversed().map((item) => ({
+            title: item.name,
+            href: index({
+                query: {
+                    id: item.id,
+                },
+            }).url,
+        })) || [];
+
+    const finalBreadcrumbs = [...breadcrumbs, ...dynamicItems];
 
     const { auth } = usePage<SharedData>().props;
 
@@ -177,27 +143,28 @@ export default function PpaPage({
         router.get(url, data, options);
     }
 
-    const nextType = current ? NEXT_TYPE_MAP[current.type] : 'Program';
+    const nextType =
+        current.length > 0 ? NEXT_TYPE_MAP[current[0].type] : 'Program';
 
     function handleAddNew() {
         setFormMode('add');
         setEditPpa(null);
 
-        if (!current) {
+        if (current.length === 0) {
             // We are at the very top - create root Program
             setTargetType('Program');
             setParentPpa(null);
         } else {
             // We are viewing children of current - create child of next type under current
             setTargetType(nextType);
-            setParentPpa(current);
+            setParentPpa(current[0]);
         }
 
         setIsFormOpen(true);
     }
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={finalBreadcrumbs}>
             <div className="flex flex-col gap-4 p-4">
                 <DataTable
                     columns={columns}
@@ -214,7 +181,8 @@ export default function PpaPage({
                     filters={filters}
                 >
                     <div className="flex items-center gap-2">
-                        {current?.type !== 'Sub-Activity' && (
+                        {(current.length === 0 ||
+                            current[0].type !== 'Sub-Activity') && (
                             <Button onClick={handleAddNew}>
                                 New {nextType}
                             </Button>
