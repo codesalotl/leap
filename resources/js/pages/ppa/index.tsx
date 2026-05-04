@@ -16,6 +16,7 @@ import { router, usePage } from '@inertiajs/react';
 import { DataTable } from '@/components/data-table';
 import columns from './table/columns';
 import { index } from '@/routes/ppa';
+import { AlertErrorDialog } from '@/components/alert-error-dialog';
 
 const NEXT_TYPE_MAP: Record<Ppa['type'], Ppa['type']> = {
     Program: 'Project',
@@ -84,6 +85,9 @@ export default function PpaPage({
     const [movePpa, setMovePpa] = useState<Ppa | null>(null);
     const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 
+    const [isErrorOpen, setIsErrorOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
     // Handlers
     function handleAddChild(parent: Ppa, childType: Ppa['type']) {
         setFormMode('add');
@@ -117,10 +121,25 @@ export default function PpaPage({
         if (!deletePpa) return;
 
         router.delete(`/ppas/${deletePpa.id}`, {
-            preserveState: false,
+            preserveState: true, // Changed to true so we can see the error dialog
             preserveScroll: true,
             onStart: () => setIsDeleting(true),
-            onSuccess: () => setDeletePpa(null),
+            onSuccess: () => {
+                setDeletePpa(null);
+                setErrorMessage(null);
+            },
+            onError: (errors) => {
+                // Check if the backend sent an 'error' key
+                if (errors.error) {
+                    setErrorMessage(errors.error);
+                    setIsErrorOpen(true);
+                } else {
+                    setErrorMessage(
+                        'An unexpected error occurred while deleting.',
+                    );
+                    setIsErrorOpen(true);
+                }
+            },
             onFinish: () => setIsDeleting(false),
         });
     }
@@ -264,6 +283,12 @@ export default function PpaPage({
                 movePpaTree={movePpaTree}
                 moveCurrent={moveCurrent}
                 filters={filters}
+            />
+
+            <AlertErrorDialog
+                open={isErrorOpen}
+                onOpenChange={setIsErrorOpen}
+                error={errorMessage}
             />
         </AppLayout>
     );

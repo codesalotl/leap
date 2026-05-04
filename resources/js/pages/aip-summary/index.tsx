@@ -114,32 +114,54 @@ export default function AipSummaryTable({
     ];
 
     const handleImportLibrary = () => {
-        setSelectorState({
-            isOpen: true,
-            data: masterPpas,
-            title: 'Import from Library',
-            description:
-                'Select Programs, Projects, and Activities to import into this Fiscal Year.',
-        });
+        router.get(
+            window.location.pathname,
+            {
+                ...filters,
+                lib_id: null, // Start at Root
+                lib_boundary_id: null, // No boundary (Full access)
+                lib_page: 1,
+            },
+            {
+                preserveState: true,
+                only: ['masterPpas', 'libCurrent', 'filters'],
+                onSuccess: () => {
+                    setSelectorState({
+                        isOpen: true,
+                        title: 'Import from Library',
+                        description:
+                            'Navigate the full library to import entries.',
+                    });
+                },
+            },
+        );
     };
 
     const handleAddEntry = useCallback(
         (entry: Ppa) => {
-            const masterNode = findPpaInTree(masterPpas, entry.id);
-
-            if (!masterNode) {
-                console.warn('This PPA does not exist in the Master Library');
-                return;
-            }
-
-            setSelectorState({
-                isOpen: true,
-                data: masterNode.children || [],
-                title: `Add Sub-entries to: ${masterNode.name}`,
-                description: `Select items to add under ${masterNode.type} ${masterNode.full_code}`,
-            });
+            router.get(
+                window.location.pathname,
+                {
+                    ...filters,
+                    lib_id: entry.id, // Drill into this item
+                    lib_boundary_id: entry.id, // Lock navigation to this branch
+                    lib_page: 1,
+                },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    only: ['masterPpas', 'libCurrent', 'filters'],
+                    onSuccess: () => {
+                        setSelectorState({
+                            isOpen: true,
+                            title: `Add Sub-entries to: ${entry.name}`,
+                            description: `Select items from the library to add under this ${entry.type}.`,
+                        });
+                    },
+                },
+            );
         },
-        [masterPpas],
+        [filters],
     );
 
     const handleEditDialogOpen = (data: Ppa) => {
@@ -164,6 +186,7 @@ export default function AipSummaryTable({
                 setSelectedEntry(null);
             },
             onFinish: () => setIsLoading(false),
+            onError: (error) => console.error('error', error),
         });
     }
 
@@ -180,48 +203,6 @@ export default function AipSummaryTable({
             officeName,
         });
     }
-
-    // const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
-    //     return ppas.flatMap((ppa): FlattenedPpa[] => {
-    //         // 1. Recursively process children, incrementing depth for the next level
-    //         const expandedChildren = ppa.children
-    //             ? expandPpaByFundingSource(ppa.children, depth + 1)
-    //             : [];
-
-    //         const sources = ppa.ppa_funding_sources || [];
-
-    //         // 2. If no funding sources, return the PPA once with its children
-    //         if (sources.length === 0) {
-    //             return [
-    //                 {
-    //                     ...ppa,
-    //                     current_fs: null,
-    //                     children: expandedChildren,
-    //                     isFirstInGroup: true,
-    //                     isLastInGroup: true,
-    //                     groupSize: 1,
-    //                     depth, // <--- Added depth
-    //                 },
-    //             ];
-    //         }
-
-    //         // 3. Duplicate PPA for each funding source
-    //         return sources.map((fs, index) => {
-    //             const isLast = index === sources.length - 1;
-
-    //             return {
-    //                 ...ppa,
-    //                 current_fs: fs,
-    //                 // Only the last duplicate retains the children array
-    //                 children: isLast ? expandedChildren : [],
-    //                 isFirstInGroup: index === 0,
-    //                 isLastInGroup: isLast,
-    //                 groupSize: sources.length,
-    //                 depth, // <--- Added depth
-    //             };
-    //         });
-    //     });
-    // };
 
     const expandPpaByFundingSource = (ppas: Ppa[], depth = 0): any[] => {
         return ppas.flatMap((ppa): FlattenedPpa[] => {

@@ -56,10 +56,34 @@ export default function PpaSelectorDialog({
     const handleNavigate = (id: number | null) => {
         router.get(
             window.location.pathname,
-            { ...filters, lib_id: id, lib_page: 1 },
+            {
+                ...filters,
+                lib_id: id,
+                lib_page: 1,
+                lib_boundary_id: filters.lib_boundary_id, // Always preserve the lock
+            },
             {
                 preserveState: true,
                 preserveScroll: true,
+                only: ['masterPpas', 'libCurrent', 'filters'],
+            },
+        );
+    };
+
+    const handleClose = () => {
+        onClose();
+        // Scrub the URL of library parameters
+        router.get(
+            window.location.pathname,
+            {
+                ...filters,
+                lib_id: undefined,
+                lib_boundary_id: undefined,
+                lib_page: undefined,
+                lib_search: undefined,
+            },
+            {
+                preserveState: true,
                 only: ['masterPpas', 'libCurrent', 'filters'],
             },
         );
@@ -93,6 +117,20 @@ export default function PpaSelectorDialog({
         }));
     }, [masterPpas, selectedItems, existingIdsSet]);
 
+    const handleToggleAll = (ppas: Ppa[], isChecked: boolean) => {
+        setSelectedItems((prev) => {
+            const next = new Map(prev);
+            ppas.forEach((ppa) => {
+                if (isChecked) {
+                    next.set(ppa.id, ppa);
+                } else {
+                    next.delete(ppa.id);
+                }
+            });
+            return next;
+        });
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="flex max-h-[95vh] flex-col sm:max-w-[85%]">
@@ -105,28 +143,53 @@ export default function PpaSelectorDialog({
                 </DialogHeader>
 
                 {/* Breadcrumbs */}
-                <div className="mb-2 flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
+                <div className="flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2"
+                        className={`h-7 px-2 ${filters.lib_boundary_id ? 'cursor-not-allowed opacity-50' : ''}`}
                         onClick={() => handleNavigate(null)}
+                        // DISABLE ROOT IF BOUNDARY EXISTS
+                        disabled={!!filters.lib_boundary_id}
                     >
                         <Home className="mr-1 h-4 w-4" /> Root
                     </Button>
-                    {libCurrent.map((item) => (
-                        <div key={item.id} className="flex items-center gap-2">
-                            <ChevronRight className="h-4 w-4 opacity-30" />
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2"
-                                onClick={() => handleNavigate(item.id)}
+
+                    {libCurrent.map((item) => {
+                        /**
+                         * DISABLE LOGIC:
+                         * If a boundary is set, we find its position in the breadcrumb path.
+                         * Anything "before" the boundary is an ancestor and should be disabled.
+                         */
+                        const boundaryId = Number(filters.lib_boundary_id);
+                        const isAncestor =
+                            boundaryId &&
+                            item.id !== boundaryId &&
+                            libCurrent.findIndex((i) => i.id === boundaryId) >
+                                libCurrent.findIndex((i) => i.id === item.id);
+
+                        return (
+                            <div
+                                key={item.id}
+                                className="flex items-center gap-2"
                             >
-                                {item.name}
-                            </Button>
-                        </div>
-                    ))}
+                                <ChevronRight className="h-4 w-4 opacity-30" />
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-7 px-2 ${isAncestor ? 'cursor-not-allowed opacity-50' : ''}`}
+                                    onClick={() => handleNavigate(item.id)}
+                                    // DISABLE IF IT'S AN ANCESTOR
+                                    disabled={
+                                        !!isAncestor ||
+                                        item.id === filters.lib_id
+                                    }
+                                >
+                                    {item.name}
+                                </Button>
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <div className="flex min-h-0">
@@ -154,6 +217,7 @@ export default function PpaSelectorDialog({
                                     existingIds: existingIdsSet,
                                     onToggle: handleToggle,
                                     onNavigate: handleNavigate,
+                                    onToggleAll: handleToggleAll,
                                 }}
                             />
                         )}

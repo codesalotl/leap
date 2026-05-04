@@ -13,7 +13,42 @@ const columns = [
     columnHelper.display({
         id: 'select',
         size: 50,
-        header: 'Select',
+        header: ({ table }) => {
+            const meta = table.options.meta as any;
+            const rows = table.getRowModel().rows;
+
+            // Only consider rows that are NOT already added to the summary
+            const selectableRows = rows.filter((row) => !row.original._isAdded);
+
+            // If every selectable row is checked, the header is checked
+            const isAllSelected =
+                selectableRows.length > 0 &&
+                selectableRows.every((row) => row.original._isSelected);
+
+            // If some (but not all) are checked, show indeterminate state
+            const isSomeSelected =
+                selectableRows.some((row) => row.original._isSelected) &&
+                !isAllSelected;
+
+            return (
+                <div className="flex items-center justify-center">
+                    <Checkbox
+                        checked={
+                            isAllSelected ||
+                            (isSomeSelected ? 'indeterminate' : false)
+                        }
+                        onCheckedChange={(checked) =>
+                            meta.onToggleAll?.(
+                                selectableRows.map((r) => r.original),
+                                !!checked,
+                            )
+                        }
+                        disabled={selectableRows.length === 0}
+                        aria-label="Select all"
+                    />
+                </div>
+            );
+        },
         cell: ({ row, table }) => {
             const meta = table.options.meta as any;
             const ppa = row.original;

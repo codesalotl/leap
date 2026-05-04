@@ -33,23 +33,20 @@ class AipEntryController extends Controller
         $yearFilter = fn($q) => $q->where('fiscal_year_id', $yearId);
         $hasAipFilter = fn($q) => $q->whereHas('aipEntries', $yearFilter);
 
+        // 1. Fetch AIP Entries (Main Table)
         $aipEntries = Ppa::whereIn('office_id', $officeIds)
             ->whereNull('parent_id')
             ->whereHas('aipEntries', $yearFilter)
             ->orderBy('sort_order')
             ->with([
-                // programs
                 'aipEntries' => function ($query) use ($yearFilter) {
                     $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
-                // 'ppaFundingSources.fundingSource',
                 'office.sector',
                 'office.lguLevel',
                 'office.officeType',
                 'office.parent',
-
-                // projects
                 'children' => fn($q) => $hasAipFilter($q)->orderBy(
                     'sort_order',
                 ),
@@ -57,13 +54,10 @@ class AipEntryController extends Controller
                     $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
-                // 'children.ppaFundingSources.fundingSource',
                 'children.office.sector',
                 'children.office.lguLevel',
                 'children.office.officeType',
                 'children.office.parent',
-
-                // activities
                 'children.children' => fn($q) => $hasAipFilter($q)->orderBy(
                     'sort_order',
                 ),
@@ -73,13 +67,10 @@ class AipEntryController extends Controller
                     $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
-                // 'children.children.ppaFundingSources.fundingSource',
                 'children.children.office.sector',
                 'children.children.office.lguLevel',
                 'children.children.office.officeType',
                 'children.children.office.parent',
-
-                // sub-activities
                 'children.children.children' => fn($q) => $hasAipFilter(
                     $q,
                 )->orderBy('sort_order'),
@@ -89,7 +80,6 @@ class AipEntryController extends Controller
                     $yearFilter($query);
                     $query->with('ppaFundingSources.fundingSource');
                 },
-                // 'children.children.children.ppaFundingSources.fundingSource',
                 'children.children.children.office.sector',
                 'children.children.children.office.lguLevel',
                 'children.children.children.office.officeType',
@@ -97,67 +87,52 @@ class AipEntryController extends Controller
             ])
             ->get();
 
-        // $ppaMasterList = Ppa::whereIn('office_id', $officeIds)
-        //     ->whereNull('parent_id')
-        //     ->orderBy('sort_order')
-        //     ->with([
-        //         'office.sector',
-        //         'office.lguLevel',
-        //         'office.officeType',
-        //         'office.parent',
-
-        //         'children' => fn($q) => $q->orderBy('sort_order'),
-        //         'children.office.sector',
-        //         'children.office.lguLevel',
-        //         'children.office.officeType',
-        //         'children.office.parent',
-
-        //         'children.children' => fn($q) => $q->orderBy('sort_order'),
-        //         'children.children.office.sector',
-        //         'children.children.office.lguLevel',
-        //         'children.children.office.officeType',
-        //         'children.children.office.parent',
-
-        //         'children.children.children' => fn($q) => $q->orderBy(
-        //             'sort_order',
-        //         ),
-        //         'children.children.children.office.sector',
-        //         'children.children.children.office.lguLevel',
-        //         'children.children.children.office.officeType',
-        //         'children.children.children.office.parent',
-        //     ])
-        //     ->get();
-
         $offices = Office::all();
 
-        //
-        $libId = $request->query('lib_id'); // Current folder
-        $libSearch = $request->query('lib_search'); // Filter library items
+        // 2. Library Selector Logic
+        $libId = $request->query('lib_id');
+        $libSearch = $request->query('lib_search');
+        $libBoundaryId = $request->query('lib_boundary_id');
 
-        $masterPpas = Ppa::where('parent_id', $libId)
-            ->whereIn('office_id', $officeIds)
+        $targetParentId = $libId ?: $libBoundaryId;
+
+        $masterPpas = Ppa::whereIn('office_id', $officeIds)
+            ->where('parent_id', $targetParentId)
             ->when($libSearch, function ($query, $search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")->orWhere(
-                        'full_code',
-                        'like',
-                        "%{$search}%",
-                    );
+                $query->where(function ($inner) use ($search) {
+                    // Use 'code_suffix' as it is the actual database column
+                    $inner
+                        ->where('name', 'like', "%$search%")
+                        ->orWhere('code_suffix', 'like', "%$search%");
+
+                    // If searching for a full code like "100-01-001", extract the last part
+                    if (str_contains($search, '-')) {
+                        $segments = explode('-', $search);
+                        $lastSegment = end($segments);
+                        if ($lastSegment) {
+                            $inner->orWhere(
+                                'code_suffix',
+                                'like',
+                                "%$lastSegment%",
+                            );
+                        }
+                    }
                 });
             })
             ->orderBy('sort_order')
-            ->paginate(50, ['*'], 'lib_page') // Uses 'lib_page' to avoid conflict with main table
+            ->paginate(50, ['*'], 'lib_page')
             ->withQueryString();
 
-        // 4. NEW: Library Breadcrumbs (To navigate back up)
-        $libCurrent = $libId ? $this->getPpaBreadcrumbs($libId) : [];
+        // 3. Library Breadcrumbs
+        $libCurrent = $targetParentId
+            ? $this->getPpaBreadcrumbs($targetParentId)
+            : [];
 
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipEntries,
             'fundingSources' => FundingSource::all(),
             'offices' => $offices,
-
             'masterPpas' => $masterPpas,
             'libCurrent' => $libCurrent,
             'filters' => $request->all(),
@@ -170,13 +145,12 @@ class AipEntryController extends Controller
         $current = Ppa::find($id);
 
         while ($current) {
-            // We only need basic info for breadcrumbs
             $breadcrumbs[] = [
                 'id' => $current->id,
                 'name' => $current->name,
                 'type' => $current->type,
             ];
-            $current = $current->parent; // Ensure you have a 'parent' relationship in Ppa model
+            $current = $current->parent;
         }
 
         return array_reverse($breadcrumbs);
@@ -372,6 +346,12 @@ class AipEntryController extends Controller
                     'aip_entry_id',
                     $aipEntryIdsToDelete,
                 )->delete();
+
+                // 2. NEW: Delete Funding Sources records
+                // This is the missing piece causing your SQLSTATE[23000] error
+                DB::table('ppa_funding_sources')
+                    ->whereIn('aip_entry_id', $aipEntryIdsToDelete)
+                    ->delete();
 
                 // 4. Delete the AIP entries themselves
                 AipEntry::whereIn('id', $aipEntryIdsToDelete)->delete();

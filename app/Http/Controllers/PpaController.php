@@ -332,54 +332,100 @@ class PpaController extends Controller
      */
     public function destroy(Ppa $ppa)
     {
-        $parentId = $ppa->parent_id;
+        // 1. Identify the branch
+        $descendantIds = $this->getDescendantPpaIds($ppa->id);
+        $allBranchIds = array_merge([$ppa->id], $descendantIds);
 
-        // This will delete the PPA and its children if you have
-        // a cascade delete set up in your migration.
-        $ppa->delete();
+        // 2. CHECK: Is ANY part of this branch used in the AIP Summary?
+        $usedInAip = \App\Models\AipEntry::whereIn(
+            'ppa_id',
+            $allBranchIds,
+        )->exists();
 
-        // Renumber remaining siblings with type-specific formatting
-        if ($parentId !== null) {
-            $siblings = Ppa::where('parent_id', $parentId)
-                ->orderBy('sort_order')
-                ->get();
-
-            // First, set all siblings to temporary unique values to avoid unique constraint violation
-            // Use numeric values that fit within 4-character limit (last 3 digits + 9 prefix)
-            foreach ($siblings as $sibling) {
-                $tempValue =
-                    '9' . str_pad($sibling->id % 999, 3, '0', STR_PAD_LEFT);
-                $sibling->update([
-                    'code_suffix' => $tempValue,
+        if ($usedInAip) {
+            return redirect()
+                ->back()
+                ->withErrors([
+                    'error' =>
+                        'Cannot delete: This entry (or one of its sub-items) is currently used in an AIP Summary.',
                 ]);
-            }
-
-            // Then, update all siblings to their final values
-            foreach ($siblings as $index => $sibling) {
-                $digitLength = $this->getCodeSuffixLength($sibling->type);
-
-                // Apply type-specific formatting
-                if ($digitLength === 0) {
-                    // Dynamic formatting (Sub-Activity) - no padding
-                    $codeSuffix = (string) ($index + 1);
-                } else {
-                    // Fixed length formatting with leading zeros
-                    $codeSuffix = str_pad(
-                        $index + 1,
-                        $digitLength,
-                        '0',
-                        STR_PAD_LEFT,
-                    );
-                }
-
-                $sibling->update([
-                    'sort_order' => $index,
-                    'code_suffix' => $codeSuffix,
-                ]);
-            }
         }
 
-        return redirect()->back()->with('success', 'Entry deleted.');
+        $parentId = $ppa->parent_id;
+        $officeId = $ppa->office_id;
+        $deletedSortOrder = $ppa->sort_order;
+
+        try {
+            DB::beginTransaction();
+
+            // 3. Delete the PPA
+            $ppa->delete();
+
+            // 4. RE-SEQUENCE SIBLINGS
+            $siblings = Ppa::where('parent_id', $parentId)
+                ->where('office_id', $officeId)
+                ->where('sort_order', '>', $deletedSortOrder)
+                ->orderBy('sort_order', 'asc')
+                ->get();
+
+            foreach ($siblings as $sibling) {
+                // newOrder is for the Database (0, 1, 2...)
+                $newOrder = (int) $sibling->sort_order - 1;
+
+                // namingIndex is for the Code Suffix (1, 2, 3...)
+                // This prevents the "000" issue.
+                $namingIndex = $newOrder + 1;
+
+                $digitLength = $this->getCodeSuffixLength($sibling->type);
+
+                $newSuffix =
+                    $digitLength === 0
+                        ? (string) $namingIndex
+                        : str_pad(
+                            $namingIndex,
+                            $digitLength,
+                            '0',
+                            STR_PAD_LEFT,
+                        );
+
+                // Force update to DB
+                DB::table('ppas')
+                    ->where('id', $sibling->id)
+                    ->update([
+                        'sort_order' => $newOrder,
+                        'code_suffix' => $newSuffix,
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            DB::commit();
+            return redirect()
+                ->back()
+                ->with('success', 'Entry removed and sequence updated.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()
+                ->back()
+                ->withErrors(['error' => 'Delete failed: ' . $e->getMessage()]);
+        }
+    }
+
+    private function getDescendantPpaIds($parentId)
+    {
+        $children = DB::table('ppas')
+            ->where('parent_id', $parentId)
+            ->pluck('id')
+            ->toArray();
+
+        $descendants = $children;
+        foreach ($children as $childId) {
+            $descendants = array_merge(
+                $descendants,
+                $this->getDescendantPpaIds($childId),
+            );
+        }
+
+        return $descendants;
     }
 
     // reorder
