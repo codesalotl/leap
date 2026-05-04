@@ -32,7 +32,9 @@ interface AipSummaryTableProp {
     aipEntries: Ppa[];
     fundingSources: FundingSource[];
     offices: Office[];
-    masterPpas: Ppa[];
+    masterPpas: PaginatedResponse<Ppa> | []; // Change from Ppa[]
+    libCurrent: any[];
+    filters: Filter;
 }
 
 const existingPpaIds = (aipEntries: Ppa[]) => {
@@ -82,9 +84,13 @@ export default function AipSummaryTable({
     aipEntries,
     fundingSources,
     offices,
-    masterPpas = [],
+    masterPpas,
+    libCurrent,
+    filters,
 }: AipSummaryTableProp) {
-    console.log(aipEntries);
+    console.log(masterPpas);
+    // console.log(aipEntries);
+
     const { auth } = usePage<SharedData>().props;
 
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -339,9 +345,9 @@ export default function AipSummaryTable({
                 onClose={() =>
                     setSelectorState((prev) => ({ ...prev, isOpen: false }))
                 }
-                data={selectorState.data}
-                title={selectorState.title}
-                description={selectorState.description}
+                masterPpas={masterPpas} // Passing the paginated data
+                libCurrent={libCurrent} // Passing the breadcrumbs
+                filters={filters} // Passing the search/page filters
                 fiscalYearId={fiscalYear.id}
                 existingPpaIds={Array.from(existingPpaIds(aipEntries))}
             />

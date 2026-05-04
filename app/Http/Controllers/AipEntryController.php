@@ -23,12 +23,11 @@ class AipEntryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(FiscalYear $fiscalYear)
+    public function index(Request $request, FiscalYear $fiscalYear)
     {
         $officeId = auth()->user()->office_id;
         $yearId = $fiscalYear->id;
 
-        // Get all office IDs in the user's office hierarchy (user's office + all child offices)
         $officeIds = $this->getOfficeHierarchyIds($officeId);
 
         $yearFilter = fn($q) => $q->where('fiscal_year_id', $yearId);
@@ -98,46 +97,89 @@ class AipEntryController extends Controller
             ])
             ->get();
 
-        $ppaMasterList = Ppa::whereIn('office_id', $officeIds)
-            ->whereNull('parent_id')
-            ->orderBy('sort_order')
-            ->with([
-                'office.sector',
-                'office.lguLevel',
-                'office.officeType',
-                'office.parent',
+        // $ppaMasterList = Ppa::whereIn('office_id', $officeIds)
+        //     ->whereNull('parent_id')
+        //     ->orderBy('sort_order')
+        //     ->with([
+        //         'office.sector',
+        //         'office.lguLevel',
+        //         'office.officeType',
+        //         'office.parent',
 
-                'children' => fn($q) => $q->orderBy('sort_order'),
-                'children.office.sector',
-                'children.office.lguLevel',
-                'children.office.officeType',
-                'children.office.parent',
+        //         'children' => fn($q) => $q->orderBy('sort_order'),
+        //         'children.office.sector',
+        //         'children.office.lguLevel',
+        //         'children.office.officeType',
+        //         'children.office.parent',
 
-                'children.children' => fn($q) => $q->orderBy('sort_order'),
-                'children.children.office.sector',
-                'children.children.office.lguLevel',
-                'children.children.office.officeType',
-                'children.children.office.parent',
+        //         'children.children' => fn($q) => $q->orderBy('sort_order'),
+        //         'children.children.office.sector',
+        //         'children.children.office.lguLevel',
+        //         'children.children.office.officeType',
+        //         'children.children.office.parent',
 
-                'children.children.children' => fn($q) => $q->orderBy(
-                    'sort_order',
-                ),
-                'children.children.children.office.sector',
-                'children.children.children.office.lguLevel',
-                'children.children.children.office.officeType',
-                'children.children.children.office.parent',
-            ])
-            ->get();
+        //         'children.children.children' => fn($q) => $q->orderBy(
+        //             'sort_order',
+        //         ),
+        //         'children.children.children.office.sector',
+        //         'children.children.children.office.lguLevel',
+        //         'children.children.children.office.officeType',
+        //         'children.children.children.office.parent',
+        //     ])
+        //     ->get();
 
         $offices = Office::all();
+
+        //
+        $libId = $request->query('lib_id'); // Current folder
+        $libSearch = $request->query('lib_search'); // Filter library items
+
+        $masterPpas = Ppa::where('parent_id', $libId)
+            ->whereIn('office_id', $officeIds)
+            ->when($libSearch, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")->orWhere(
+                        'full_code',
+                        'like',
+                        "%{$search}%",
+                    );
+                });
+            })
+            ->orderBy('sort_order')
+            ->paginate(50, ['*'], 'lib_page') // Uses 'lib_page' to avoid conflict with main table
+            ->withQueryString();
+
+        // 4. NEW: Library Breadcrumbs (To navigate back up)
+        $libCurrent = $libId ? $this->getPpaBreadcrumbs($libId) : [];
 
         return Inertia::render('aip-summary/index', [
             'fiscalYear' => $fiscalYear,
             'aipEntries' => $aipEntries,
             'fundingSources' => FundingSource::all(),
             'offices' => $offices,
-            // 'masterPpas' => $ppaMasterList,
+
+            'masterPpas' => $masterPpas,
+            'libCurrent' => $libCurrent,
+            'filters' => $request->all(),
         ]);
+    }
+
+    private function getPpaBreadcrumbs($id)
+    {
+        $breadcrumbs = [];
+        $current = Ppa::find($id);
+
+        while ($current) {
+            // We only need basic info for breadcrumbs
+            $breadcrumbs[] = [
+                'id' => $current->id,
+                'name' => $current->name,
+                'type' => $current->type,
+            ];
+            $current = $current->parent; // Ensure you have a 'parent' relationship in Ppa model
+        }
+
+        return array_reverse($breadcrumbs);
     }
 
     /**

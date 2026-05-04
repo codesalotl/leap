@@ -9,170 +9,181 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { DataTable } from '@/pages/aip-summary/ppa-import-table/data-table';
+import { DataTable } from '@/components/data-table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
-import { getPpaColumns } from '@/pages/aip-summary/ppa-import-table/columns';
-import type { RowSelectionState } from '@tanstack/react-table';
-import type { Ppa } from '@/types/global';
-
+import { ChevronRight, Home, Info } from 'lucide-react';
+import columns from './ppa-import-table/columns';
+import type { Ppa, PaginatedResponse, Filter } from '@/types/global';
 interface PpaSelectorDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    data: Ppa[]; // <--- Dynamic Data
-    title: string; // <--- Dynamic Title
-    description: string; // <--- Dynamic Desc
+    masterPpas: PaginatedResponse<Ppa> | [];
+    libCurrent: any[];
     fiscalYearId: number;
     existingPpaIds: number[];
+    filters: Filter;
 }
 
 export default function PpaSelectorDialog({
     isOpen,
     onClose,
-    data,
-    title,
-    description,
+    masterPpas,
+    libCurrent = [],
     fiscalYearId,
     existingPpaIds = [],
+    filters,
 }: PpaSelectorDialogProps) {
-    const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-    const [globalFilter, setGlobalFilter] = useState('');
+    const [selectedItems, setSelectedItems] = useState<Map<number, Ppa>>(
+        new Map(),
+    );
     const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        if (!isOpen) {
-            setRowSelection({});
-            setGlobalFilter('');
-        }
-    }, [isOpen]);
-
-    // Create a Set for faster lookups in the column definitions
     const existingIdsSet = useMemo(
         () => new Set(existingPpaIds),
         [existingPpaIds],
     );
 
-    // Pass the existing IDs Set to the columns
-    const columns = useMemo(
-        () =>
-            getPpaColumns({
-                setRowSelection,
-                existingPpaIds: existingIdsSet,
-            }),
-        [setRowSelection, existingIdsSet],
-    );
+    const handleToggle = (ppa: Ppa) => {
+        setSelectedItems((prev) => {
+            const next = new Map(prev);
+            if (next.has(ppa.id)) next.delete(ppa.id);
+            else next.set(ppa.id, ppa);
+            return next;
+        });
+    };
 
-    const handleImport = () => {
-        // Filter out items already in the AIP (just in case)
-        const selectedIds = Object.keys(rowSelection).filter(
-            (id) => !existingIdsSet.has(Number(id)),
-        );
-
-        if (selectedIds.length === 0) return;
-
-        router.post(
-            `/aip/${fiscalYearId}/import`,
-            { ppa_ids: selectedIds },
+    const handleNavigate = (id: number | null) => {
+        router.get(
+            window.location.pathname,
+            { ...filters, lib_id: id, lib_page: 1 },
             {
-                preserveScroll: true,
                 preserveState: true,
-                onStart: () => {
-                    setLoading(true);
-                },
-                onSuccess: () => {
-                    // Success logic: Close and reset
-                    onClose();
-                    setRowSelection({});
-                },
-                onError: (errors) => {
-                    // Optional: Handle validation errors or toast notifications here
-                    console.error('Import failed:', errors);
-                },
-                onFinish: () => {
-                    // This runs regardless of success or error
-                    setLoading(false);
-                },
+                preserveScroll: true,
+                only: ['masterPpas', 'libCurrent', 'filters'],
             },
         );
     };
 
-    // Calculate actual new items selected (excluding already added ones that might be visually checked)
-    const newSelectedCount = Object.keys(rowSelection).filter(
-        (id) => !existingIdsSet.has(Number(id)),
-    ).length;
+    const handleImport = () => {
+        const ids = Array.from(selectedItems.keys());
+        router.post(
+            `/aip/${fiscalYearId}/import`,
+            { ppa_ids: ids },
+            {
+                onStart: () => setLoading(true),
+                onSuccess: () => {
+                    setSelectedItems(new Map());
+                    onClose();
+                },
+                onFinish: () => setLoading(false),
+            },
+        );
+    };
+
+    const displayData = useMemo(() => {
+        if (Array.isArray(masterPpas)) return [];
+
+        return masterPpas.data.map((ppa) => ({
+            ...ppa,
+            // We inject the state directly into the object
+            // This ensures the DataTable's useEffect detects a change
+            _isSelected: selectedItems.has(ppa.id),
+            _isAdded: existingIdsSet.has(ppa.id),
+        }));
+    }, [masterPpas, selectedItems, existingIdsSet]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent
-                className="flex max-h-[90vh] flex-col sm:max-w-[80%]"
-                onPointerDownOutside={(e) => {
-                    if (loading) e.preventDefault();
-                }}
-                onEscapeKeyDown={(e) => {
-                    if (loading) e.preventDefault();
-                }}
-            >
-                <DialogHeader className="">
-                    <DialogTitle>{title}</DialogTitle>
-
-                    <DialogDescription>{description}</DialogDescription>
+            <DialogContent className="flex max-h-[95vh] flex-col sm:max-w-[85%]">
+                <DialogHeader>
+                    <DialogTitle>Library Navigator</DialogTitle>
+                    <DialogDescription>
+                        Select items to import. Selections are preserved across
+                        folders.
+                    </DialogDescription>
                 </DialogHeader>
 
-                <div>
-                    <div className="relative">
-                        <Search className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search library..."
-                            value={globalFilter ?? ''}
-                            onChange={(e) => setGlobalFilter(e.target.value)}
-                            className="bg-muted/50 pl-9"
-                        />
-                    </div>
+                {/* Breadcrumbs */}
+                <div className="mb-2 flex items-center gap-2 rounded-md bg-muted/50 p-2 text-sm">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2"
+                        onClick={() => handleNavigate(null)}
+                    >
+                        <Home className="mr-1 h-4 w-4" /> Root
+                    </Button>
+                    {libCurrent.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2">
+                            <ChevronRight className="h-4 w-4 opacity-30" />
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2"
+                                onClick={() => handleNavigate(item.id)}
+                            >
+                                {item.name}
+                            </Button>
+                        </div>
+                    ))}
                 </div>
 
                 <div className="flex min-h-0">
-                    <ScrollArea className="w-full">
-                        <DataTable
-                            columns={columns}
-                            data={data}
-                            rowSelection={rowSelection}
-                            setRowSelection={setRowSelection}
-                            globalFilter={globalFilter}
-                            setGlobalFilter={setGlobalFilter}
-                            getSubRows={(row) => row.children}
-                        />
+                    <ScrollArea className="w-full pr-3">
+                        {!Array.isArray(masterPpas) && (
+                            <DataTable
+                                key={`lib-table-${filters?.lib_id}`}
+                                columns={columns}
+                                // data={masterPpas.data}
+                                data={displayData}
+                                paginationObj={masterPpas}
+                                withSearch
+                                searchKey="lib_search"
+                                pageKey="lib_page"
+                                negativeHeight={24}
+                                filters={filters}
+                                onlyKeys={[
+                                    'masterPpas',
+                                    'libCurrent',
+                                    'filters',
+                                ]}
+                                // DYNAMIC STATE PASSED HERE
+                                meta={{
+                                    selectedIds: new Set(selectedItems.keys()),
+                                    existingIds: existingIdsSet,
+                                    onToggle: handleToggle,
+                                    onNavigate: handleNavigate,
+                                }}
+                            />
+                        )}
                     </ScrollArea>
                 </div>
 
-                <DialogFooter className="sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-sm text-muted-foreground">
-                        {newSelectedCount} new item(s) selected
-                    </div>
+                <DialogFooter>
+                    <div className="flex w-full justify-between">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Info className="h-4 w-4" />
+                            {selectedItems.size} items selected
+                        </div>
 
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            onClick={onClose}
-                            disabled={loading}
-                        >
-                            Cancel
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={onClose}
+                                disabled={loading}
+                            >
+                                Cancel
+                            </Button>
 
-                        <Button
-                            onClick={handleImport}
-                            disabled={newSelectedCount === 0 || loading}
-                        >
-                            {loading ? (
-                                <span className="flex items-center gap-1">
-                                    <Spinner />
-                                    Importing...
-                                </span>
-                            ) : (
-                                'Import Selected'
-                            )}
-                        </Button>
+                            <Button
+                                onClick={handleImport}
+                                disabled={loading || selectedItems.size === 0}
+                            >
+                                {loading && <Spinner className="mr-2" />}
+                                Import Selected
+                            </Button>
+                        </div>
                     </div>
                 </DialogFooter>
             </DialogContent>
